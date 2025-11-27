@@ -1,0 +1,64 @@
+#!/usr/bin/env php
+<?php
+
+require_once './vendor/autoload.php';
+
+use Inquisition\Core\Infrastructure\Console\ConsoleRunner;
+use Inquisition\Foundation\Config\Config;
+use Inquisition\Foundation\Kernel;
+
+$kernel = Kernel::getInstance();
+$kernel->boot();
+
+$config = Config::getInstance();
+
+require_once __DIR__ . '/config/index.php';
+
+$config->loadFromEnvironment(prefix: 'APP_');
+
+try {
+    $runner = new ConsoleRunner();
+    $runner->bootstrap();
+
+    // Parse command line arguments
+    $arguments = [];
+    $commandName = null;
+
+    // Skip the script name (first argument)
+    $args = array_slice($argv, 1);
+
+    if (empty($args)) {
+        echo "Available commands:\n";
+        foreach ($runner->listCommands() as $command) {
+            echo "  - $command\n";
+        }
+        exit(0);
+    }
+
+    $commandName = $args[0];
+
+    // Parse remaining arguments
+    for ($i = 1; $i < count($args); $i++) {
+        $arg = $args[$i];
+        if (str_starts_with($arg, '--')) {
+            // Handle --key=value or --key value
+            if (str_contains($arg, '=')) {
+                [$key, $value] = explode('=', substr($arg, 2), 2);
+                $arguments[$key] = $value;
+            } else {
+                $key = substr($arg, 2);
+                if ($i + 1 < count($args) && !str_starts_with($args[$i + 1], '--')) {
+                    $arguments[$key] = $args[++$i];
+                } else {
+                    $arguments[$key] = true;
+                }
+            }
+        }
+    }
+
+    $runner->run($commandName, $arguments);
+
+} catch (Exception | Throwable $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+    exit(1);
+}
