@@ -4,6 +4,7 @@ namespace Tests\Module\Identity\Integration\Application\Job;
 
 use App\Module\Identity\Application\User\Event\UserCreatedEvent;
 use App\Module\Identity\Application\User\Job\CreateUserSyncJob;
+use App\Module\Identity\Domain\User\ValueObject\UserId;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use PDOException;
 use Tests\Module\Identity\Fixture\UserFixture;
@@ -20,6 +21,7 @@ class CreateUserSyncJobTest extends IntegrationTestCase
     public function testHandleCreatesAndSavesUser(): void
     {
         $payload = [
+            'id' => UserId::generate()->toRaw(),
             'userName' => $this->faker->userName(),
             'password' => $this->faker->password(),
         ];
@@ -39,6 +41,7 @@ class CreateUserSyncJobTest extends IntegrationTestCase
     public function testHandleThrowsExceptionIfUserAlreadyExists(): void
     {
         $payload = [
+            'id' => UserId::generate()->toRaw(),
             'userName' => $this->faker->userName(),
             'password' => $this->faker->password(),
         ];
@@ -56,6 +59,7 @@ class CreateUserSyncJobTest extends IntegrationTestCase
     public function testHandleCreatesAndSavesUserShouldDispatchEvent(): void
     {
         $payload = [
+            'id' => UserId::generate()->toRaw(),
             'userName' => $this->faker->userName(),
             'password' => $this->faker->password(),
         ];

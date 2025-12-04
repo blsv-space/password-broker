@@ -7,6 +7,7 @@ use App\Module\Identity\Application\User\Job\DeleteUserSyncJob;
 use App\Module\Identity\Application\User\Job\UpdateUserSyncJob;
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\UserDomainService;
+use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Shared\Domain\ValueObject\Id;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
@@ -34,6 +35,7 @@ final class UserApplicationService
     ): User
     {
         return new CreateUserSyncJob([
+            'id' => UserId::generate()->toRaw(),
             'userName' => $userName,
             'password' => $password,
         ])->execute();

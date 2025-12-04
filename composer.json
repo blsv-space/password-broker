@@ -29,6 +29,7 @@
     "generate-secrets": [
       "@php -r \"file_exists('.env') || copy('.env.default', '.env');\"",
       "@php -r \"file_exists('.env.test') || copy('.env.test.default', '.env.test');\"",
+      "@php -r \"file_exists('.env.docker') || copy('.env.docker.default', '.env.docker');\"",
       "@php scripts/generate-secrets.php",
       "@php -r \"echo '\\n\\033[32mProject created successfully!\\033[0m\\n';\"",
       "@php -r \"echo '\\n\\033[33mNext steps:\\033[0m\\n';\"",
@@ -36,7 +37,7 @@
       "@php -r \"echo '2. Configure your .env file\\n';\"",
       "@php -r \"echo '3. Run ./console to see available commands\\n\\n';\""
     ],
-    "post-create-project-cmd": [
+    "post-install-cmd": [
       "@generate-secrets"
     ]
   },

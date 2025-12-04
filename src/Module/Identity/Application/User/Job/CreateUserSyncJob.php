@@ -7,13 +7,12 @@ use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\AuthDomainService;
 use App\Module\Identity\Domain\User\Service\UserDomainService;
 use App\Module\Identity\Domain\User\Validator\PasswordValidator;
-use App\Module\Identity\Domain\User\ValueObject\UserId;
-use Inquisition\Core\Application\Job\AbstractSyncJob;
+use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 use InvalidArgumentException;
 use Throwable;
 
-class CreateUserSyncJob extends AbstractSyncJob
+class CreateUserSyncJob extends AbstractReplicableSyncJob
 {
     /**
      * @return User
@@ -29,9 +28,6 @@ class CreateUserSyncJob extends AbstractSyncJob
         unset($payload['password']);
 
         $user = $userDomainService->mapArrayToEntity($payload);
-        if (!$user->id) {
-            $user->id = UserId::generate();
-        }
 
         $userDomainService->save($user);
 

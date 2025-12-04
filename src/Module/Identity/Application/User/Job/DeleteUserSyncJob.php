@@ -5,12 +5,12 @@ namespace App\Module\Identity\Application\User\Job;
 use App\Module\Identity\Application\User\Event\UserDeletedEvent;
 use App\Module\Identity\Domain\User\Service\UserDomainService;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
-use Inquisition\Core\Application\Job\AbstractSyncJob;
+use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 use InvalidArgumentException;
 use Throwable;
 
-class DeleteUserSyncJob extends AbstractSyncJob
+class DeleteUserSyncJob extends AbstractReplicableSyncJob
 {
     /**
      * @return void

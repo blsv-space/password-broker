@@ -10,12 +10,12 @@ use App\Module\Identity\Domain\User\Validator\PasswordValidator;
 use App\Module\Identity\Domain\User\ValueObject\HashedPassword;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\Identity\Domain\User\ValueObject\UserName;
-use Inquisition\Core\Application\Job\AbstractSyncJob;
+use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 use InvalidArgumentException;
 use Throwable;
 
-class UpdateUserSyncJob extends AbstractSyncJob
+class UpdateUserSyncJob extends AbstractReplicableSyncJob
 {
     /**
      * @return User
