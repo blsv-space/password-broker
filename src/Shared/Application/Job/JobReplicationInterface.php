@@ -2,7 +2,9 @@
 
 namespace App\Shared\Application\Job;
 
-interface JobReplicationInterface
+use Inquisition\Core\Application\Job\JobInterface;
+
+interface JobReplicationInterface extends JobInterface
 {
     /**
      * @var bool $isReplicated

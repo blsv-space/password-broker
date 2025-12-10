@@ -3,10 +3,10 @@
 namespace App\Shared\Application\Job;
 
 use App\Shared\Infrastructure\Replication\Replicator;
-use Inquisition\Core\Application\Job\AbstractSyncJob;
+use Inquisition\Core\Application\Job\AbstractAsyncJob;
 use Throwable;
 
-abstract class AbstractReplicableSyncJob extends AbstractSyncJob
+abstract class AbstractReplicableAsyncJob extends AbstractAsyncJob
     implements JobReplicationInterface
 {
 
@@ -39,16 +39,16 @@ abstract class AbstractReplicableSyncJob extends AbstractSyncJob
     }
 
     /**
-     * @return mixed
+     * @return void
      * @throws Throwable
      */
-    public function execute(): mixed
+    public function execute(): void
     {
         if (!$this->isReplicated) {
             $this->publish();
         }
 
-        return parent::execute();
+        parent::execute();
     }
 
 }
