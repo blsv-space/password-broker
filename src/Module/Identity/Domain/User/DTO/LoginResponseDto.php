@@ -4,7 +4,7 @@ namespace App\Module\Identity\Domain\User\DTO;
 
 use Inquisition\Core\Domain\Entity\BaseEntity;
 
-class LoginResponseDTO extends BaseEntity
+class LoginResponseDto extends BaseEntity
 {
     public function __construct(
         public string $jwtToken,

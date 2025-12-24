@@ -4,9 +4,12 @@ namespace App\Module\Identity\Infrastructure\User\Repository;
 
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Repository\UserRepositoryInterface;
+use App\Module\Identity\Domain\User\ValueObject\Email;
 use App\Module\Identity\Domain\User\ValueObject\HashedPassword;
+use App\Module\Identity\Domain\User\ValueObject\IsAdmin;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\Identity\Domain\User\ValueObject\UserName;
+use App\Module\Identity\Domain\User\ValueObject\UserPublicKey;
 use App\Module\Identity\Infrastructure\Repository\AbstractIdentityRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
@@ -32,6 +35,9 @@ class UserRepository extends AbstractIdentityRepository
     public const string FIELD_HASHED_PASSWORD = 'hashedPassword';
     public const string FIELD_CREATED_AT = 'createdAt';
     public const string FIELD_UPDATED_AT = 'updatedAt';
+    public const string FIELD_EMAIL = 'email';
+    public const string FIELD_RSA_PUBLIC_KEY = 'publicKey';
+    public const string FIELD_IS_ADMIN = 'isAdmin';
 
     protected const string TABLE_NAME = 'users';
     protected const string ENTITY_CLASS_NAME = User::class;
@@ -48,9 +54,12 @@ class UserRepository extends AbstractIdentityRepository
     protected function mapRowToEntity(array $row): EntityInterface
     {
         return new User(
+            id: UserId::fromRaw($row[self::FIELD_ID]),
             userName: UserName::fromRaw($row[self::FIELD_USER_NAME]),
             hashedPassword: HashedPassword::fromRaw($row[self::FIELD_HASHED_PASSWORD]),
-            id: UserId::fromRaw($row[self::FIELD_ID]),
+            isAdmin: IsAdmin::fromRaw($row[self::FIELD_IS_ADMIN] === 1),
+            email: Email::fromRaw($row[self::FIELD_EMAIL]),
+            publicKey: UserPublicKey::fromRaw($row[self::FIELD_RSA_PUBLIC_KEY]),
             createdAt: CreatedAt::fromRaw($row[self::FIELD_CREATED_AT]),
             updatedAt: UpdatedAt::fromRaw($row[self::FIELD_UPDATED_AT]),
         );

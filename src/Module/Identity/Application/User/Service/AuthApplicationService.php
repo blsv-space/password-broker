@@ -4,17 +4,15 @@ namespace App\Module\Identity\Application\User\Service;
 
 use App\Module\Identity\Application\User\Service\Exception\AuthInvalidPasswordException;
 use App\Module\Identity\Application\User\Service\Exception\AuthUserNotFoundException;
-use App\Module\Identity\Domain\RefreshToken\Entity\RefreshToken;
 use App\Module\Identity\Domain\RefreshToken\Service\Exception\RefreshTokenException;
 use App\Module\Identity\Domain\RefreshToken\ValueObject\Token;
-use App\Module\Identity\Domain\User\DTO\LoginResponseDTO;
+use App\Module\Identity\Domain\User\DTO\LoginResponseDto;
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\AuthDomainService;
 use App\Module\Identity\Domain\User\Service\UserDomainService;
 use App\Module\Identity\Domain\User\ValueObject\UserName;
 use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
 use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
-use DateMalformedIntervalStringException;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
 use Inquisition\Core\Infrastructure\Http\Router\RequestDispatcher;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
@@ -40,12 +38,12 @@ class AuthApplicationService
     /**
      * @param string $username
      * @param string $password
-     * @return LoginResponseDTO
+     * @return LoginResponseDto
      * @throws AuthInvalidPasswordException
      * @throws AuthUserNotFoundException
      * @throws PersistenceException
      */
-    public function login(string $username, string $password): LoginResponseDTO
+    public function login(string $username, string $password): LoginResponseDto
     {
         $userName = UserName::fromRaw($username);
         $user = $this->userDomainService->findUserByUsername($userName);
@@ -111,11 +109,11 @@ class AuthApplicationService
 
     /**
      * @param Token $token
-     * @return LoginResponseDTO
+     * @return LoginResponseDto
      * @throws PersistenceException
      * @throws RefreshTokenException
      */
-    public function refreshToken(Token $token): LoginResponseDTO
+    public function refreshToken(Token $token): LoginResponseDto
     {
         return $this->authDomainService->refreshToken($token);
     }

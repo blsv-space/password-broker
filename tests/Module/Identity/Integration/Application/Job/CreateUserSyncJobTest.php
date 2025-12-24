@@ -4,6 +4,7 @@ namespace Tests\Module\Identity\Integration\Application\Job;
 
 use App\Module\Identity\Application\User\Event\UserCreatedEvent;
 use App\Module\Identity\Application\User\Job\CreateUserSyncJob;
+use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use PDOException;
@@ -20,10 +21,16 @@ class CreateUserSyncJobTest extends IntegrationTestCase
      */
     public function testHandleCreatesAndSavesUser(): void
     {
+        $rsaKeyPair = RsaDomainService::getInstance()->generateKeyPair($this->faker->password());
+
         $payload = [
-            'id' => UserId::generate()->toRaw(),
-            'userName' => $this->faker->userName(),
-            'password' => $this->faker->password(),
+            CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
+            CreateUserSyncJob::PAYLOAD_KEY_USER_NAME => $this->faker->userName(),
+            CreateUserSyncJob::PAYLOAD_KEY_PASSWORD => $this->faker->password(),
+            CreateUserSyncJob::PAYLOAD_KEY_EMAIL => $this->faker->email(),
+            CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $this->faker->boolean(),
+            CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,
+            CreateUserSyncJob::PAYLOAD_KEY_RSA_PUBLIC_KEY => $rsaKeyPair->publicKey,
         ];
 
         $createUserSyncJob = new CreateUserSyncJob($payload);
@@ -40,10 +47,16 @@ class CreateUserSyncJobTest extends IntegrationTestCase
      */
     public function testHandleThrowsExceptionIfUserAlreadyExists(): void
     {
+        $rsaKeyPair = RsaDomainService::getInstance()->generateKeyPair($this->faker->password());
+
         $payload = [
-            'id' => UserId::generate()->toRaw(),
-            'userName' => $this->faker->userName(),
-            'password' => $this->faker->password(),
+            CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
+            CreateUserSyncJob::PAYLOAD_KEY_USER_NAME => $this->faker->userName(),
+            CreateUserSyncJob::PAYLOAD_KEY_PASSWORD => $this->faker->password(),
+            CreateUserSyncJob::PAYLOAD_KEY_EMAIL => $this->faker->email(),
+            CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $this->faker->boolean(),
+            CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,
+            CreateUserSyncJob::PAYLOAD_KEY_RSA_PUBLIC_KEY => $rsaKeyPair->publicKey,
         ];
         UserFixture::create([UserFixture::USER_NAME => $payload['userName']], true);
         $this->expectException(PDOException::class);
@@ -58,12 +71,17 @@ class CreateUserSyncJobTest extends IntegrationTestCase
      */
     public function testHandleCreatesAndSavesUserShouldDispatchEvent(): void
     {
-        $payload = [
-            'id' => UserId::generate()->toRaw(),
-            'userName' => $this->faker->userName(),
-            'password' => $this->faker->password(),
-        ];
+        $rsaKeyPair = RsaDomainService::getInstance()->generateKeyPair($this->faker->password());
 
+        $payload = [
+            CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
+            CreateUserSyncJob::PAYLOAD_KEY_USER_NAME => $this->faker->userName(),
+            CreateUserSyncJob::PAYLOAD_KEY_PASSWORD => $this->faker->password(),
+            CreateUserSyncJob::PAYLOAD_KEY_EMAIL => $this->faker->email(),
+            CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $this->faker->boolean(),
+            CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,
+            CreateUserSyncJob::PAYLOAD_KEY_RSA_PUBLIC_KEY => $rsaKeyPair->publicKey,
+        ];
         $testEventHandler = new TestEventHandler(
             eventNames: [UserCreatedEvent::class],
         );

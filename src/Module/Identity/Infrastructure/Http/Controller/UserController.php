@@ -23,6 +23,9 @@ final readonly class UserController extends AbstractRestController
     implements RestControllerInterface
 {
     public const string FIELD_PASSWORD = 'password';
+    public const string FIELD_MASTER_PASSWORD = 'masterPassword';
+    public const string FIELD_EMAIL = 'email';
+    public const string FIELD_IS_ADMIN = 'is_admin';
 
     private UserApplicationService $userApplicationService;
 
@@ -95,6 +98,9 @@ final readonly class UserController extends AbstractRestController
         UserApplicationService::getInstance()->createUserSync(
             userName: $request->getParameter(UserRepository::FIELD_USER_NAME),
             password: $request->getParameter(self::FIELD_PASSWORD),
+            email: $request->getParameter(self::FIELD_EMAIL),
+            masterPassword: $request->getParameter(self::FIELD_MASTER_PASSWORD),
+            isAdmin: $request->getParameter('isAdmin', '0') === '1',
         );
 
         return $this->jsonResponse([], HttpStatusCode::CREATED);

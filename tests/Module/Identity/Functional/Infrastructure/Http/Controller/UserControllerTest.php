@@ -159,6 +159,9 @@ class UserControllerTest extends FunctionalTestCase
             body: [
                 UserFixture::USER_NAME => $userForCreating->userName->toRaw(),
                 UserController::FIELD_PASSWORD => $this->faker->password(),
+                UserController::FIELD_MASTER_PASSWORD => $this->faker->password(),
+                UserController::FIELD_EMAIL => $this->faker->email(),
+                UserController::FIELD_IS_ADMIN => $this->faker->boolean(),
             ]
         );
 

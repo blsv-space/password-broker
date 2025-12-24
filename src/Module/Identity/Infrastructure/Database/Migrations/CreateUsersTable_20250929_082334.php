@@ -14,6 +14,9 @@ readonly class CreateUsersTable_20250929_082334 extends AbstractMigration
                 `id` VARCHAR(36) NOT NULL PRIMARY KEY,
                 `userName` varchar(255) NOT NULL UNIQUE,
                 `hashedPassword` varchar(255) NOT NULL,
+                `email` varchar(255) NOT NULL,
+                `isAdmin` tinyint(1) NOT NULL DEFAULT 0,
+                `publicKey` BLOB NOT NULL,
                 `createdAt` datatime NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updatedAt` datatime NOT NULL DEFAULT CURRENT_TIMESTAMP
             );    

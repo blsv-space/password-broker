@@ -18,5 +18,6 @@ $config->merge([
             'secret' => null,
             'algo' => JwtAlgoEnum::HS256->value,
         ],
+        'storage_key_path' => 'keys'
     ]
 ]);

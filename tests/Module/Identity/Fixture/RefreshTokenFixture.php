@@ -32,16 +32,16 @@ class RefreshTokenFixture extends AbstractFixture
     public static function create(array $attributes = [], bool $persist = false): RefreshToken
     {
         $refreshToken = new RefreshToken(
+            id: RefreshTokenId::fromRaw(static::generateId($attributes[self::ID] ?? RefreshTokenId::generate()->toRaw())),
             userId: UserId::fromRaw($attributes[self::USER_ID] ?? UserFixture::getId()),
             token: Token::fromRaw($attributes[self::TOKEN] ?? static::faker()->sha256()),
             expirationAt: ExpirationAt::fromRaw(
-                $attributes[self::EXPIRATION_AT]
+            $attributes[self::EXPIRATION_AT]
                 ?? static::faker()->dateTimeBetween('+1 hour', '+1 day')
                 ->format(DateTime::FORMAT)
             ),
             createdAt: CreatedAt::fromRaw($attributes[self::CREATED_AT]
                 ?? static::faker()->dateTime()->format(DateTime::FORMAT)),
-            id: RefreshTokenId::fromRaw(static::generateId($attributes[self::ID] ?? null)),
         );
 
         if ($persist) {

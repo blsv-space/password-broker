@@ -3,9 +3,12 @@
 namespace Tests\Module\Identity\Unit\Domain\User\Entity;
 
 use App\Module\Identity\Domain\User\Entity\User;
+use App\Module\Identity\Domain\User\ValueObject\Email;
 use App\Module\Identity\Domain\User\ValueObject\HashedPassword;
+use App\Module\Identity\Domain\User\ValueObject\IsAdmin;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\Identity\Domain\User\ValueObject\UserName;
+use App\Module\Identity\Domain\User\ValueObject\UserPublicKey;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\DateTime;
 use App\Shared\Domain\ValueObject\UpdatedAt;
@@ -23,9 +26,12 @@ final class UserTest extends UnitTestCase
         $updateAt = $this->faker->dateTime();
 
         $user = new User(
+            id: UserId::fromRaw($id),
             userName: UserName::fromRaw($name),
             hashedPassword: HashedPassword::fromRaw($password),
-            id: UserId::fromRaw($id),
+            isAdmin: IsAdmin::fromRaw($this->faker->boolean()),
+            email: Email::fromRaw($this->faker->email()),
+            publicKey: UserPublicKey::fromRaw($this->faker->sha256()),
             createdAt: CreatedAt::fromDateTime($createdAt),
             updatedAt: UpdatedAt::fromDateTime($updateAt),
         );

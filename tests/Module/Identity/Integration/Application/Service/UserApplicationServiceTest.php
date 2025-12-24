@@ -23,6 +23,9 @@ class UserApplicationServiceTest extends IntegrationTestCase
         UserApplicationService::getInstance()->createUserSync(
             userName: $user->userName->toRaw(),
             password: $user->hashedPassword->toRaw(),
+            email: $user->email->toRaw(),
+            masterPassword: $this->faker->password(),
+            isAdmin: $user->isAdmin->toRaw(),
         );
 
         $this->assertDatabaseHas(

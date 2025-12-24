@@ -12,12 +12,11 @@ use Inquisition\Core\Infrastructure\Persistence\DatabaseConnections;
 use Inquisition\Core\Infrastructure\Persistence\DatabaseManagerFactory;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Foundation\Config\Config;
-use Inquisition\Foundation\Singleton\SingletonRegistry;
+use Inquisition\Foundation\Storage\StorageRegistry;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use ReflectionProperty;
 use RuntimeException;
-use Tests\Shared\Mock\ReplicatorMock;
 
 abstract class AbstractTestCase extends TestCase
 {
@@ -39,20 +38,6 @@ abstract class AbstractTestCase extends TestCase
         parent::setUp();
 
         $this->faker = Factory::create();
-        $this->loadMocks();
-    }
-
-    /**
-     * @return void
-     */
-    protected function loadMocks(): void
-    {
-        SingletonRegistry::getInstance()
-            ->resetAll(
-                exclusions: TEST_UNTOUCHABLE_SINGLETONS,
-            );
-
-        ReplicatorMock::getInstance();
     }
 
     /**
@@ -165,4 +150,14 @@ abstract class AbstractTestCase extends TestCase
         new ReflectionProperty($authApplicationService, 'authUser')->setValue($authApplicationService, $user);
     }
 
+
+
+    /**
+     * @return void
+     */
+    public function cleanUpStorage(): void
+    {
+        $storage = StorageRegistry::getInstance()->storage('local');
+        $storage->deleteDirectoryByPath('');
+    }
 }

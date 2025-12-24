@@ -2,7 +2,7 @@
 
 namespace Tests\Shared;
 
-use App\Shared\Infrastructure\Security\UuidGenerator;
+use App\Module\Identity\Domain\User\ValueObject\UserId;
 use Faker\Factory;
 use Faker\Generator;
 use Inquisition\Core\Domain\Entity\BaseEntity;
@@ -10,25 +10,35 @@ use Inquisition\Core\Infrastructure\Persistence\DatabaseConnections;
 use Inquisition\Core\Infrastructure\Persistence\DatabaseManagerFactory;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use InvalidArgumentException;
-use Random\RandomException;
 use RuntimeException;
 
 abstract class AbstractFixture
 {
 
-    protected const int MIN_ID = 1_000_000;
-    protected const int MAX_ID = 1_000_000_000;
-
     protected static ?Generator $faker = null;
     /**
-     * @var int[]
+     * @var string[]
      */
     protected static array $idPool = [];
 
+    /**
+     * @param array $attributes
+     * @param bool $persist
+     * @return mixed
+     */
     public static abstract function create(array $attributes = [], bool $persist = false);
 
-    public static abstract function createMany(int $count, array $attributes = [], bool $persist = true);
+    /**
+     * @param int $count
+     * @param array $attributes
+     * @param bool $persist
+     * @return array
+     */
+    public static abstract function createMany(int $count, array $attributes = [], bool $persist = true): array;
 
+    /**
+     * @return string
+     */
     public static function getTableName(): string
     {
         throw new RuntimeException('Method getTableName not implemented in ' . static::class);
@@ -47,17 +57,21 @@ abstract class AbstractFixture
     }
 
     /**
-     * @param string|null $uuid
+     * @param string|null $id
      * @return string
      */
-    protected static function generateId(?string $uuid = null): string
+    protected static function generateId(?string $id = null): string
     {
-        if (is_null($uuid)) {
-            $uuid = static::getUuid();
-        }
-        self::$idPool[] = $uuid;
+        if ($id !== null) {
+            self::$idPool[] = $id;
 
-        return $uuid;
+            return $id;
+        }
+
+        $id = UserId::generate()->toRaw();
+        self::$idPool[] = $id;
+
+        return $id;
     }
 
     /**
@@ -94,14 +108,6 @@ abstract class AbstractFixture
         }
 
         return self::$idPool[array_rand(self::$idPool)];
-    }
-
-    /**
-     * @return string
-     */
-    public static function getUuid(): string
-    {
-        return new UuidGenerator()->generate();
     }
 
     /**

@@ -5,7 +5,8 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use Inquisition\Foundation\Config\Config;
 use Inquisition\Foundation\Kernel;
-use Inquisition\Foundation\Singleton\SingletonRegistry;
+use Inquisition\Foundation\Storage\StorageRegistry;
+use Tests\Shared\MockeryTestHelper;
 
 $kernel = Kernel::getInstance();
 $kernel->projectRoot = dirname(__DIR__);
@@ -21,6 +22,11 @@ if (file_exists($envFile)) {
 }
 
 $config->loadFromEnvironment(prefix: 'APP_');
+
+$storage = StorageRegistry::getInstance()->storage('local');
+
+$storage->deleteDirectoryByPath('');
+
 require_once $kernel->projectRoot . '/config/routing.php';
 
-define('TEST_UNTOUCHABLE_SINGLETONS', array_keys(SingletonRegistry::getInstance()->getRegisteredSingletons()));
+MockeryTestHelper::init();

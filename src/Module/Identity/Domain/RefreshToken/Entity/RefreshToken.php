@@ -13,23 +13,23 @@ use Inquisition\Core\Domain\ValueObject\ValueObjectInterface;
 class RefreshToken extends BaseEntityWithId
 {
     public function __construct(
-        public UserId          $userId,
-        public Token           $token,
-        public ExpirationAt    $expirationAt,
-        public CreatedAt       $createdAt,
-        public ?RefreshTokenId $id = null {
+        public RefreshTokenId $id {
             get {
                 return $this->id;
             }
         },
+        public UserId          $userId,
+        public Token           $token,
+        public ExpirationAt    $expirationAt,
+        public CreatedAt       $createdAt,
     )
     {
     }
 
     /**
-     * @return RefreshTokenId|null
+     * @return RefreshTokenId
      */
-    public function getId(): ?ValueObjectInterface
+    public function getId(): ValueObjectInterface
     {
         return $this->id;
     }

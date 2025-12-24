@@ -36,7 +36,7 @@ class Id extends AbstractValueObject
     public static function validate(mixed $data): void
     {
         if (!is_string($data)) {
-            throw new InvalidArgumentException('Invalid data type');
+            throw new InvalidArgumentException('Invalid data type expected string, got ' . gettype($data));
         }
 
         if (!new UuidGenerator()->isValid($data)) {

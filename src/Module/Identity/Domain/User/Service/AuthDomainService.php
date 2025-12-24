@@ -2,12 +2,11 @@
 
 namespace App\Module\Identity\Domain\User\Service;
 
-use App\Module\Identity\Domain\RefreshToken\Entity\RefreshToken;
 use App\Module\Identity\Domain\RefreshToken\Service\Exception\RefreshTokenException;
 use App\Module\Identity\Domain\RefreshToken\Service\RefreshTokenService;
 use App\Module\Identity\Domain\RefreshToken\ValueObject\Token;
-use App\Module\Identity\Domain\User\DTO\JwtTokenPayloadDTO;
-use App\Module\Identity\Domain\User\DTO\LoginResponseDTO;
+use App\Module\Identity\Domain\User\DTO\JwtTokenPayloadDto;
+use App\Module\Identity\Domain\User\DTO\LoginResponseDto;
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\Identity\Infrastructure\Security\PasswordHasher;
@@ -16,7 +15,6 @@ use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use App\Shared\Infrastructure\Security\JwtAlgoEnum;
 use App\Shared\Infrastructure\Security\JwtTokenGenerator;
 use DateInterval;
-use DateMalformedIntervalStringException;
 use Exception;
 use Inquisition\Core\Domain\Service\DomainServiceInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
@@ -86,12 +84,12 @@ final class AuthDomainService
 
     /**
      * @param User $user
-     * @return LoginResponseDTO
+     * @return LoginResponseDto
      * @throws PersistenceException
      */
-    public function login(User $user): LoginResponseDTO
+    public function login(User $user): LoginResponseDto
     {
-        $jwtTokenPayload = new JwtTokenPayloadDTO(
+        $jwtTokenPayload = new JwtTokenPayloadDto(
             userId: $user->id,
         );
 
@@ -117,7 +115,7 @@ final class AuthDomainService
             expiresIn: $refreshTtl,
         );
 
-        return new LoginResponseDTO(
+        return new LoginResponseDto(
             jwtToken: $jwtToken,
             refreshToken: $refreshToken->token->toRaw(),
         );
@@ -135,11 +133,11 @@ final class AuthDomainService
 
     /**
      * @param Token $token
-     * @return LoginResponseDTO
+     * @return LoginResponseDto
      * @throws PersistenceException
      * @throws RefreshTokenException
      */
-    public function refreshToken(Token $token): LoginResponseDTO
+    public function refreshToken(Token $token): LoginResponseDto
     {
         $refreshToken = $this->refreshTokenService->findByToken($token, true);
 

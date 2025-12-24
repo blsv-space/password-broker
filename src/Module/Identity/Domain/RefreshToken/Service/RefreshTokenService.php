@@ -50,11 +50,11 @@ final class RefreshTokenService
         $token = $this->opaqueTokenGenerator->generate();
         $expiresAt = DateTimeImmutable::createFromMutable(new DateTime()->add($expiresIn));
         $refreshToken = new RefreshToken(
+            id: RefreshTokenId::generate(),
             userId: $userId,
             token: Token::fromRaw($token),
             expirationAt: ExpirationAt::fromDateTime($expiresAt),
             createdAt: CreatedAt::now(),
-            id: RefreshTokenId::generate(),
         );
 
         $this->refreshTokenRepository->insert($refreshToken);

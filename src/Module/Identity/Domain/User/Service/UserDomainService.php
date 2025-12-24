@@ -4,9 +4,12 @@ namespace App\Module\Identity\Domain\User\Service;
 
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Repository\UserRepositoryInterface;
+use App\Module\Identity\Domain\User\ValueObject\Email;
 use App\Module\Identity\Domain\User\ValueObject\HashedPassword;
+use App\Module\Identity\Domain\User\ValueObject\IsAdmin;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\Identity\Domain\User\ValueObject\UserName;
+use App\Module\Identity\Domain\User\ValueObject\UserPublicKey;
 use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\Id;
@@ -92,9 +95,12 @@ final class UserDomainService
         $updateAt = isset($array['updatedAt']) ? UpdatedAt::fromRaw($array['updatedAt']) : null;
 
         return new User(
+            id: UserId::fromRaw($array['id']),
             userName: UserName::fromRaw($array['userName']),
             hashedPassword: HashedPassword::fromRaw($array['hashedPassword']),
-            id: !empty($array['id']) ? UserId::fromRaw($array['id']) : null,
+            isAdmin: IsAdmin::fromRaw($array['isAdmin']),
+            email: Email::fromRaw($array['email']),
+            publicKey: UserPublicKey::fromRaw($array['publicKey']),
             createdAt: $createdAt,
             updatedAt: $updateAt,
         );
