@@ -11,7 +11,7 @@ use Inquisition\Foundation\Config\Config;
 use Inquisition\Foundation\Singleton\SingletonTrait;
 use Inquisition\Foundation\Storage\StorageRegistry;
 use phpseclib3\Crypt\Common\PrivateKey as PrivateKeyCommon;
-use phpseclib3\Crypt\Common\PublicKey as PublicKeyAliasCommon;
+use phpseclib3\Crypt\Common\PublicKey as PublicKeyCommon;
 use phpseclib3\Crypt\PublicKeyLoader;
 use phpseclib3\Crypt\RSA;
 use phpseclib3\Crypt\RSA\PrivateKey;
@@ -43,7 +43,7 @@ class RsaDomainService
         $privateKey = $privateKey->withPassword($masterPassword);
         $publicKey = $privateKey->getPublicKey();
 
-        return new RsaKeyPair($privateKey, $publicKey);
+        return new RsaKeyPair(privateKey: (string)$privateKey, publicKey: $publicKey);
     }
 
     /**
@@ -101,21 +101,41 @@ class RsaDomainService
 
     /**
      * @param UserId $userId
-     * @param string $master_password
+     * @param string $masterPassword
      * @return PrivateKeyCommon
      * @throws RsaDomainServiceException
      */
-    public function getUserPrivateKey(UserId $userId, string $master_password): PrivateKeyCommon
+    public function getUserPrivateKey(UserId $userId, string $masterPassword): PrivateKeyCommon
     {
-        return PublicKeyLoader::loadPrivateKey($this->getUserPrivateKeyString($userId), $master_password);
+        return PublicKeyLoader::loadPrivateKey($this->getUserPrivateKeyString($userId), $masterPassword);
+    }
+
+    /**
+     * @param string $privateKey
+     * @param string $masterPassword
+     * @return PrivateKeyCommon
+     */
+    public function getPrivateKeyFromString(string $privateKey, string $masterPassword): PrivateKeyCommon
+    {
+        return PublicKeyLoader::loadPrivateKey($privateKey, $masterPassword);
     }
 
     /**
      * @param User $user
-     * @return PublicKeyAliasCommon
+     * @return PublicKeyCommon
      */
-    public function getUserPublicKey(User $user): PublicKeyAliasCommon
+    public function getUserPublicKey(User $user): PublicKeyCommon
     {
         return PublicKeyLoader::loadPublicKey($user->publicKey->toRaw());
+    }
+
+    /**
+     * @param string $publicKey
+     * @return PublicKeyCommon
+     */
+    public function getPublicKeyFromString(string $publicKey): PublicKeyCommon
+    {
+        return PublicKeyLoader::loadPublicKey($publicKey);
+
     }
 }

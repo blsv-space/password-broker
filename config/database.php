@@ -11,6 +11,8 @@ $config->merge([
         'migration' => [
             'paths' => [
                 'Identity' => 'src/Module/Identity/Infrastructure/Database/Migrations',
+                'PasswordBroker' => 'src/Module/PasswordBroker/Infrastructure/Database/Migrations',
+//                'System' => 'src/Module/System/Infrastructure/Database/Migrations',
             ],
         ],
         'connections' => [
