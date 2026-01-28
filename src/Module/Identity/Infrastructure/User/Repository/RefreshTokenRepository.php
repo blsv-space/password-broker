@@ -52,11 +52,11 @@ class RefreshTokenRepository extends AbstractIdentityRepository
     protected function mapRowToEntity(array $row): EntityInterface
     {
         return new RefreshToken(
+            id: RefreshTokenId::fromRaw($row[self::FIELD_ID]),
             userId: UserId::fromRaw($row[self::FIELD_USER_ID]),
             token: Token::fromRaw($row[self::FIELD_TOKEN]),
             expirationAt: ExpirationAt::fromRaw($row[self::FIELD_EXPIRATION_AT]),
             createdAt: CreatedAt::fromRaw($row[self::FIELD_CREATED_AT]),
-            id: RefreshTokenId::fromRaw($row[self::FIELD_ID]),
         );
     }
 

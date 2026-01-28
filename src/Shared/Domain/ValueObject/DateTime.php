@@ -51,7 +51,7 @@ abstract class DateTime extends AbstractValueObject
      * @param DateTimeImmutable | DateTimeSystem $dateTime
      * @return $this
      */
-    public static  function fromDateTime(DateTimeImmutable | DateTimeSystem $dateTime): static
+    public static function fromDateTime(DateTimeImmutable | DateTimeSystem $dateTime): static
     {
         if ($dateTime instanceof DateTimeSystem) {
             return new static(DateTimeImmutable::createFromMutable($dateTime));

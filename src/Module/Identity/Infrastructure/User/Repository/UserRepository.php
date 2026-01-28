@@ -61,7 +61,7 @@ class UserRepository extends AbstractIdentityRepository
             email: Email::fromRaw($row[self::FIELD_EMAIL]),
             publicKey: UserPublicKey::fromRaw($row[self::FIELD_RSA_PUBLIC_KEY]),
             createdAt: CreatedAt::fromRaw($row[self::FIELD_CREATED_AT]),
-            updatedAt: UpdatedAt::fromRaw($row[self::FIELD_UPDATED_AT]),
+            updatedAt: !empty($row[self::FIELD_UPDATED_AT]) ? UpdatedAt::fromRaw($row[self::FIELD_UPDATED_AT]) : null,
         );
     }
 

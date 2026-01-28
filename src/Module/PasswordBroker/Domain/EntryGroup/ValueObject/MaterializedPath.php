@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Module\PasswordBroker\Domain\EntryGroup\ValueObject;
+
+use App\Shared\Domain\ValueObject\Id;
+use Inquisition\Core\Domain\ValueObject\AbstractValueObject;
+use InvalidArgumentException;
+
+class MaterializedPath extends AbstractValueObject
+{
+    public const string SEPARATOR = '.';
+
+    /**
+     * @inheritDoc
+     */
+    public function toRaw(): mixed
+    {
+        return $this->value;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function fromRaw(mixed $data): static
+    {
+        static::validate($data);
+        return new static($data);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function validate(mixed $data): void
+    {
+        $path = explode(self::SEPARATOR, $data);
+        foreach ($path as $part) {
+            try {
+                ID::validate($part);
+            } catch (InvalidArgumentException $_) {
+                throw new InvalidArgumentException('Invalid path format');
+            }
+        }
+    }
+}
