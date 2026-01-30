@@ -24,8 +24,8 @@ final readonly class UserController extends AbstractRestController
 {
     public const string FIELD_PASSWORD = 'password';
     public const string FIELD_MASTER_PASSWORD = 'masterPassword';
-    public const string FIELD_EMAIL = 'email';
-    public const string FIELD_IS_ADMIN = 'is_admin';
+    public const string FIELD_EMAIL = UserRepository::FIELD_EMAIL;
+    public const string FIELD_IS_ADMIN = UserRepository::FIELD_IS_ADMIN;
 
     private UserApplicationService $userApplicationService;
 

@@ -91,16 +91,20 @@ final class UserDomainService
      */
     public function mapArrayToEntity(array $array): User
     {
-        $createdAt = isset($array['createdAt']) ? CreatedAt::fromRaw($array['createdAt']) : null;
-        $updateAt = isset($array['updatedAt']) ? UpdatedAt::fromRaw($array['updatedAt']) : null;
+        $createdAt = isset($array[UserRepository::FIELD_CREATED_AT])
+            ? CreatedAt::fromRaw($array[UserRepository::FIELD_CREATED_AT])
+            : null;
+        $updateAt = isset($array[UserRepository::FIELD_UPDATED_AT])
+            ? UpdatedAt::fromRaw($array[UserRepository::FIELD_UPDATED_AT])
+            : null;
 
         return new User(
-            id: UserId::fromRaw($array['id']),
-            userName: UserName::fromRaw($array['userName']),
-            hashedPassword: HashedPassword::fromRaw($array['hashedPassword']),
-            isAdmin: IsAdmin::fromRaw($array['isAdmin']),
-            email: Email::fromRaw($array['email']),
-            publicKey: UserPublicKey::fromRaw($array['publicKey']),
+            id: UserId::fromRaw($array[UserRepository::FIELD_ID]),
+            userName: UserName::fromRaw($array[UserRepository::FIELD_USER_NAME]),
+            hashedPassword: HashedPassword::fromRaw($array[UserRepository::FIELD_HASHED_PASSWORD]),
+            isAdmin: IsAdmin::fromRaw($array[UserRepository::FIELD_IS_ADMIN]),
+            email: Email::fromRaw($array[UserRepository::FIELD_EMAIL]),
+            publicKey: UserPublicKey::fromRaw($array[UserRepository::FIELD_RSA_PUBLIC_KEY]),
             createdAt: $createdAt,
             updatedAt: $updateAt,
         );

@@ -8,16 +8,17 @@ use App\Module\Identity\Domain\User\Service\AuthDomainService;
 use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\Identity\Domain\User\Service\UserDomainService;
 use App\Module\Identity\Domain\User\Validator\PasswordValidator;
+use App\Module\Identity\Infrastructure\Http\Controller\UserController;
 use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
 use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 use InvalidArgumentException;
 use Throwable;
 
-class CreateUserSyncJob extends AbstractReplicableSyncJob
+final class CreateUserSyncJob extends AbstractReplicableSyncJob
 {
     const string PAYLOAD_KEY_ID = UserRepository::FIELD_ID;
-    const string PAYLOAD_KEY_PASSWORD = 'password';
+    const string PAYLOAD_KEY_PASSWORD = UserController::FIELD_PASSWORD;
     const string PAYLOAD_KEY_RSA_PRIVATE_KEY = 'rsaPrivateKey';
     const string PAYLOAD_KEY_RSA_PUBLIC_KEY = UserRepository::FIELD_RSA_PUBLIC_KEY;
     const string PAYLOAD_KEY_USER_NAME = UserRepository::FIELD_USER_NAME;
@@ -30,9 +31,10 @@ class CreateUserSyncJob extends AbstractReplicableSyncJob
      */
     public function handle(): User
     {
+        $this->validate();
+
         $userDomainService = UserDomainService::getInstance();
         $authApplicationService = AuthDomainService::getInstance();
-        $this->validate();
         $payload = $this->payload;
         $payload['hashedPassword'] = $authApplicationService->hashPassword($this->payload[self::PAYLOAD_KEY_PASSWORD]);
         unset($payload[self::PAYLOAD_KEY_PASSWORD]);

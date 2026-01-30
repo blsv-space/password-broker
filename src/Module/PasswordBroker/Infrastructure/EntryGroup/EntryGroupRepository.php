@@ -74,7 +74,7 @@ class EntryGroupRepository extends AbstractPasswordBrokerRepository
      * @return EntryGroupName|null
      * @throws PersistenceException
      */
-    public function findByEntryGroupName(EntryGroupName $entryGroupName): ?EntryGroup
+    public function findEntryGroupByName(EntryGroupName $entryGroupName): ?EntryGroup
     {
         return $this->findOneBy(
             [new QueryCriteria(
