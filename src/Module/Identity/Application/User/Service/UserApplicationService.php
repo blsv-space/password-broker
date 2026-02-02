@@ -93,7 +93,7 @@ final class UserApplicationService
      * @return User|null
      * @throws PersistenceException
      */
-    public function getUserByUud(string $uuid): ?User
+    public function getUserByUuid(string $uuid): ?User
     {
         return $this->userDomainService->findUserById(Id::fromRaw($uuid));
     }

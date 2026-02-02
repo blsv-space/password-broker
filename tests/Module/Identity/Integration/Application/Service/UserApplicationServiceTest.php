@@ -43,7 +43,7 @@ class UserApplicationServiceTest extends IntegrationTestCase
         $user = UserFixture::create(
             persist: true,
         );
-        $foundUser = UserApplicationService::getInstance()->getUserByUud($user->id->toRaw());
+        $foundUser = UserApplicationService::getInstance()->getUserByUuid($user->id->toRaw());
         $this->assertEquals($user->id->toRaw(), $foundUser->id->toRaw());
     }
 

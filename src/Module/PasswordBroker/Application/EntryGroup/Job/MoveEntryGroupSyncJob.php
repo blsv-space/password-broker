@@ -2,7 +2,7 @@
 
 namespace App\Module\PasswordBroker\Application\EntryGroup\Job;
 
-use App\Module\PasswordBroker\Application\EntryGroup\Event\EntryGroupCreatedEvent;
+use App\Module\PasswordBroker\Application\EntryGroup\Event\EntryGroupMovedEvent;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Service\EntryGroupDomainService;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
@@ -32,7 +32,7 @@ final class MoveEntryGroupSyncJob extends AbstractReplicableSyncJob
         if (is_null($entryGroup)) {
             throw new InvalidArgumentException('Entry Group not found');
         }
-        $entryGroups = $entryGroupDomainService->findAllChildren($entryGroup);
+        $allChildren = $entryGroupDomainService->findAllChildren($entryGroup);
         $entryGroupOldPath = $entryGroup->materializedPath;
         $parentEntryGroup = null;
         if (!is_null($this->payload[self::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID])) {
@@ -44,17 +44,17 @@ final class MoveEntryGroupSyncJob extends AbstractReplicableSyncJob
             }
         }
         $entryGroup->materializedPath = $entryGroupDomainService->makeMaterializedPath($entryGroup->id, $parentEntryGroup);
-
-
+        $entryGroupDomainService->getEntryGroupRepository()->beginTransaction();
         $entryGroupDomainService->save($entryGroup);
-        foreach ($entryGroups as $entryGroupChild) {
+        foreach ($allChildren as $entryGroupChild) {
             $entryGroupChild->materializedPath = MaterializedPath::fromRaw(
                 str_replace($entryGroupOldPath, $entryGroupChild->materializedPath->toRaw(), 1)
             );
             $entryGroupDomainService->save($entryGroupChild);
         }
+        $entryGroupDomainService->getEntryGroupRepository()->commit();
 
-        EventDispatcher::getInstance()->dispatch(new EntryGroupCreatedEvent($entryGroup));
+        EventDispatcher::getInstance()->dispatch(new EntryGroupMovedEvent($entryGroup));
 
         return $entryGroup;
     }

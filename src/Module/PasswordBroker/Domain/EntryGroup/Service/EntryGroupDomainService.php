@@ -2,6 +2,7 @@
 
 namespace App\Module\PasswordBroker\Domain\EntryGroup\Service;
 
+use App\Module\PasswordBroker\Domain\EntryGroup\DTO\EntryGroupTreeNode;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Repository\EntryGroupRepositoryInterface;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
@@ -15,6 +16,7 @@ use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryOperatorEnum;
 use Inquisition\Foundation\Singleton\SingletonTrait;
+use RuntimeException;
 
 final class EntryGroupDomainService
     implements DomainServiceInterface
@@ -38,10 +40,10 @@ final class EntryGroupDomainService
      * @throws PersistenceException
      */
     public function findBy(
-        array $criteria = [],
+        array  $criteria = [],
         ?array $orderBy = [],
-        ?int $limit = null,
-        ?int $offset = null
+        ?int   $limit = null,
+        ?int   $offset = null
     ): array
     {
         return $this->entryGroupRepository->findBy(
@@ -67,7 +69,7 @@ final class EntryGroupDomainService
      * @return int
      * @throws PersistenceException
      */
-    private function count(array $criteria = []): int
+    public function count(array $criteria = []): int
     {
         return $this->entryGroupRepository->count($criteria);
     }
@@ -151,10 +153,10 @@ final class EntryGroupDomainService
     public function findAllChildren(EntryGroup $entryGroup): array
     {
         return $this->findBy([
-            new QueryCriteria(
-                field: EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID,
-                value: $entryGroup->materializedPath->toRaw() . '%',
-                operator:  QueryOperatorEnum::LIKE)]
+                new QueryCriteria(
+                    field: EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID,
+                    value: $entryGroup->materializedPath->toRaw() . '%',
+                    operator: QueryOperatorEnum::LIKE)]
         );
     }
 
@@ -164,5 +166,43 @@ final class EntryGroupDomainService
     public function getEntryGroupRepository(): EntryGroupRepositoryInterface
     {
         return $this->entryGroupRepository;
+    }
+
+    /**
+     * Returns all EntryGroups as a tree.
+     *
+     * @return EntryGroupTreeNode[]
+     * @throws PersistenceException
+     */
+    public function getEntryGroupsAsTree(): array
+    {
+        /**
+         * @var EntryGroupTreeNode[] $trees
+         */
+        $trees = [];
+        /**
+         * @var EntryGroupTreeNode[] $entryGroupTreeNodes
+         */
+        $entryGroupTreeNodes = [];
+        $entryGroups = $this->findBy(
+            orderBy: [EntryGroupRepository::FIELD_MATERIALIZED_PATH],
+        );
+        foreach ($entryGroups as $entryGroup) {
+            $entryGroupTreeNode = new EntryGroupTreeNode(
+                entryGroup: $entryGroup,
+            );
+            $entryGroupTreeNodes[$entryGroup->id->value] = $entryGroupTreeNode;
+            if ($entryGroup->parentEntryGroupId === null) {
+                $trees[$entryGroup->id->value] = $entryGroupTreeNode;
+                continue;
+            }
+            if (!array_key_exists($entryGroup->parentEntryGroupId->value, $entryGroupTreeNodes)) {
+                throw new RuntimeException('EntryGroup Tree is not valid.');
+            }
+
+            $entryGroupTreeNodes[$entryGroup->parentEntryGroupId->value]->children[] = $entryGroupTreeNode;
+        }
+
+        return $trees;
     }
 }

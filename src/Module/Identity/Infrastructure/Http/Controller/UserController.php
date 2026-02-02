@@ -118,7 +118,7 @@ final readonly class UserController extends AbstractRestController
 
         return $this->jsonResponse(
             $this->normalizeData(
-                data: $this->userApplicationService->getUserByUud($parameters['id']),
+                data: $this->userApplicationService->getUserByUuid($parameters['id']),
                 entityResponseClassName: UserResponse::class,
             )
         );
