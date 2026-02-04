@@ -2,6 +2,8 @@
 
 namespace App\Module\PasswordBroker\Application\EntryGroup\Service;
 
+use App\Module\Identity\Application\User\Service\AuthApplicationService;
+use App\Module\Identity\Application\User\Service\Exception\AuthException;
 use App\Module\PasswordBroker\Application\EntryGroup\Job\CreateEntryGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroup\Job\DeleteEntryGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroup\Job\MoveEntryGroupSyncJob;
@@ -9,8 +11,6 @@ use App\Module\PasswordBroker\Application\EntryGroup\Job\RenameEntryGroupSyncJob
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Service\EntryGroupDomainService;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
-use Inquisition\Core\Application\Job\Exception\JobFailedException;
-use Inquisition\Core\Application\Job\Exception\JobRetryableException;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
@@ -46,6 +46,26 @@ class EntryGroupApplicationService
             CreateEntryGroupSyncJob::PAYLOAD_KEY_NAME => $name,
             CreateEntryGroupSyncJob::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID => $parentEntryGroup?->id->toRaw() ?? null,
         ])->execute();
+    }
+
+    /**
+     * @param string $name
+     * @param string|null $parentEntryGroupId
+     * @return EntryGroup
+     * @throws PersistenceException
+     * @throws Throwable
+     */
+    public function createEntryGroupFromPrimitivesSync(
+        string $name,
+        ?string $parentEntryGroupId = null,
+    ): EntryGroup
+    {
+        return $this->createEntryGroupSync(
+            name: $name,
+            parentEntryGroup: $parentEntryGroupId
+                ? $this->getEntryGroupByUuid($parentEntryGroupId)
+                : null,
+        );
     }
 
     /**
@@ -133,10 +153,17 @@ class EntryGroupApplicationService
 
     /**
      * @return array
+     * @throws AuthException
      * @throws PersistenceException
      */
     public function getEntryGroupsAsTree(): array
     {
-        return $this->entryGroupDomainService->getEntryGroupsAsTree();
+        try {
+            $user = AuthApplicationService::getInstance()->authUser();
+        } catch (Throwable $exception) {
+            throw new AuthException('User not authenticated', 0, $exception);
+        }
+
+        return $this->entryGroupDomainService->getEntryGroupsAsTree($user);
     }
 }

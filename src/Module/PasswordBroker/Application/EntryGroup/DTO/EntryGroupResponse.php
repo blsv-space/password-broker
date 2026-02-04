@@ -38,7 +38,7 @@ class EntryGroupResponse implements EntityResponseInterface
         return [
           EntryGroupRepository::FIELD_ID => $this->entryGroup->id?->value ?? null,
           EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID => $this->entryGroup->parentEntryGroupId?->value ?? null,
-          EntryGroupRepository::FIELD_NAME => $this->entryGroup->entryGroupName->toRaw(),
+          EntryGroupRepository::FIELD_NAME => $this->entryGroup->name->toRaw(),
           EntryGroupRepository::FIELD_MATERIALIZED_PATH => $this->entryGroup->materializedPath->toRaw(),
           EntryGroupRepository::FIELD_CREATED_AT => $this->entryGroup?->createdAt->toRaw() ?? null,
           EntryGroupRepository::FIELD_UPDATED_AT => $this->entryGroup?->updatedAt->toRaw() ?? null,

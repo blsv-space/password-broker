@@ -16,17 +16,17 @@ class EntryGroup extends BaseEntityWithId
     implements EntityInterface
 {
     public function __construct(
-        public EntryGroupId $id {
+        public EntryGroupId     $id {
             get {
                 return $this->id;
             }
         },
-        public EntryGroupId $parentEntryGroupId,
-        public EntryGroupName $entryGroupName,
+        public EntryGroupName   $name,
         public MaterializedPath $materializedPath,
-        public ?CreatedAt $createdAt,
-        public ?UpdatedAt $updatedAt,
-        public ?DeletedAt $deletedAt,
+        public ?EntryGroupId    $parentEntryGroupId,
+        public ?CreatedAt       $createdAt,
+        public ?UpdatedAt       $updatedAt,
+        public ?DeletedAt       $deletedAt,
     )
     {}
 

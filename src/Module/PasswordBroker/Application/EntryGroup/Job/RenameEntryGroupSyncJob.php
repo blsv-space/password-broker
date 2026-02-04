@@ -32,7 +32,7 @@ final class RenameEntryGroupSyncJob extends AbstractReplicableSyncJob
         if (is_null($entryGroup)) {
             throw new InvalidArgumentException('Entry Group not found');
         }
-        $entryGroup->entryGroupName = EntryGroupName::fromRaw($this->payload[self::PAYLOAD_KEY_NAME]);
+        $entryGroup->name = EntryGroupName::fromRaw($this->payload[self::PAYLOAD_KEY_NAME]);
         $entryGroupDomainService->save($entryGroup);
 
         EventDispatcher::getInstance()->dispatch(new EntryGroupRenamedEvent($entryGroup));

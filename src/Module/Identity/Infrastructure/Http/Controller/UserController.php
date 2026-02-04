@@ -93,7 +93,7 @@ final readonly class UserController extends AbstractRestController
                 new NotEmptyRule(),
                 new MinLengthRule($passwordMinLength),
             ],
-        ]);
+        ])->validate($request);
 
         UserApplicationService::getInstance()->createUserSync(
             userName: $request->getParameter(UserRepository::FIELD_USER_NAME),

@@ -2,6 +2,7 @@
 
 namespace App\Module\PasswordBroker\Domain\EntryGroup\Service;
 
+use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\PasswordBroker\Domain\EntryGroup\DTO\EntryGroupTreeNode;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Repository\EntryGroupRepositoryInterface;
@@ -122,7 +123,7 @@ final class EntryGroupDomainService
         return new EntryGroup(
             id: EntryGroupId::fromRaw($array[EntryGroupRepository::FIELD_ID]),
             parentEntryGroupId: EntryGroupId::fromRaw($array[EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID]),
-            entryGroupName: EntryGroupName::fromRaw($array[EntryGroupRepository::FIELD_NAME]),
+            name: EntryGroupName::fromRaw($array[EntryGroupRepository::FIELD_NAME]),
             materializedPath: MaterializedPath::fromRaw($array[EntryGroupRepository::FIELD_MATERIALIZED_PATH]),
             createdAt: $createdAt,
             updatedAt: $updateAt,
@@ -170,11 +171,12 @@ final class EntryGroupDomainService
 
     /**
      * Returns all EntryGroups as a tree.
+     * @param User $user
      *
      * @return EntryGroupTreeNode[]
      * @throws PersistenceException
      */
-    public function getEntryGroupsAsTree(): array
+    public function getEntryGroupsAsTree(User $user): array
     {
         /**
          * @var EntryGroupTreeNode[] $trees

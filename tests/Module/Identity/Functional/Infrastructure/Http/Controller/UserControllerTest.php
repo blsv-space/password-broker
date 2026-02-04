@@ -20,6 +20,10 @@ class UserControllerTest extends FunctionalTestCase
 {
     private array $routePath;
 
+    /**
+     * @return void
+     * @throws PersistenceException
+     */
     public function setUp(): void
     {
         parent::setUp();

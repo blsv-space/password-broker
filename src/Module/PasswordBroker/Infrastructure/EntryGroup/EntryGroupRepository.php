@@ -51,9 +51,9 @@ class EntryGroupRepository extends AbstractPasswordBrokerRepository
     {
         return new EntryGroup(
             id: EntryGroupId::fromRaw($row[self::FIELD_ID]),
-            parentEntryGroupId: !empty($row[self::FIELD_PARENT_ENTRY_GROUP_ID]) ?EntryGroupId::fromRaw($row[self::FIELD_PARENT_ENTRY_GROUP_ID]) : null,
-            entryGroupName: $row[self::FIELD_NAME],
+            name: $row[self::FIELD_NAME],
             materializedPath: $row[self::FIELD_MATERIALIZED_PATH],
+            parentEntryGroupId: !empty($row[self::FIELD_PARENT_ENTRY_GROUP_ID]) ?EntryGroupId::fromRaw($row[self::FIELD_PARENT_ENTRY_GROUP_ID]) : null,
             createdAt: CreatedAt::fromRaw($row[self::FIELD_CREATED_AT]),
             updatedAt: !empty($row[self::FIELD_UPDATED_AT]) ? UpdatedAt::fromRaw($row[self::FIELD_UPDATED_AT]) : null,
             deletedAt: !empty($row[self::FIELD_DELETED_AT]) ? UpdatedAt::fromRaw($row[self::FIELD_DELETED_AT]) : null

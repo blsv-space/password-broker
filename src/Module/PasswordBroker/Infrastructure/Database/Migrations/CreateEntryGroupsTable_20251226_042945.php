@@ -32,7 +32,7 @@ final readonly class CreateEntryGroupsTable_20251226_042945 extends AbstractMigr
             CREATE TABLE `passwordBrokerEntryGroups` (
                 `id` VARCHAR(36) NOT NULL PRIMARY KEY,
                 `parentEntryGroupId` VARCHAR(36) DEFAULT NULL,
-                `materializedPath` TEXT NOT NULL,
+                `materializedPath` VARCHAR(1024) NOT NULL,
                 `name` VARCHAR(255) NOT NULL,
                 `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updatedAt` TIMESTAMP DEFAULT NULL,
@@ -42,6 +42,7 @@ final readonly class CreateEntryGroupsTable_20251226_042945 extends AbstractMigr
                     ON DELETE CASCADE
                     ON UPDATE CASCADE
             );
+            CREATE INDEX `idxMaterializedPath` ON `passwordBrokerEntryGroups` (`materializedPath`);
         ');
     }
 
