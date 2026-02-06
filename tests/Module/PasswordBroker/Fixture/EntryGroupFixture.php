@@ -33,13 +33,13 @@ class EntryGroupFixture extends AbstractFixture
      */
     public static function create(array $attributes = [], bool $persist = false): EntryGroup
     {
-        if ($attributes[self::PARENT_ENTRY_GROUP] && !isset($attributes[self::PARENT_ENTRY_GROUP_ID])) {
+        if (isset($attributes[self::PARENT_ENTRY_GROUP]) && !isset($attributes[self::PARENT_ENTRY_GROUP_ID])) {
             $attributes[self::PARENT_ENTRY_GROUP_ID] = $attributes[self::PARENT_ENTRY_GROUP]->getId()->value;
         }
 
         $entryGroupId = EntryGroupId::fromRaw(static::generateId($attributes[self::ID] ?? EntryGroupId::generate()->toRaw()));
         $entryGroupDomainService = EntryGroupDomainService::getInstance();
-        $materializedPath = $attributes[self::MATERIALIZED_PATH]
+        $materializedPath = !empty($attributes[self::MATERIALIZED_PATH])
             ? MaterializedPath::fromRaw($attributes[self::MATERIALIZED_PATH])
             : $entryGroupDomainService->makeMaterializedPath(
                 entryGroupId: $entryGroupId,
@@ -50,14 +50,14 @@ class EntryGroupFixture extends AbstractFixture
             id: $entryGroupId,
             name: EntryGroupName::fromRaw($attributes[self::NAME] ?? static::faker()->word()),
             materializedPath: $materializedPath,
-            parentEntryGroupId: $attributes[self::PARENT_ENTRY_GROUP_ID]
+            parentEntryGroupId: isset($attributes[self::PARENT_ENTRY_GROUP_ID])
                 ? EntryGroupId::fromRaw($attributes[self::PARENT_ENTRY_GROUP_ID])
                 : null,
             createdAt: CreatedAt::fromRaw($attributes[self::CREATED_AT]
                 ?? static::faker()->dateTime()->format(DateTime::FORMAT)),
             updatedAt: UpdatedAt::fromRaw($attributes[self::UPDATED_AT]
                 ?? static::faker()->dateTime()->format(DateTime::FORMAT)),
-            deletedAt: $attributes[self::DELETED_AT]
+            deletedAt: isset($attributes[self::DELETED_AT])
                 ? DateTime::fromRaw($attributes[self::DELETED_AT])
                 : null,
         );
