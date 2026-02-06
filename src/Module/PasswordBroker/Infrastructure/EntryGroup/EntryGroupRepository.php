@@ -6,6 +6,7 @@ use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Repository\EntryGroupRepositoryInterface;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupName;
+use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\MaterializedPath;
 use App\Module\PasswordBroker\Infrastructure\Repository\AbstractPasswordBrokerRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
@@ -51,9 +52,11 @@ class EntryGroupRepository extends AbstractPasswordBrokerRepository
     {
         return new EntryGroup(
             id: EntryGroupId::fromRaw($row[self::FIELD_ID]),
-            name: $row[self::FIELD_NAME],
-            materializedPath: $row[self::FIELD_MATERIALIZED_PATH],
-            parentEntryGroupId: !empty($row[self::FIELD_PARENT_ENTRY_GROUP_ID]) ?EntryGroupId::fromRaw($row[self::FIELD_PARENT_ENTRY_GROUP_ID]) : null,
+            name: EntryGroupName::fromRaw($row[self::FIELD_NAME]),
+            materializedPath: MaterializedPath::fromRaw($row[self::FIELD_MATERIALIZED_PATH]),
+            parentEntryGroupId: !empty($row[self::FIELD_PARENT_ENTRY_GROUP_ID])
+                ? EntryGroupId::fromRaw($row[self::FIELD_PARENT_ENTRY_GROUP_ID])
+                : null,
             createdAt: CreatedAt::fromRaw($row[self::FIELD_CREATED_AT]),
             updatedAt: !empty($row[self::FIELD_UPDATED_AT]) ? UpdatedAt::fromRaw($row[self::FIELD_UPDATED_AT]) : null,
             deletedAt: !empty($row[self::FIELD_DELETED_AT]) ? UpdatedAt::fromRaw($row[self::FIELD_DELETED_AT]) : null

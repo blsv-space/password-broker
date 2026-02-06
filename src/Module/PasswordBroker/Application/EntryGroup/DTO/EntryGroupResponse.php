@@ -36,13 +36,13 @@ class EntryGroupResponse implements EntityResponseInterface
     public function getAsArray(): array
     {
         return [
-          EntryGroupRepository::FIELD_ID => $this->entryGroup->id?->value ?? null,
-          EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID => $this->entryGroup->parentEntryGroupId?->value ?? null,
+          EntryGroupRepository::FIELD_ID => $this->entryGroup->id?->toRaw() ?? null,
+          EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID => $this->entryGroup->parentEntryGroupId?->toRaw() ?? null,
           EntryGroupRepository::FIELD_NAME => $this->entryGroup->name->toRaw(),
           EntryGroupRepository::FIELD_MATERIALIZED_PATH => $this->entryGroup->materializedPath->toRaw(),
-          EntryGroupRepository::FIELD_CREATED_AT => $this->entryGroup?->createdAt->toRaw() ?? null,
-          EntryGroupRepository::FIELD_UPDATED_AT => $this->entryGroup?->updatedAt->toRaw() ?? null,
-          EntryGroupRepository::FIELD_DELETED_AT => $this->entryGroup?->deletedAt->toRaw() ?? null,
+          EntryGroupRepository::FIELD_CREATED_AT => $this->entryGroup?->createdAt?->toRaw() ?? null,
+          EntryGroupRepository::FIELD_UPDATED_AT => $this->entryGroup?->updatedAt?->toRaw() ?? null,
+          EntryGroupRepository::FIELD_DELETED_AT => $this->entryGroup?->deletedAt?->toRaw() ?? null,
         ];
     }
 }

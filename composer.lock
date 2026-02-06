@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7304b8e2cfab0387f998fbee8b72c8b6",
+    "content-hash": "a2544d1c6264ca26d26f59637f973616",
     "packages": [
         {
             "name": "blsv-space/inquisition-php",
-            "version": "0.3.1",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/blsv-space/inquisition-php.git",
-                "reference": "789c12344eff24656354fb0bc2f97511d87e734d"
+                "reference": "0f087be9efc716d5df1f63bdf450e27596849d3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blsv-space/inquisition-php/zipball/789c12344eff24656354fb0bc2f97511d87e734d",
-                "reference": "789c12344eff24656354fb0bc2f97511d87e734d",
+                "url": "https://api.github.com/repos/blsv-space/inquisition-php/zipball/0f087be9efc716d5df1f63bdf450e27596849d3d",
+                "reference": "0f087be9efc716d5df1f63bdf450e27596849d3d",
                 "shasum": ""
             },
             "require": {
@@ -53,10 +53,10 @@
             ],
             "description": "description",
             "support": {
-                "source": "https://github.com/blsv-space/inquisition-php/tree/v0.3.1",
+                "source": "https://github.com/blsv-space/inquisition-php/tree/v0.3.2",
                 "issues": "https://github.com/blsv-space/inquisition-php/issues"
             },
-            "time": "2026-02-02T03:43:00+00:00"
+            "time": "2026-02-06T03:38:01+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",

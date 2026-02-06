@@ -14,6 +14,7 @@ use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
 use Inquisition\Core\Domain\Service\DomainServiceInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
+use Inquisition\Core\Infrastructure\Persistence\Repository\AbstractRepository;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryOperatorEnum;
 use Inquisition\Foundation\Singleton\SingletonTrait;
@@ -187,7 +188,7 @@ final class EntryGroupDomainService
          */
         $entryGroupTreeNodes = [];
         $entryGroups = $this->findBy(
-            orderBy: [EntryGroupRepository::FIELD_MATERIALIZED_PATH],
+            orderBy: [EntryGroupRepository::FIELD_MATERIALIZED_PATH => AbstractRepository::ORDER_ASC],
         );
         foreach ($entryGroups as $entryGroup) {
             $entryGroupTreeNode = new EntryGroupTreeNode(

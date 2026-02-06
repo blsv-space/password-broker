@@ -42,13 +42,16 @@ final readonly class EntryGroupController extends AbstractRestController
      */
     public function index(RequestInterface $request, array $parameters): ResponseInterface
     {
-        $tree = $this->entryGroupApplicationService->getEntryGroupsAsTree();
+        $trees = $this->entryGroupApplicationService->getEntryGroupsAsTree();
 
         return $this->jsonResponse(
-            $this->normalizeData(
-                data: $tree,
-                entityResponseClassName: EntryGroupTreeResponse::class,
-            )
+            data: [
+                EntryGroupTreeResponse::FIELD_TREES =>
+                    $this->normalizeData(
+                        data: $trees,
+                        entityResponseClassName: EntryGroupTreeResponse::class,
+                    )
+            ]
         );
     }
 

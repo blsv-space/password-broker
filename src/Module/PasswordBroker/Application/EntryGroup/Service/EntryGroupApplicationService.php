@@ -8,6 +8,7 @@ use App\Module\PasswordBroker\Application\EntryGroup\Job\CreateEntryGroupSyncJob
 use App\Module\PasswordBroker\Application\EntryGroup\Job\DeleteEntryGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroup\Job\MoveEntryGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroup\Job\RenameEntryGroupSyncJob;
+use App\Module\PasswordBroker\Domain\EntryGroup\DTO\EntryGroupTreeNode;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Service\EntryGroupDomainService;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
@@ -152,7 +153,7 @@ class EntryGroupApplicationService
     }
 
     /**
-     * @return array
+     * @return EntryGroupTreeNode[]
      * @throws AuthException
      * @throws PersistenceException
      */

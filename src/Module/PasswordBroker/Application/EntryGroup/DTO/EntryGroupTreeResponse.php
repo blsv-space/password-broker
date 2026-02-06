@@ -9,6 +9,8 @@ use InvalidArgumentException;
 
 class EntryGroupTreeResponse implements EntityResponseInterface
 {
+    public const string FIELD_TREES = 'trees';
+
     private EntryGroupTreeNode $entryGroupTreeNode;
 
     /**
@@ -33,12 +35,6 @@ class EntryGroupTreeResponse implements EntityResponseInterface
     public function getAsArray(): array
     {
 
-        return [
-            'entryGroup' => EntryGroupResponse::fromEntity($this->entryGroupTreeNode->entryGroup)->getAsArray(),
-            'children' => array_map(
-                fn(EntryGroupTreeNode $child) => EntryGroupTreeResponse::fromEntity($child)->getAsArray(),
-                $this->entryGroupTreeNode->children,
-            ),
-        ];
+        return $this->entryGroupTreeNode->getAsArray();
     }
 }
