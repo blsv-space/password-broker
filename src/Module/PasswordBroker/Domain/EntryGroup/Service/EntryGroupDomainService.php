@@ -123,9 +123,11 @@ final class EntryGroupDomainService
 
         return new EntryGroup(
             id: EntryGroupId::fromRaw($array[EntryGroupRepository::FIELD_ID]),
-            parentEntryGroupId: EntryGroupId::fromRaw($array[EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID]),
             name: EntryGroupName::fromRaw($array[EntryGroupRepository::FIELD_NAME]),
             materializedPath: MaterializedPath::fromRaw($array[EntryGroupRepository::FIELD_MATERIALIZED_PATH]),
+            parentEntryGroupId: !empty($array[EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID])
+                ? EntryGroupId::fromRaw($array[EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID])
+                : null,
             createdAt: $createdAt,
             updatedAt: $updateAt,
             deletedAt: $deletedAt,

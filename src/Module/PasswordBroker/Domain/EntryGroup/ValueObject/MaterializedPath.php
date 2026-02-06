@@ -32,12 +32,15 @@ class MaterializedPath extends AbstractValueObject
      */
     public static function validate(mixed $data): void
     {
+        if (empty($data)) {
+            return;
+        }
         $path = explode(self::SEPARATOR, $data);
         foreach ($path as $part) {
             try {
                 ID::validate($part);
             } catch (InvalidArgumentException $_) {
-                throw new InvalidArgumentException('Invalid path format');
+                throw new InvalidArgumentException('Invalid materialized path format');
             }
         }
     }

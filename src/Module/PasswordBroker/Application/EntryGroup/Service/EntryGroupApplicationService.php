@@ -61,6 +61,7 @@ class EntryGroupApplicationService
         ?string $parentEntryGroupId = null,
     ): EntryGroup
     {
+
         return $this->createEntryGroupSync(
             name: $name,
             parentEntryGroup: $parentEntryGroupId

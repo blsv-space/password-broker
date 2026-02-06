@@ -3,6 +3,7 @@
 namespace Tests\Module\PasswordBroker\Functional\Infrastructure\Http\Controller;
 
 use App\Module\PasswordBroker\Application\EntryGroup\DTO\EntryGroupTreeResponse;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
 use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryGroupRoute;
 use App\Module\PasswordBroker\Infrastructure\Http\Route\PasswordBrokerRoute;
 use App\Shared\Infrastructure\Http\Route\AppRoute;
@@ -69,5 +70,39 @@ class EntryGroupControllerTest extends FunctionalTestCase
         $treeResponse = $response[EntryGroupTreeResponse::FIELD_TREES];
         $this->assertArrayHasKey(array_key_first($tree), $treeResponse);
         $this->assertArrayHasKey(array_key_first($treeSecond), $treeResponse);
+    }
+
+    /**
+     * @return void
+     * @throws PersistenceException
+     * @throws ReflectionException
+     * @throws RouteNotFoundException
+     */
+    public function testItShouldCreateEntryGroup(): void
+    {
+        $userActor = UserFixture::create(persist: true);
+        $this->actAs($userActor);
+
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_STORE);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $entryGroupName = $this->faker->word();
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $route->path,
+            body: [
+                EntryGroupRepository::FIELD_NAME => $entryGroupName
+            ],
+        );
+
+        $this->assertEquals(HttpStatusCode::CREATED, $httpResponse->getStatusCode());
+
+        $this->assertDatabaseHas(EntryGroupFixture::getTableName(), [
+            EntryGroupFixture::NAME => $entryGroupName,
+        ]);
     }
 }
