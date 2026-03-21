@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Domain\User\Validator;
 
 use Inquisition\Core\Domain\Validator\AbstractValueObjectValidator;
@@ -7,10 +9,7 @@ use Inquisition\Foundation\Config\Config;
 
 class PasswordValidator extends AbstractValueObjectValidator
 {
-
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     protected function doValidate(mixed $data): void
     {
         if (!is_string($data)) {

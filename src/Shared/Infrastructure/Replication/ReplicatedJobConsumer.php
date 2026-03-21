@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shared\Infrastructure\Replication;
 
 use App\Shared\Application\Job\JobReplicationInterface;
@@ -31,16 +33,14 @@ class ReplicatedJobConsumer implements SingletonInterface
     }
 
     /**
-     * @param array $data
-     * @return void
      * @throws ReplicationConsumeValidationException
      */
     private function validate(array $data): void
     {
         foreach ([
-                     JobReplicatorInterface::FIELD_JOB_CLASS,
-                     JobReplicatorInterface::FIELD_PAYLOAD,
-                 ] as $field) {
+            JobReplicatorInterface::FIELD_JOB_CLASS,
+            JobReplicatorInterface::FIELD_PAYLOAD,
+        ] as $field) {
             if (!array_key_exists($field, $data)) {
                 throw new ReplicationConsumeValidationException('missing filed: ' . $field);
             }
@@ -48,19 +48,19 @@ class ReplicatedJobConsumer implements SingletonInterface
 
         if (!class_exists($data[JobReplicatorInterface::FIELD_JOB_CLASS])) {
             throw new ReplicationConsumeValidationException(
-                'Job Class: ' . $data[JobReplicatorInterface::FIELD_JOB_CLASS] . ' does not exists'
+                'Job Class: ' . $data[JobReplicatorInterface::FIELD_JOB_CLASS] . ' does not exists',
             );
         }
 
         if (!is_subclass_of($data[JobReplicatorInterface::FIELD_JOB_CLASS], JobInterface::class)) {
             throw new ReplicationConsumeValidationException(
-                'Job Class: ' . $data[JobReplicatorInterface::FIELD_JOB_CLASS] . ' is not a Job'
+                'Job Class: ' . $data[JobReplicatorInterface::FIELD_JOB_CLASS] . ' is not a Job',
             );
         }
 
         if (!is_array($data[JobReplicatorInterface::FIELD_PAYLOAD])) {
             throw new ReplicationConsumeValidationException(
-                JobReplicatorInterface::FIELD_PAYLOAD . ' is not an array'
+                JobReplicatorInterface::FIELD_PAYLOAD . ' is not an array',
             );
         }
     }

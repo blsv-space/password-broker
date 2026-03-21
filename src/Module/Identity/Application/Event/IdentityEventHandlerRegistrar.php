@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Application\Event;
 
 use App\Module\Identity\Application\User\EventHandler\UserCreatedEventHandler;
@@ -8,10 +10,7 @@ use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 
 class IdentityEventHandlerRegistrar implements EventHandlerRegistrarInterface
 {
-
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public static function register(): void
     {
         $eventDispatcher = EventDispatcher::getInstance();

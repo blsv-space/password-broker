@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Domain\User\ValueObject;
 
 use App\Module\Identity\Domain\User\Validator\PasswordValidator;
@@ -11,34 +13,25 @@ use Inquisition\Core\Domain\ValueObject\AbstractValueObject;
  */
 class HashedPassword extends AbstractValueObject
 {
-
-    /**
-     * @return string
-     */
+    #[\Override]
     public function toRaw(): string
     {
         return $this->value;
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public static function fromRaw(mixed $data): static
     {
         return new static($data);
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public static function validate(mixed $data): void
     {
         static::getValidator()->validate($data);
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     protected static function getValidator(): ValueObjectValidatorInterface
     {
         return new PasswordValidator();

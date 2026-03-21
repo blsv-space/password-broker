@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\PasswordBroker\Domain\EntryGroup\Entity;
 
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
@@ -12,8 +14,7 @@ use Inquisition\Core\Domain\Entity\BaseEntityWithId;
 use Inquisition\Core\Domain\Entity\EntityInterface;
 use Inquisition\Core\Domain\ValueObject\ValueObjectInterface;
 
-class EntryGroup extends BaseEntityWithId
-    implements EntityInterface
+class EntryGroup extends BaseEntityWithId implements EntityInterface
 {
     public function __construct(
         public EntryGroupId     $id {
@@ -33,6 +34,7 @@ class EntryGroup extends BaseEntityWithId
     /**
      * @return EntryGroupId|null
      */
+    #[\Override]
     public function getId(): ?ValueObjectInterface
     {
         return $this->id;

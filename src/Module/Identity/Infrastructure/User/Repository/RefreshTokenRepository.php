@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Infrastructure\User\Repository;
 
 use App\Module\Identity\Domain\RefreshToken\Entity\RefreshToken;
@@ -12,6 +14,7 @@ use App\Module\Identity\Infrastructure\Repository\AbstractIdentityRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use DateTimeImmutable;
 use Inquisition\Core\Domain\Entity\EntityInterface;
+use Inquisition\Core\Domain\ValueObject\ValueObjectInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryOperatorEnum;
@@ -19,12 +22,10 @@ use Inquisition\Foundation\Singleton\SingletonTrait;
 use InvalidArgumentException;
 
 /**
- * @method RefreshToken|null findOneBy(array $criteria, array $orderBy = null)
- * @method RefreshToken[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- * @method RefreshToken|null findById(EntityInterface $entity)
+ * @extends AbstractIdentityRepository<RefreshToken>
+ * @implements RefreshTokenRepositoryInterface<RefreshToken>
  */
-class RefreshTokenRepository extends AbstractIdentityRepository
-    implements RefreshTokenRepositoryInterface
+class RefreshTokenRepository extends AbstractIdentityRepository implements RefreshTokenRepositoryInterface
 {
     use SingletonTrait;
 
@@ -38,17 +39,18 @@ class RefreshTokenRepository extends AbstractIdentityRepository
     protected const string ENTITY_CLASS_NAME = RefreshToken::class;
 
 
-    private function __construct() {
+    private function __construct()
+    {
         parent::__construct();
     }
 
     /**
-     * @param array $row
      *
-     * @return RefreshToken
      *
      * @throws InvalidArgumentException
+     * @return RefreshToken
      */
+    #[\Override]
     protected function mapRowToEntity(array $row): EntityInterface
     {
         return new RefreshToken(
@@ -60,20 +62,16 @@ class RefreshTokenRepository extends AbstractIdentityRepository
         );
     }
 
-    /**
-     * @param EntityInterface $entity
-     * @return array
-     */
+    #[\Override]
     protected function mapEntityToRow(EntityInterface $entity): array
     {
         return $entity->getAsArray();
     }
 
     /**
-     * @param UserId $userId
-     * @return RefreshToken|null
      * @throws PersistenceException
      */
+    #[\Override]
     public function findByUserId(UserId $userId): ?RefreshToken
     {
         $now = new DateTimeImmutable()->format('Y-m-d H:i:s');
@@ -82,13 +80,14 @@ class RefreshTokenRepository extends AbstractIdentityRepository
             [
                 new QueryCriteria(field: self::FIELD_USER_ID, value: $userId->toRaw()),
                 new QueryCriteria(field: self::FIELD_EXPIRATION_AT, value: $now, operator: QueryOperatorEnum::GREATER_THAN),
-            ]);
+            ],
+        );
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      */
+    #[\Override]
     public function cleanExpiredTokens(): void
     {
         $now = new DateTimeImmutable()->format('Y-m-d H:i:s');
@@ -99,10 +98,10 @@ class RefreshTokenRepository extends AbstractIdentityRepository
     }
 
     /**
-     * @param RefreshToken $entity
-     * @return void
+     * @param  RefreshToken         $entity
      * @throws PersistenceException
      */
+    #[\Override]
     public function insert(EntityInterface $entity): void
     {
         parent::insert($entity);

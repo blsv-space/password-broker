@@ -1,31 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\PasswordBroker\Infrastructure\Database\Migrations;
 
 use Inquisition\Core\Infrastructure\Migration\AbstractMigration;
 
 final readonly class CreateEntryGroupsTable_20251226_042945 extends AbstractMigration
 {
-
-    /**
-     * @return string
-     */
+    #[\Override]
     public function getVersion(): string
     {
         return  '0.0.1';
     }
 
-    /**
-     * @return string
-     */
+    #[\Override]
     public function getDescription(): string
     {
         return 'Create entry groups table';
     }
 
-    /**
-     * @return void
-     */
+    #[\Override]
     public function up(): void
     {
         $this->query('
@@ -46,9 +41,7 @@ final readonly class CreateEntryGroupsTable_20251226_042945 extends AbstractMigr
         ');
     }
 
-    /**
-     * @return void
-     */
+    #[\Override]
     public function down(): void
     {
         $this->query('DROP TABLE IF EXISTS `passwordBrokerEntryGroups`;');

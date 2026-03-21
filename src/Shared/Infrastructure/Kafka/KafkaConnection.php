@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shared\Infrastructure\Kafka;
 
 use Inquisition\Foundation\Config\Config;
@@ -14,11 +16,10 @@ use RdKafka\TopicPartition;
 
 class KafkaConnection implements SingletonInterface
 {
+    use SingletonTrait;
     private const int READ_TOTAL_TIMEOUT_SEC = 5;
     private const int READ_TIMEOUT_MICRO_SEC = 300;
     private const int READ_MICRO_TIMEOUT_ATTEMPT = 3;
-
-    use SingletonTrait;
 
     private ?Producer $producer = null;
 
@@ -38,12 +39,6 @@ class KafkaConnection implements SingletonInterface
         $this->conf->set('metadata.broker.list', $brokers);
     }
 
-    /**
-     * @param string $topic
-     * @param string $message
-     * @param int $partition
-     * @return void
-     */
     public function publish(string $topic, string $message, int $partition = 0): void
     {
         $topic = $this->getProducerTopic($topic);
@@ -53,11 +48,6 @@ class KafkaConnection implements SingletonInterface
     }
 
     /**
-     * @param string $topic
-     * @param int $limit
-     * @param int $offset
-     * @param int $partition
-     * @return array
      * @throws RKafkaException
      */
     public function read(string $topic, int $limit, int $offset = 0, int $partition = 0): array
@@ -102,9 +92,6 @@ class KafkaConnection implements SingletonInterface
         return $messages;
     }
 
-    /**
-     * @return Producer
-     */
     private function getProducer(): Producer
     {
         if (is_null($this->producer)) {
@@ -114,19 +101,12 @@ class KafkaConnection implements SingletonInterface
         return $this->producer;
     }
 
-    /**
-     * @return KafkaConsumer
-     */
     private function getConsumer(): KafkaConsumer
     {
 
         return new KafkaConsumer($this->conf);
     }
 
-    /**
-     * @param $name
-     * @return ProducerTopic
-     */
     private function getProducerTopic($name): ProducerTopic
     {
         if (!array_key_exists($name, $this->producerTopics)) {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Identity\Functional\Infrastructure\Http\Controller;
 
 use App\Module\Identity\Infrastructure\Http\Controller\UserController;
@@ -21,9 +23,9 @@ class UserControllerTest extends FunctionalTestCase
     private array $routePath;
 
     /**
-     * @return void
      * @throws PersistenceException
      */
+    #[\Override]
     public function setUp(): void
     {
         parent::setUp();
@@ -37,12 +39,11 @@ class UserControllerTest extends FunctionalTestCase
 
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws RouteNotFoundException
      * @throws ReflectionException
      */
-    public function testItShouldListUsers(): void
+    public function test_it_should_list_users(): void
     {
         $userNumber = $this->faker->numberBetween(3, 10);
         $this->actAs(UserFixture::createMany($userNumber, persist: true)[0]);
@@ -80,12 +81,11 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
      */
-    public function testItShouldFoundUser(): void
+    public function test_it_should_found_user(): void
     {
         $userNameTarget = 'aaaaa';
         $userName_1 = 'bbbbb';
@@ -140,12 +140,11 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
      */
-    public function testItShouldCreateUser(): void
+    public function test_it_should_create_user(): void
     {
         $userActor = UserFixture::create(persist: true);
         $userForCreating = UserFixture::create();
@@ -166,7 +165,7 @@ class UserControllerTest extends FunctionalTestCase
                 UserController::FIELD_MASTER_PASSWORD => $this->faker->password(),
                 UserController::FIELD_EMAIL => $this->faker->email(),
                 UserController::FIELD_IS_ADMIN => $this->faker->boolean(),
-            ]
+            ],
         );
 
         $this->assertEquals(HttpStatusCode::CREATED, $httpResponse->getStatusCode());
@@ -177,12 +176,11 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
      */
-    public function testItShouldShowUser(): void
+    public function test_it_should_show_user(): void
     {
         $user = UserFixture::create(persist: true);
         $this->actAs($user);
@@ -211,12 +209,11 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
      */
-    public function testItShouldNotShowUserHashedPassword(): void
+    public function test_it_should_not_show_user_hashed_password(): void
     {
         $user = UserFixture::create(persist: true);
         $this->actAs($user);
@@ -245,12 +242,11 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
      */
-    public function testItShouldUpdateUser(): void
+    public function test_it_should_update_user(): void
     {
         $user = UserFixture::create(persist: true);
         $this->actAs($user);
@@ -272,7 +268,7 @@ class UserControllerTest extends FunctionalTestCase
             uri: $uri,
             body: [
                 UserFixture::USER_NAME => $newUserName,
-            ]
+            ],
         );
 
         $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
@@ -286,12 +282,11 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
      */
-    public function testItShouldDeleteUser(): void
+    public function test_it_should_delete_user(): void
     {
         $user = UserFixture::create(persist: true);
         $this->actAs($user);

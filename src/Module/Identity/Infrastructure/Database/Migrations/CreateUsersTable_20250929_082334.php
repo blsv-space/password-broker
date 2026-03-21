@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Infrastructure\Database\Migrations;
 
 use Inquisition\Core\Infrastructure\Migration\AbstractMigration;
 
 readonly class CreateUsersTable_20250929_082334 extends AbstractMigration
 {
-
+    #[\Override]
     public function up(): void
     {
         $this->query('
@@ -22,16 +24,19 @@ readonly class CreateUsersTable_20250929_082334 extends AbstractMigration
             );    
         ');
     }
+    #[\Override]
     public function down(): void
     {
         $this->query('DROP TABLE IF EXISTS `identity_users`;');
     }
 
+    #[\Override]
     public function getVersion(): string
     {
         return '0.0.1';
     }
 
+    #[\Override]
     public function getDescription(): string
     {
         return 'Creating users table';

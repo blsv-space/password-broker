@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Application\User\Job;
 
 use App\Module\Identity\Application\User\Event\UserCreatedEvent;
+use App\Module\Identity\Application\User\Service\UserApplicationService;
 use App\Module\Identity\Domain\User\Entity\User;
-use App\Module\Identity\Domain\User\Service\AuthDomainService;
 use App\Module\Identity\Domain\User\Service\RsaDomainService;
-use App\Module\Identity\Domain\User\Service\UserDomainService;
 use App\Module\Identity\Domain\User\Validator\PasswordValidator;
 use App\Module\Identity\Infrastructure\Http\Controller\UserController;
+use App\Module\Identity\Infrastructure\Security\PasswordHasher;
 use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
 use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
@@ -17,40 +19,37 @@ use Throwable;
 
 final class CreateUserSyncJob extends AbstractReplicableSyncJob
 {
-    const string PAYLOAD_KEY_ID = UserRepository::FIELD_ID;
-    const string PAYLOAD_KEY_PASSWORD = UserController::FIELD_PASSWORD;
-    const string PAYLOAD_KEY_RSA_PRIVATE_KEY = 'rsaPrivateKey';
-    const string PAYLOAD_KEY_RSA_PUBLIC_KEY = UserRepository::FIELD_RSA_PUBLIC_KEY;
-    const string PAYLOAD_KEY_USER_NAME = UserRepository::FIELD_USER_NAME;
-    const string PAYLOAD_KEY_EMAIL = UserRepository::FIELD_EMAIL;
-    const string PAYLOAD_KEY_IS_ADMIN = UserRepository::FIELD_IS_ADMIN;
+    public const string PAYLOAD_KEY_ID = UserRepository::FIELD_ID;
+    public const string PAYLOAD_KEY_PASSWORD = UserController::FIELD_PASSWORD;
+    public const string PAYLOAD_KEY_RSA_PRIVATE_KEY = 'rsaPrivateKey';
+    public const string PAYLOAD_KEY_RSA_PUBLIC_KEY = UserRepository::FIELD_RSA_PUBLIC_KEY;
+    public const string PAYLOAD_KEY_USER_NAME = UserRepository::FIELD_USER_NAME;
+    public const string PAYLOAD_KEY_EMAIL = UserRepository::FIELD_EMAIL;
+    public const string PAYLOAD_KEY_IS_ADMIN = UserRepository::FIELD_IS_ADMIN;
 
     /**
-     * @return User
      * @throws Throwable
      */
+    #[\Override]
     public function handle(): User
     {
+        $userRepository = UserRepository::getInstance();
+        $passwordHasher = PasswordHasher::getInstance();
+        $userApplicationService = UserApplicationService::getInstance();
         $this->validate();
-
-        $userDomainService = UserDomainService::getInstance();
-        $authApplicationService = AuthDomainService::getInstance();
         $payload = $this->payload;
-        $payload['hashedPassword'] = $authApplicationService->hashPassword($this->payload[self::PAYLOAD_KEY_PASSWORD]);
-        unset($payload[self::PAYLOAD_KEY_PASSWORD]);
+        $payload['hashedPassword'] = $passwordHasher->hash($this->payload['password']);
+        unset($payload['password']);
 
-        $user = $userDomainService->mapArrayToEntity($payload);
+        $user = $userRepository->mapArrayToEntity($payload);
+        $userApplicationService->save($user);
 
-        $userDomainService->save($user);
         RsaDomainService::getInstance()->storeUserPrivateKeyFromString($user->getId(), $payload[self::PAYLOAD_KEY_RSA_PRIVATE_KEY]);
         EventDispatcher::getInstance()->dispatch(new UserCreatedEvent($user));
 
         return $user;
     }
 
-    /**
-     * @return void
-     */
     private function validate(): void
     {
         if (empty($this->payload[self::PAYLOAD_KEY_ID])) {

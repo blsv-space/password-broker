@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\PasswordBroker\Infrastructure\EntryGroup;
 
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
@@ -9,21 +11,22 @@ use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupName;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\MaterializedPath;
 use App\Module\PasswordBroker\Infrastructure\Repository\AbstractPasswordBrokerRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
+use App\Shared\Domain\ValueObject\DeletedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
 use Inquisition\Core\Domain\Entity\EntityInterface;
 use Inquisition\Core\Domain\ValueObject\ValueObjectInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
+use Inquisition\Core\Infrastructure\Persistence\Repository\QueryOperatorEnum;
 use Inquisition\Foundation\Singleton\SingletonTrait;
 use InvalidArgumentException;
 
 /**
- * @method EntryGroup|null findOneBy(array $criteria, array $orderBy = null)
- * @method EntryGroup[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- * @method EntryGroup|null findById(ValueObjectInterface $entity)
+ * @method EntryGroup|null findById(ValueObjectInterface $id)
+ *
+ * @extends AbstractPasswordBrokerRepository<EntryGroup>
  */
-class EntryGroupRepository extends AbstractPasswordBrokerRepository
-    implements EntryGroupRepositoryInterface
+class EntryGroupRepository extends AbstractPasswordBrokerRepository implements EntryGroupRepositoryInterface
 {
     use SingletonTrait;
 
@@ -39,15 +42,16 @@ class EntryGroupRepository extends AbstractPasswordBrokerRepository
     protected const string TABLE_NAME = 'entryGroups';
     protected const string ENTITY_CLASS_NAME = EntryGroup::class;
 
-    private function __construct() {
+    private function __construct()
+    {
         parent::__construct();
     }
 
     /**
-     * @param array $row
-     * @return EntryGroup
      * @throws InvalidArgumentException
+     * @return EntryGroup
      */
+    #[\Override]
     protected function mapRowToEntity(array $row): EntityInterface
     {
         return new EntryGroup(
@@ -59,30 +63,70 @@ class EntryGroupRepository extends AbstractPasswordBrokerRepository
                 : null,
             createdAt: CreatedAt::fromRaw($row[self::FIELD_CREATED_AT]),
             updatedAt: !empty($row[self::FIELD_UPDATED_AT]) ? UpdatedAt::fromRaw($row[self::FIELD_UPDATED_AT]) : null,
-            deletedAt: !empty($row[self::FIELD_DELETED_AT]) ? UpdatedAt::fromRaw($row[self::FIELD_DELETED_AT]) : null
+            deletedAt: !empty($row[self::FIELD_DELETED_AT]) ? DeletedAt::fromRaw($row[self::FIELD_DELETED_AT]) : null,
         );
     }
 
-    /**
-     * @param EntityInterface $entity
-     * @return array
-     */
+    #[\Override]
     protected function mapEntityToRow(EntityInterface $entity): array
     {
         return $entity->getAsArray();
     }
 
     /**
-     * @param EntryGroupName $entryGroupName
-     * @return EntryGroupName|null
      * @throws PersistenceException
      */
+    #[\Override]
     public function findEntryGroupByName(EntryGroupName $entryGroupName): ?EntryGroup
     {
         return $this->findOneBy(
             [new QueryCriteria(
                 field: self::FIELD_NAME,
-                value: $entryGroupName->toRaw()
-            )]);
+                value: $entryGroupName->toRaw(),
+            )],
+        );
+    }
+
+    /**
+     * @throws PersistenceException
+     * @return EntryGroup[]
+     */
+    public function findAllChildren(EntryGroup $entryGroup): array
+    {
+        return $this->findBy(
+            [
+                new QueryCriteria(
+                    field: EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID,
+                    value: $entryGroup->materializedPath->toRaw() . '%',
+                    operator: QueryOperatorEnum::LIKE,
+                ),
+            ],
+        );
+    }
+
+    #[\Override]
+    public function mapArrayToEntity(array $array): EntryGroup
+    {
+        $createdAt = isset($array[EntryGroupRepository::FIELD_CREATED_AT])
+            ? CreatedAt::fromRaw($array[EntryGroupRepository::FIELD_CREATED_AT])
+            : null;
+        $updateAt = isset($array[EntryGroupRepository::FIELD_UPDATED_AT])
+            ? UpdatedAt::fromRaw($array[EntryGroupRepository::FIELD_UPDATED_AT])
+            : null;
+        $deletedAt = isset($array[EntryGroupRepository::FIELD_DELETED_AT])
+            ? DeletedAt::fromRaw($array[EntryGroupRepository::FIELD_DELETED_AT])
+            : null;
+
+        return new EntryGroup(
+            id: EntryGroupId::fromRaw($array[EntryGroupRepository::FIELD_ID]),
+            name: EntryGroupName::fromRaw($array[EntryGroupRepository::FIELD_NAME]),
+            materializedPath: MaterializedPath::fromRaw($array[EntryGroupRepository::FIELD_MATERIALIZED_PATH] ?? ''),
+            parentEntryGroupId: !empty($array[EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID])
+                ? EntryGroupId::fromRaw($array[EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID])
+                : null,
+            createdAt: $createdAt,
+            updatedAt: $updateAt,
+            deletedAt: $deletedAt,
+        );
     }
 }

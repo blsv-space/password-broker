@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Domain\RefreshToken\Entity;
 
 use App\Module\Identity\Domain\RefreshToken\ValueObject\ExpirationAt;
@@ -29,6 +31,7 @@ class RefreshToken extends BaseEntityWithId
     /**
      * @return RefreshTokenId
      */
+    #[\Override]
     public function getId(): ValueObjectInterface
     {
         return $this->id;

@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\PasswordBroker\Application\EntryGroup\Job;
 
 use App\Module\PasswordBroker\Application\EntryGroup\Event\EntryGroupCreatedEvent;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Service\EntryGroupDomainService;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
-use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\MaterializedPath;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
 use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
@@ -15,30 +16,31 @@ use InvalidArgumentException;
 
 final class CreateEntryGroupSyncJob extends AbstractReplicableSyncJob
 {
-    const string PAYLOAD_KEY_ID = EntryGroupRepository::FIELD_ID;
-    const string PAYLOAD_KEY_NAME = EntryGroupRepository::FIELD_NAME;
-    const string PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID = EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID;
+    public const string PAYLOAD_KEY_ID = EntryGroupRepository::FIELD_ID;
+    public const string PAYLOAD_KEY_NAME = EntryGroupRepository::FIELD_NAME;
+    public const string PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID = EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID;
 
     /**
-     * @return EntryGroup
      * @throws PersistenceException
      */
+    #[\Override]
     public function handle(): EntryGroup
     {
         $this->validate();
 
         $entryGroupDomainService = EntryGroupDomainService::getInstance();
-        $entryGroup = $entryGroupDomainService->mapArrayToEntity($this->payload);
+        $entryGroupRepository = EntryGroupRepository::getInstance();
+        $entryGroup = $entryGroupRepository->mapArrayToEntity($this->payload);
         $parentEntryGroup = null;
-        if (!is_null($this->payload[self::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID])) {
-            $parentEntryGroup = $entryGroupDomainService->findById(EntryGroupId::fromRaw($this->payload[self::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID]));
+        if (!empty($this->payload[self::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID])) {
+            $parentEntryGroup = $entryGroupRepository->findById(EntryGroupId::fromRaw($this->payload[self::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID]));
             if (!$parentEntryGroup) {
                 throw new InvalidArgumentException('Parent Entry Group not found');
             }
         }
         $entryGroup->materializedPath = $entryGroupDomainService->makeMaterializedPath($entryGroup->id, $parentEntryGroup);
 
-        $entryGroupDomainService->save($entryGroup);
+        $entryGroupRepository->save($entryGroup);
         EventDispatcher::getInstance()->dispatch(new EntryGroupCreatedEvent($entryGroup));
 
         return $entryGroup;

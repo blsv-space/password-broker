@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Application\User\DTO;
 
 use App\Module\Identity\Domain\User\Entity\User;
@@ -13,11 +15,10 @@ class UserResponse implements EntityResponseInterface
     private User $user;
 
     /**
-     * @param EntityInterface $entity
-     * @return static
      *
      * @throws InvalidArgumentException
      */
+    #[\Override]
     public static function fromEntity(EntityInterface $entity): static
     {
         if (!$entity instanceof User) {
@@ -30,16 +31,14 @@ class UserResponse implements EntityResponseInterface
         return $userResponse;
     }
 
-    /**
-     * @return array
-     */
+    #[\Override]
     public function getAsArray(): array
     {
         return [
-            UserRepository::FIELD_ID => $this->user->id?->value ?? null,
+            UserRepository::FIELD_ID => $this->user->id->value,
             UserRepository::FIELD_USER_NAME => $this->user->userName->toRaw(),
-            UserRepository::FIELD_CREATED_AT => $this->user?->createdAt->toRaw() ?? null,
-            UserRepository::FIELD_UPDATED_AT => $this->user?->updatedAt->toRaw() ?? null,
+            UserRepository::FIELD_CREATED_AT => $this->user->createdAt?->toRaw(),
+            UserRepository::FIELD_UPDATED_AT => $this->user->updatedAt?->toRaw(),
         ];
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Identity\Fixture;
 
 use App\Module\Identity\Domain\User\Entity\User;
@@ -28,13 +30,11 @@ class UserFixture extends AbstractFixture
     public const string UPDATED_AT = UserRepository::FIELD_UPDATED_AT;
 
     /**
-     * @param array $attributes
-     * @param bool $persist
      *
-     * @return User
      *
      * @throws PersistenceException
      */
+    #[\Override]
     public static function create(array $attributes = [], bool $persist = false): User
     {
         $user = new User(
@@ -58,14 +58,11 @@ class UserFixture extends AbstractFixture
     }
 
     /**
-     * @param int $count
-     * @param array $attributes
-     * @param bool $persist
      *
-     * @return array
      *
      * @throws PersistenceException
      */
+    #[\Override]
     public static function createMany(int $count, array $attributes = [], bool $persist = false): array
     {
         $out = [];
@@ -76,9 +73,7 @@ class UserFixture extends AbstractFixture
         return $out;
     }
 
-    /**
-     * @return string
-     */
+    #[\Override]
     public static function getTableName(): string
     {
         return UserRepository::getTableName();

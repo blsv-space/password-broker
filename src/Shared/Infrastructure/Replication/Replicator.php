@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shared\Infrastructure\Replication;
 
 use Inquisition\Foundation\Singleton\SingletonInterface;
@@ -15,9 +17,6 @@ class Replicator implements SingletonInterface
         $this->jobReplicator = new KafkaJobReplicator();
     }
 
-    /**
-     * @return JobReplicatorInterface
-     */
     public function getReplicator(): JobReplicatorInterface
     {
         return $this->jobReplicator;

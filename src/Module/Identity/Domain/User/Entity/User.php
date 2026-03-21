@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Domain\User\Entity;
 
 use App\Module\Identity\Domain\User\ValueObject\Email;
@@ -14,8 +16,7 @@ use Inquisition\Core\Domain\Entity\BaseEntityWithId;
 use Inquisition\Core\Domain\Entity\EntityInterface;
 use Inquisition\Core\Domain\ValueObject\ValueObjectInterface;
 
-class User extends BaseEntityWithId
-    implements EntityInterface
+class User extends BaseEntityWithId implements EntityInterface
 {
     public function __construct(
         public UserId        $id {
@@ -37,6 +38,7 @@ class User extends BaseEntityWithId
     /**
      * @return UserId|null
      */
+    #[\Override]
     public function getId(): ?ValueObjectInterface
     {
         return $this->id;

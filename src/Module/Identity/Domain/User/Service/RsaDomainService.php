@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Domain\User\Service;
 
 use App\Module\Identity\Domain\User\DTO\RsaKeyPair;
@@ -17,39 +19,22 @@ use phpseclib3\Crypt\RSA;
 use phpseclib3\Crypt\RSA\PrivateKey;
 use phpseclib3\Crypt\RSA\PublicKey;
 
-class RsaDomainService
-    implements DomainServiceInterface
+class RsaDomainService implements DomainServiceInterface
 {
+    use SingletonTrait;
     public const int KEY_SIZE = 4096;
     public const string KEY_HASH = 'sha512';
 
-    use SingletonTrait;
-
-    /**
-     * @param string $masterPassword
-     * @return RsaKeyPair
-     */
     public function generateKeyPair(string $masterPassword): RsaKeyPair
     {
-        $privateKey = RSA::createKey(self::KEY_SIZE);
-        /**
-         * @var $privateKey PrivateKey
-         */
-        $privateKey = $privateKey->withHash(self::KEY_HASH);
-        /**
-         * @var $privateKey PrivateKey
-         * @var $publicKey PublicKey
-         */
-        $privateKey = $privateKey->withPassword($masterPassword);
+        $privateKey = RSA::createKey(self::KEY_SIZE)
+            ->withHash(self::KEY_HASH)
+            ->withPassword($masterPassword);
         $publicKey = $privateKey->getPublicKey();
 
-        return new RsaKeyPair(privateKey: (string)$privateKey, publicKey: $publicKey);
+        return new RsaKeyPair(privateKey: (string) $privateKey, publicKey: (string) $publicKey);
     }
 
-    /**
-     * @param UserId $userId
-     * @return string
-     */
     protected function getStorageUserKeyPath(UserId $userId): string
     {
         $keyPath = Config::getInstance()->getByPath('security.storage_key_path', '');
@@ -59,23 +44,13 @@ class RsaDomainService
     }
 
 
-    /**
-     * @param UserId $userId
-     * @param PrivateKey $privateKey
-     * @return void
-     */
     public function storeUserPrivateKey(UserId $userId, PrivateKey $privateKey): void
     {
         $storage = StorageRegistry::getInstance()->storage();
         $storageUserKeyPath = $this->getStorageUserKeyPath($userId);
-        $storage->writeByPath($storageUserKeyPath, (string)$privateKey);
+        $storage->writeByPath($storageUserKeyPath, (string) $privateKey);
     }
 
-    /**
-     * @param UserId $userId
-     * @param string $privateKey
-     * @return void
-     */
     public function storeUserPrivateKeyFromString(UserId $userId, string $privateKey): void
     {
         $storage = StorageRegistry::getInstance()->storage();
@@ -84,8 +59,6 @@ class RsaDomainService
     }
 
     /**
-     * @param UserId $userId
-     * @return string
      * @throws RsaDomainServiceException
      */
     public function getUserPrivateKeyString(UserId $userId): string
@@ -100,9 +73,6 @@ class RsaDomainService
     }
 
     /**
-     * @param UserId $userId
-     * @param string $masterPassword
-     * @return PrivateKeyCommon
      * @throws RsaDomainServiceException
      */
     public function getUserPrivateKey(UserId $userId, string $masterPassword): PrivateKeyCommon
@@ -110,29 +80,16 @@ class RsaDomainService
         return PublicKeyLoader::loadPrivateKey($this->getUserPrivateKeyString($userId), $masterPassword);
     }
 
-    /**
-     * @param string $privateKey
-     * @param string $masterPassword
-     * @return PrivateKeyCommon
-     */
     public function getPrivateKeyFromString(string $privateKey, string $masterPassword): PrivateKeyCommon
     {
         return PublicKeyLoader::loadPrivateKey($privateKey, $masterPassword);
     }
 
-    /**
-     * @param User $user
-     * @return PublicKeyCommon
-     */
     public function getUserPublicKey(User $user): PublicKeyCommon
     {
         return PublicKeyLoader::loadPublicKey($user->publicKey->toRaw());
     }
 
-    /**
-     * @param string $publicKey
-     * @return PublicKeyCommon
-     */
     public function getPublicKeyFromString(string $publicKey): PublicKeyCommon
     {
         return PublicKeyLoader::loadPublicKey($publicKey);

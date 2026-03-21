@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Module\Identity\Domain\RefreshToken\Service;
+declare(strict_types=1);
 
+namespace App\Module\Identity\Application\User\Service;
+
+use App\Module\Identity\Application\User\Service\Exception\RefreshTokenException;
 use App\Module\Identity\Domain\RefreshToken\Entity\RefreshToken;
 use App\Module\Identity\Domain\RefreshToken\Repository\RefreshTokenRepositoryInterface;
-use App\Module\Identity\Domain\RefreshToken\Service\Exception\RefreshTokenException;
 use App\Module\Identity\Domain\RefreshToken\ValueObject\ExpirationAt;
 use App\Module\Identity\Domain\RefreshToken\ValueObject\RefreshTokenId;
 use App\Module\Identity\Domain\RefreshToken\ValueObject\Token;
@@ -17,13 +19,12 @@ use App\Shared\Infrastructure\Security\OpaqueTokenGenerator;
 use DateInterval;
 use DateTime;
 use DateTimeImmutable;
-use Inquisition\Core\Domain\Service\DomainServiceInterface;
+use Inquisition\Core\Application\Service\ApplicationServiceInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Foundation\Singleton\SingletonTrait;
 
-final class RefreshTokenService
-    implements DomainServiceInterface
+class RefreshTokenApplicationService implements ApplicationServiceInterface
 {
     use SingletonTrait;
 
@@ -37,16 +38,12 @@ final class RefreshTokenService
     }
 
     /**
-     * @param UserId $userId
-     * @param DateInterval $expiresIn
-     * @return RefreshToken
      * @throws PersistenceException
      */
     public function createRefreshToken(
         UserId       $userId,
         DateInterval $expiresIn,
-    ): RefreshToken
-    {
+    ): RefreshToken {
         $token = $this->opaqueTokenGenerator->generate();
         $expiresAt = DateTimeImmutable::createFromMutable(new DateTime()->add($expiresIn));
         $refreshToken = new RefreshToken(
@@ -63,8 +60,6 @@ final class RefreshTokenService
     }
 
     /**
-     * @param Token $token
-     * @return void
      * @throws PersistenceException
      */
     public function removeRefreshToken(Token $token): void
@@ -73,23 +68,14 @@ final class RefreshTokenService
     }
 
     /**
-     * @param User $user
-     * @return void
      * @throws PersistenceException
      */
     public function removeRefreshTokenByUser(User $user): void
     {
-        if (!$user->id) {
-            return;
-        }
-
         $this->refreshTokenRepository->removeBy([new QueryCriteria(RefreshTokenRepository::FIELD_USER_ID, $user->id->toRaw())]);
     }
 
     /**
-     * @param Token $token
-     * @param bool|null $throwException
-     * @return RefreshToken|null
      * @throws PersistenceException
      * @throws RefreshTokenException
      */
@@ -103,15 +89,4 @@ final class RefreshTokenService
         return $refreshToken;
     }
 
-    /**
-     * @param RefreshToken $refreshToken
-     * @return void
-     * @throws RefreshTokenException
-     */
-    public function refreshTokenValidate(RefreshToken $refreshToken): void
-    {
-        if ($refreshToken->expirationAt->value < new DateTimeImmutable()) {
-            throw new RefreshTokenException('Refresh token expired');
-        }
-    }
 }

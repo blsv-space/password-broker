@@ -1,14 +1,17 @@
 <?php
 
-namespace Shared\Unit\Infrastructure\Storage;
+declare(strict_types=1);
 
+namespace Tests\Module\Shared\Unit\Infrastructure\Storage;
+
+use Inquisition\Core\Infrastructure\Storage\LocalStorage;
 use Inquisition\Foundation\Storage\Exception\StorageException;
 use Inquisition\Foundation\Storage\StorageRegistry;
 use Tests\Shared\UnitTestCase;
 
 class LocalStorageTest extends UnitTestCase
 {
-
+    #[\Override]
     protected function tearDown(): void
     {
         $this->cleanUpStorage();
@@ -16,14 +19,14 @@ class LocalStorageTest extends UnitTestCase
         parent::tearDown();
     }
 
-    /**
-     * @return void
-     */
-    public function testItShouldCreateAFileInLocalStorage(): void
+    public function test_it_should_create_a_file_in_local_storage(): void
     {
         $fileName = $this->faker->word();
         $fileContent = $this->faker->text();
 
+        /**
+         * @var LocalStorage $storage
+         */
         $storage = StorageRegistry::getInstance()->storage('local');
         $storageDir = $storage->getRootPath();
         $fullPath = $storageDir . DIRECTORY_SEPARATOR . $fileName;
@@ -34,20 +37,14 @@ class LocalStorageTest extends UnitTestCase
         $this->assertEquals($fileContent, file_get_contents($fullPath));
     }
 
-    /**
-     * @return void
-     */
-    public function testItShouldThrowExceptionWhenFileDoesNotExist(): void
+    public function test_it_should_throw_exception_when_file_does_not_exist(): void
     {
         $this->expectException(StorageException::class);
         $storage = StorageRegistry::getInstance()->storage('local');
         $storage->readByPath('non-existent-file');
     }
 
-    /**
-     * @return void
-     */
-    public function testItShouldReadFile(): void
+    public function test_it_should_read_file(): void
     {
         $fileName = $this->faker->word();
         $fileContent = $this->faker->text();
@@ -58,29 +55,29 @@ class LocalStorageTest extends UnitTestCase
         $this->assertEquals($fileContent, $storage->readByPath($fileName));
     }
 
-    /**
-     * @return void
-     */
-    public function testItShouldDeleteFile(): void
+    public function test_it_should_delete_file(): void
     {
         $fileName = $this->faker->word();
         $fileContent = $this->faker->text();
 
+        /**
+         * @var LocalStorage $storage
+         */
         $storage = StorageRegistry::getInstance()->storage('local');
         $storage->writeByPath($fileName, $fileContent);
         $storage->deleteByPath($fileName);
         $this->assertFileDoesNotExist($storage->getRootPath() . DIRECTORY_SEPARATOR . $fileName);
     }
 
-    /**
-     * @return void
-     */
-    public function testItShouldCreateFileInSubDirectory(): void
+    public function test_it_should_create_file_in_sub_directory(): void
     {
         $dir = $this->faker->word();
         $fileName = $dir . DIRECTORY_SEPARATOR . $this->faker->word();
         $fileContent = $this->faker->text();
 
+        /**
+         * @var LocalStorage $storage
+         */
         $storage = StorageRegistry::getInstance()->storage('local');
         $storage->writeByPath($fileName, $fileContent);
 
@@ -94,10 +91,7 @@ class LocalStorageTest extends UnitTestCase
         $this->assertEquals($fileContent, file_get_contents($fullPath));
     }
 
-    /**
-     * @return void
-     */
-    public function testItShouldListFilesInDirectory(): void
+    public function test_it_should_list_files_in_directory(): void
     {
         $dir = $this->faker->word();
         $files = [
@@ -110,13 +104,13 @@ class LocalStorageTest extends UnitTestCase
         }
 
         $list = $storage->listFiles($dir, true);
-        $this->assertIsArray($list);
         $this->assertCount(count($files), $list);
 
         foreach ($list as $file) {
             $this->assertTrue(
                 condition: in_array($file->getFilename(), $files, true),
-                message: "{$file->getFilename()} does not exist in " . implode(', ', $files));
+                message: "{$file->getFilename()} does not exist in " . implode(', ', $files),
+            );
         }
     }
 }

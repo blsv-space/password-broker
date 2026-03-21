@@ -1,26 +1,26 @@
 <?php
 
-namespace Tests\Module\Identity\Integration\Application\Job;
+declare(strict_types=1);
 
-use App\Module\Identity\Application\User\Event\UserUpdatedEvent;
-use App\Module\Identity\Application\User\Job\UpdateUserSyncJob;
+namespace Tests\Module\Identity\Integration\Application\User\Job;
+
+use App\Module\Identity\Application\User\Event\UserDeletedEvent;
+use App\Module\Identity\Application\User\Job\DeleteUserSyncJob;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Tests\Module\Identity\Fixture\UserFixture;
 use Tests\Shared\IntegrationTestCase;
 use Tests\Shared\TestEventHandler;
 use Throwable;
 
-class UpdateUserSyncJobTest extends IntegrationTestCase
+class DeleteUserSyncJobTest extends IntegrationTestCase
 {
     /**
-     * @return void
      * @throws PersistenceException
      * @throws Throwable
      */
-    public function testHandleUpdateUser(): void
+    public function test_handle_delete_user(): void
     {
         $user = UserFixture::create(persist: true);
-        $nameNew = $this->faker->userName();
 
         $this->assertDatabaseHas(
             table: UserFixture::getTableName(),
@@ -32,28 +32,19 @@ class UpdateUserSyncJobTest extends IntegrationTestCase
 
         $payload = [
             UserFixture::ID => $user->id->toRaw(),
-            UserFixture::USER_NAME => $nameNew,
         ];
 
-        $testEventHandler = new TestEventHandler(eventNames: [UserUpdatedEvent::class]);
+        $testEventHandler = new TestEventHandler(eventNames: [UserDeletedEvent::class]);
 
-        new UpdateUserSyncJob($payload)->handle();
+        new DeleteUserSyncJob($payload)->handle();
 
         $this->assertDatabaseMissing(
             table: UserFixture::getTableName(),
             param: [
                 UserFixture::ID => $user->id->toRaw(),
-                UserFixture::USER_NAME => $user->userName->toRaw(),
             ],
         );
 
-        $this->assertDatabaseHas(
-            table: UserFixture::getTableName(),
-            param: [
-                UserFixture::ID => $user->id->toRaw(),
-                UserFixture::USER_NAME => $nameNew,
-            ],
-        );
         $this->assertTrue($testEventHandler->wasDispatched());
     }
 }

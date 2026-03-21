@@ -1,6 +1,8 @@
 <?php
 
-namespace Tests\Module\Identity\Integration\Application\Service;
+declare(strict_types=1);
+
+namespace Tests\Module\Identity\Integration\Application\User\Service;
 
 use App\Module\Identity\Application\User\Service\UserApplicationService;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
@@ -11,13 +13,11 @@ use Throwable;
 
 class UserApplicationServiceTest extends IntegrationTestCase
 {
-
     /**
-     * @return void
      * @throws PersistenceException
      * @throws Throwable
      */
-    public function testItShouldCreateAUser(): void
+    public function test_it_should_create_a_user(): void
     {
         $user = UserFixture::create();
         UserApplicationService::getInstance()->createUserSync(
@@ -35,10 +35,9 @@ class UserApplicationServiceTest extends IntegrationTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      */
-    public function testItShouldGetUserById(): void
+    public function test_it_should_get_user_by_id(): void
     {
         $user = UserFixture::create(
             persist: true,
@@ -48,19 +47,18 @@ class UserApplicationServiceTest extends IntegrationTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      */
-    public function testItShouldGetUsersBy(): void
+    public function test_it_should_get_users_by(): void
     {
         $user = UserFixture::create(
-            persist: true
+            persist: true,
         );
         $usersBy = UserApplicationService::getInstance()->getUsersBy([
             new QueryCriteria(
                 field: UserFixture::USER_NAME,
                 value: $user->userName->toRaw(),
-            )
+            ),
         ]);
 
         $this->assertCount(1, $usersBy);
@@ -68,10 +66,9 @@ class UserApplicationServiceTest extends IntegrationTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      */
-    public function testItShouldGetUsersByOrder(): void
+    public function test_it_should_get_users_by_order(): void
     {
         $name_1 = 'bbb';
         $name_2 = 'aaa';

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shared\Infrastructure\Replication;
 
 use App\Shared\Infrastructure\Kafka\KafkaConnection;
@@ -9,12 +11,7 @@ class KafkaJobReplicator implements JobReplicatorInterface
 {
     public const string TOPIC_NAME = 'job.replication';
 
-    /**
-     * @param string $jobClass
-     * @param array $payload
-     *
-     * @return void
-     */
+    #[\Override]
     public function replicate(string $jobClass, array $payload): void
     {
         $message = [
@@ -32,12 +29,10 @@ class KafkaJobReplicator implements JobReplicatorInterface
     }
 
     /**
-     * @param int $limit
-     * @param int $offset
      *
-     * @return array
      * @throws Exception
      */
+    #[\Override]
     public function read(int $limit, int $offset): array
     {
         return KafkaConnection::getInstance()->read(

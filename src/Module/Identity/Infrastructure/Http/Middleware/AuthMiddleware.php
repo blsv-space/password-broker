@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Infrastructure\Http\Middleware;
 
 use App\Module\Identity\Application\User\Service\AuthApplicationService;
@@ -20,12 +22,10 @@ final readonly class AuthMiddleware implements MiddlewareInterface
     }
 
     /**
-     * @param RequestInterface $request
-     * @param callable $next
-     * @return ResponseInterface
      * @throws PersistenceException
      * @throws JsonException
      */
+    #[\Override]
     public function process(RequestInterface $request, callable $next): ResponseInterface
     {
         if ($this->authApplicationService->authUser()) {

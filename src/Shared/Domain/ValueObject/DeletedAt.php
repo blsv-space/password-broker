@@ -1,7 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shared\Domain\ValueObject;
 
-class DeletedAt extends DateTime
-{
-}
+class DeletedAt extends DateTime {}

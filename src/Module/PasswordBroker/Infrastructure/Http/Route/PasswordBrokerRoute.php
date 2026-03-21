@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\PasswordBroker\Infrastructure\Http\Route;
 
 use App\Module\Identity\Infrastructure\Http\Middleware\AuthMiddleware;
@@ -11,23 +13,15 @@ final readonly class PasswordBrokerRoute extends AbstractRouterRegistry
 {
     public const string GROUP_NAME = 'passwordBroker';
 
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
-    /**
-     * @param RouteGroupInterface|null $parentRouteGroup
-     * @return void
-     */
+    #[\Override]
     public static function register(?RouteGroupInterface $parentRouteGroup = null): void
     {
         $routeGroup = self::inheritGroup(
             parentRouteGroup: $parentRouteGroup ?? AppRoute::GROUP_NAME,
-            newGroupName: self::GROUP_NAME
-        );
-
-        $routeGroup->group(self::GROUP_NAME)
-            ->middleware(new AuthMiddleware())
+            newGroupName: self::GROUP_NAME,
+        )->middleware(new AuthMiddleware())
             ->prefix('/passwordBroker');
 
         EntryGroupRoute::register($routeGroup);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\PasswordBroker\Application\EntryGroup\DTO;
 
 use App\Module\PasswordBroker\Domain\EntryGroup\DTO\EntryGroupTreeNode;
@@ -13,10 +15,7 @@ class EntryGroupTreeResponse implements EntityResponseInterface
 
     private EntryGroupTreeNode $entryGroupTreeNode;
 
-    /**
-     * @param EntityInterface $entity
-     * @return static
-     */
+    #[\Override]
     public static function fromEntity(EntityInterface $entity): static
     {
         if (!$entity instanceof EntryGroupTreeNode) {
@@ -29,9 +28,7 @@ class EntryGroupTreeResponse implements EntityResponseInterface
         return $entryGroupResponse;
     }
 
-    /**
-     * @return array
-     */
+    #[\Override]
     public function getAsArray(): array
     {
 

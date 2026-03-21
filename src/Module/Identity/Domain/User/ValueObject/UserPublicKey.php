@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Domain\User\ValueObject;
 
 use Inquisition\Core\Domain\ValueObject\AbstractValueObject;
@@ -7,18 +9,13 @@ use InvalidArgumentException;
 
 class UserPublicKey extends AbstractValueObject
 {
-
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function toRaw(): mixed
     {
         return $this->value;
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public static function fromRaw(mixed $data): static
     {
         static::validate($data);
@@ -26,9 +23,7 @@ class UserPublicKey extends AbstractValueObject
         return new static($data);
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public static function validate(mixed $data): void
     {
         if (is_string($data) === false) {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\PasswordBroker\Fixture;
 
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
@@ -26,11 +28,9 @@ class EntryGroupFixture extends AbstractFixture
     public const string PARENT_ENTRY_GROUP = 'parentEntryGroup';
 
     /**
-     * @param array $attributes
-     * @param bool $persist
-     * @return EntryGroup
      * @throws PersistenceException
      */
+    #[\Override]
     public static function create(array $attributes = [], bool $persist = false): EntryGroup
     {
         if (isset($attributes[self::PARENT_ENTRY_GROUP]) && !isset($attributes[self::PARENT_ENTRY_GROUP_ID])) {
@@ -70,12 +70,9 @@ class EntryGroupFixture extends AbstractFixture
     }
 
     /**
-     * @param int $count
-     * @param array $attributes
-     * @param bool $persist
-     * @return array
      * @throws PersistenceException
      */
+    #[\Override]
     public static function createMany(int $count, array $attributes = [], bool $persist = true): array
     {
         $out = [];
@@ -86,27 +83,20 @@ class EntryGroupFixture extends AbstractFixture
         return $out;
     }
 
-    /**
-     * @return string
-     */
+    #[\Override]
     public static function getTableName(): string
     {
         return EntryGroupRepository::getTableName();
     }
 
     /**
-     * @param int $depth
-     * @param int $branchesPerLevel
-     * @param EntryGroup|null $root
-     * @return array
      * @throws PersistenceException
      */
     public static function createTree(
         int $depth = 3,
         int $branchesPerLevel = 3,
-        ?EntryGroup $root = null
-    ): array
-    {
+        ?EntryGroup $root = null,
+    ): array {
         $out = [];
 
         if ($depth === 0) {

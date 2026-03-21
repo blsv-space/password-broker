@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\PasswordBroker\Domain\EntryGroup\ValueObject;
 
 use Inquisition\Core\Domain\ValueObject\AbstractValueObject;
@@ -10,18 +12,13 @@ use InvalidArgumentException;
  */
 class EntryGroupName extends AbstractValueObject
 {
-
-    /**
-     * @return string
-     */
+    #[\Override]
     public function toRaw(): string
     {
         return $this->value;
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public static function fromRaw(mixed $data): static
     {
         static::validate($data);
@@ -29,9 +26,7 @@ class EntryGroupName extends AbstractValueObject
         return new static($data);
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public static function validate(mixed $data): void
     {
         if (!is_string($data)) {

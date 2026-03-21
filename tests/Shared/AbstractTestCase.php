@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Shared;
 
 use App\Module\Identity\Application\User\Service\AuthApplicationService;
@@ -22,17 +24,13 @@ abstract class AbstractTestCase extends TestCase
 {
     protected Generator $faker;
 
-    /**
-     * @return void
-     */
+    #[\Override]
     protected function tearDown(): void
     {
         parent::tearDown();
     }
 
-    /**
-     * @return void
-     */
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -40,12 +38,6 @@ abstract class AbstractTestCase extends TestCase
         $this->faker = Factory::create();
     }
 
-    /**
-     * @param $table
-     * @param array $param
-     * @param string|null $connectionName
-     * @return void
-     */
     protected function assertDatabaseHas($table, array $param = [], ?string $connectionName = null): void
     {
         $databaseHas = $this->databaseHas($table, $param, $connectionName);
@@ -55,8 +47,8 @@ abstract class AbstractTestCase extends TestCase
             sprintf(
                 'Failed asserting that table [%s] contains row with data: %s',
                 $table,
-                json_encode($param)
-            )
+                json_encode($param),
+            ),
         );
     }
 
@@ -78,17 +70,11 @@ abstract class AbstractTestCase extends TestCase
 
         $statement = $databaseConnection->connect()->prepare("SELECT COUNT(*) FROM `$table` $where");
         $statement->execute($param);
-        $count = (int)$statement->fetchColumn();
+        $count = (int) $statement->fetchColumn();
 
         return $count > 0;
     }
 
-    /**
-     * @param $table
-     * @param array $param
-     * @param string|null $connectionName
-     * @return void
-     */
     protected function assertDatabaseMissing($table, array $param = [], ?string $connectionName = null): void
     {
         $databaseHas = $this->databaseHas($table, $param, $connectionName);
@@ -98,13 +84,12 @@ abstract class AbstractTestCase extends TestCase
             sprintf(
                 'Failed asserting that table [%s] does not contain row with data: %s',
                 $table,
-                json_encode($param)
-            )
+                json_encode($param),
+            ),
         );
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      */
     public function flushDatabase(): void
@@ -131,17 +116,12 @@ abstract class AbstractTestCase extends TestCase
         );
     }
 
-    /**
-     * @return void
-     */
     public function resetFixtures(): void
     {
         FixtureRegister::reset();
     }
 
     /**
-     * @param User $user
-     * @return void
      * @throws ReflectionException
      */
     public function actAs(User $user): void
@@ -152,9 +132,6 @@ abstract class AbstractTestCase extends TestCase
 
 
 
-    /**
-     * @return void
-     */
     public function cleanUpStorage(): void
     {
         $storage = StorageRegistry::getInstance()->storage('local');

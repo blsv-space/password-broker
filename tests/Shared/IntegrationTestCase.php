@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Shared;
 
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
@@ -10,9 +12,9 @@ abstract class IntegrationTestCase extends AbstractTestCase
     protected PDO $connection;
 
     /**
-     * @return void
      * @throws PersistenceException
      */
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

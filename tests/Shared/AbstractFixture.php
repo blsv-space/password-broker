@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Shared;
 
 use App\Module\Identity\Domain\User\ValueObject\UserId;
@@ -14,7 +16,6 @@ use RuntimeException;
 
 abstract class AbstractFixture
 {
-
     protected static ?Generator $faker = null;
     /**
      * @var string[]
@@ -22,31 +23,17 @@ abstract class AbstractFixture
     protected static array $idPool = [];
 
     /**
-     * @param array $attributes
-     * @param bool $persist
      * @return mixed
      */
-    public static abstract function create(array $attributes = [], bool $persist = false);
+    abstract public static function create(array $attributes = [], bool $persist = false);
 
-    /**
-     * @param int $count
-     * @param array $attributes
-     * @param bool $persist
-     * @return array
-     */
-    public static abstract function createMany(int $count, array $attributes = [], bool $persist = true): array;
+    abstract public static function createMany(int $count, array $attributes = [], bool $persist = true): array;
 
-    /**
-     * @return string
-     */
     public static function getTableName(): string
     {
         throw new RuntimeException('Method getTableName not implemented in ' . static::class);
     }
 
-    /**
-     * @return Generator
-     */
     protected static function faker(): Generator
     {
         if (self::$faker === null) {
@@ -56,10 +43,6 @@ abstract class AbstractFixture
         return self::$faker;
     }
 
-    /**
-     * @param string|null $id
-     * @return string
-     */
     protected static function generateId(?string $id = null): string
     {
         if ($id !== null) {
@@ -74,17 +57,11 @@ abstract class AbstractFixture
         return $id;
     }
 
-    /**
-     * @return void
-     */
     protected static function register(): void
     {
         FixtureRegister::register(static::class);
     }
 
-    /**
-     * @return void
-     */
     public static function reset(): void
     {
         self::$idPool = [];
@@ -98,9 +75,6 @@ abstract class AbstractFixture
         return self::$idPool;
     }
 
-    /**
-     * @return string
-     */
     public static function getId(): string
     {
         if (count(self::$idPool) === 0) {
@@ -111,9 +85,6 @@ abstract class AbstractFixture
     }
 
     /**
-     * @param BaseEntity $entity
-     * @param string|null $connectionName
-     * @return void
      * @throws PersistenceException
      */
     public static function persist(BaseEntity $entity, ?string $connectionName = null): void

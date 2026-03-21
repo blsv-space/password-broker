@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Shared\Mock;
 
 use App\Shared\Infrastructure\Replication\JobReplicatorInterface;
@@ -8,11 +10,7 @@ class JobReplicatorMock implements JobReplicatorInterface
 {
     public array $storage = [];
 
-    /**
-     * @param string $jobClass
-     * @param array $payload
-     * @return void
-     */
+    #[\Override]
     public function replicate(string $jobClass, array $payload): void
     {
         $this->storage[] = [
@@ -22,11 +20,7 @@ class JobReplicatorMock implements JobReplicatorInterface
         ];
     }
 
-    /**
-     * @param int $limit
-     * @param int $offset
-     * @return array
-     */
+    #[\Override]
     public function read(int $limit, int $offset): array
     {
         return array_slice($this->storage, $offset, $limit);

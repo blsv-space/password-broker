@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\PasswordBroker\Application\EntryGroup\DTO;
 
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
@@ -13,11 +15,10 @@ class EntryGroupResponse implements EntityResponseInterface
     private EntryGroup $entryGroup;
 
     /**
-     * @param EntityInterface $entity
-     * @return static
      *
      * @throws InvalidArgumentException
      */
+    #[\Override]
     public static function fromEntity(EntityInterface $entity): static
     {
         if (!$entity instanceof EntryGroup) {
@@ -30,19 +31,17 @@ class EntryGroupResponse implements EntityResponseInterface
         return $entryGroupResponse;
     }
 
-    /**
-     * @return array
-     */
+    #[\Override]
     public function getAsArray(): array
     {
         return [
-          EntryGroupRepository::FIELD_ID => $this->entryGroup->id?->toRaw() ?? null,
-          EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID => $this->entryGroup->parentEntryGroupId?->toRaw() ?? null,
-          EntryGroupRepository::FIELD_NAME => $this->entryGroup->name->toRaw(),
-          EntryGroupRepository::FIELD_MATERIALIZED_PATH => $this->entryGroup->materializedPath->toRaw(),
-          EntryGroupRepository::FIELD_CREATED_AT => $this->entryGroup?->createdAt?->toRaw() ?? null,
-          EntryGroupRepository::FIELD_UPDATED_AT => $this->entryGroup?->updatedAt?->toRaw() ?? null,
-          EntryGroupRepository::FIELD_DELETED_AT => $this->entryGroup?->deletedAt?->toRaw() ?? null,
+            EntryGroupRepository::FIELD_ID => $this->entryGroup->id->toRaw(),
+            EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID => $this->entryGroup->parentEntryGroupId?->toRaw(),
+            EntryGroupRepository::FIELD_NAME => $this->entryGroup->name->toRaw(),
+            EntryGroupRepository::FIELD_MATERIALIZED_PATH => $this->entryGroup->materializedPath->toRaw(),
+            EntryGroupRepository::FIELD_CREATED_AT => $this->entryGroup->createdAt?->toRaw(),
+            EntryGroupRepository::FIELD_UPDATED_AT => $this->entryGroup->updatedAt?->toRaw(),
+            EntryGroupRepository::FIELD_DELETED_AT => $this->entryGroup->deletedAt?->toRaw(),
         ];
     }
 }

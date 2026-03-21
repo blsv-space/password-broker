@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shared\Application\Validation\Rule;
 
 use App\Shared\Infrastructure\Security\UuidGenerator;
@@ -7,12 +9,7 @@ use Inquisition\Core\Application\Validation\RuleInterface;
 
 final readonly class ValidUuidRule implements RuleInterface
 {
-
-    /**
-     * @param mixed $value
-     * @param array $data
-     * @return bool
-     */
+    #[\Override]
     public function passes(mixed $value, array $data = []): bool
     {
         if (is_null($value)) {
@@ -30,17 +27,13 @@ final readonly class ValidUuidRule implements RuleInterface
         return false;
     }
 
-    /**
-     * @return string
-     */
+    #[\Override]
     public function message(): string
     {
         return 'Invalid UUID format';
     }
 
-    /**
-     * @return string
-     */
+    #[\Override]
     public function getName(): string
     {
         return 'valid_uuid';

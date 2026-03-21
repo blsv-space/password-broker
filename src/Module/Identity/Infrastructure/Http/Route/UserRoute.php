@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Infrastructure\Http\Route;
 
 use App\Module\Identity\Infrastructure\Http\Controller\UserController;
@@ -12,19 +14,14 @@ final readonly class UserRoute extends AbstractRouterRegistry
 {
     public const string GROUP_NAME = 'user';
 
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
-    /**
-     * @param RouteGroupInterface|null $parentRouteGroup
-     * @return void
-     */
+    #[\Override]
     public static function register(?RouteGroupInterface $parentRouteGroup = null): void
     {
         $routeGroup = self::inheritGroup(
             parentRouteGroup: $parentRouteGroup,
-            newGroupName: self::GROUP_NAME
+            newGroupName: self::GROUP_NAME,
         );
 
         $routeGroup
