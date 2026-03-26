@@ -13,6 +13,8 @@ use App\Module\PasswordBroker\Infrastructure\Repository\AbstractPasswordBrokerRe
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\DeletedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
+use App\Shared\Infrastructure\Repository\RepositorySoftDeleteInterface;
+use App\Shared\Infrastructure\Repository\RepositorySoftDeleteTrait;
 use Inquisition\Core\Domain\Entity\EntityInterface;
 use Inquisition\Core\Domain\ValueObject\ValueObjectInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
@@ -25,10 +27,16 @@ use InvalidArgumentException;
  * @method EntryGroup|null findById(ValueObjectInterface $id)
  *
  * @extends AbstractPasswordBrokerRepository<EntryGroup>
+ * @implements RepositorySoftDeleteInterface<EntryGroup>
  */
-class EntryGroupRepository extends AbstractPasswordBrokerRepository implements EntryGroupRepositoryInterface
+class EntryGroupRepository extends AbstractPasswordBrokerRepository implements EntryGroupRepositoryInterface, RepositorySoftDeleteInterface
 {
     use SingletonTrait;
+
+    /**
+     * @use RepositorySoftDeleteTrait<EntryGroup>
+     */
+    use RepositorySoftDeleteTrait;
 
     public const string FIELD_ID = 'id';
     public const string FIELD_PARENT_ENTRY_GROUP_ID = 'parentEntryGroupId';

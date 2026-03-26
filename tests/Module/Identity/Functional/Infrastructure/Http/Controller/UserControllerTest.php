@@ -308,6 +308,12 @@ class UserControllerTest extends FunctionalTestCase
         );
 
         $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
-        $this->assertDatabaseMissing(UserFixture::getTableName(), [UserFixture::ID => $user->id->toRaw()]);
+        $this->assertDatabaseMissing(
+            table: UserFixture::getTableName(),
+            param: [
+                UserFixture::ID => $user->id->toRaw(),
+                UserFixture::DELETED_AT => null,
+            ],
+        );
     }
 }

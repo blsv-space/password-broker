@@ -50,6 +50,7 @@ final class MoveEntryGroupSyncJob extends AbstractReplicableSyncJob
             }
         }
         $entryGroup->materializedPath = $entryGroupDomainService->makeMaterializedPath($entryGroup->id, $parentEntryGroup);
+        $entryGroup->parentEntryGroupId = $parentEntryGroup?->id;
         $entryGroupNewPath = $entryGroup->materializedPath->toRaw();
         $entryGroupRepository->beginTransaction();
         $entryGroupRepository->save($entryGroup);

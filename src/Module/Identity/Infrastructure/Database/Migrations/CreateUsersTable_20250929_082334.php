@@ -20,7 +20,8 @@ readonly class CreateUsersTable_20250929_082334 extends AbstractMigration
                 `isAdmin` tinyint(1) NOT NULL DEFAULT 0,
                 `publicKey` BLOB NOT NULL,
                 `createdAt` datatime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                `updatedAt` datatime NOT NULL DEFAULT CURRENT_TIMESTAMP
+                `updatedAt` datatime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `deletedAt` datatime DEFAULT NULL,
             );    
         ');
     }

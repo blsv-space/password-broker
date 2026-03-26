@@ -34,7 +34,7 @@ final class DeleteEntryGroupSyncJob extends AbstractReplicableSyncJob
         if (is_null($entryGroup)) {
             throw new InvalidArgumentException('Entry Group not found');
         }
-        $entryGroupRepository->removeById($entryGroup);
+        $entryGroupRepository->softDelete($entryGroup);
 
         EventDispatcher::getInstance()->dispatch(new EntryGroupDeletedEvent($entryGroup));
 

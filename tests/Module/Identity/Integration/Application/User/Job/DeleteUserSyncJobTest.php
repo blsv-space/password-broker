@@ -42,6 +42,7 @@ class DeleteUserSyncJobTest extends IntegrationTestCase
             table: UserFixture::getTableName(),
             param: [
                 UserFixture::ID => $user->id->toRaw(),
+                UserFixture::DELETED_AT => null,
             ],
         );
 

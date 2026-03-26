@@ -114,7 +114,7 @@ final class UserApplicationService implements ApplicationServiceInterface
      */
     public function delete(User $user): void
     {
-        $this->userRepository->removeById($user);
+        $this->userRepository->softDelete($user);
     }
 
     /**

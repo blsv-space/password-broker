@@ -12,6 +12,7 @@ use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\MaterializedPath;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\DateTime;
+use App\Shared\Domain\ValueObject\DeletedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Tests\Shared\AbstractFixture;
@@ -57,8 +58,8 @@ class EntryGroupFixture extends AbstractFixture
                 ?? static::faker()->dateTime()->format(DateTime::FORMAT)),
             updatedAt: UpdatedAt::fromRaw($attributes[self::UPDATED_AT]
                 ?? static::faker()->dateTime()->format(DateTime::FORMAT)),
-            deletedAt: isset($attributes[self::DELETED_AT])
-                ? DateTime::fromRaw($attributes[self::DELETED_AT])
+            deletedAt: !empty($attributes[self::DELETED_AT])
+                ? DeletedAt::fromRaw($attributes[self::DELETED_AT])
                 : null,
         );
 

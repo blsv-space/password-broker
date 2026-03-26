@@ -14,6 +14,7 @@ use App\Module\Identity\Domain\User\ValueObject\UserPublicKey;
 use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\DateTime;
+use App\Shared\Domain\ValueObject\DeletedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Tests\Shared\AbstractFixture;
@@ -28,6 +29,7 @@ class UserFixture extends AbstractFixture
     public const string RSA_PUBLIC_KEY = UserRepository::FIELD_RSA_PUBLIC_KEY;
     public const string CREATED_AT = UserRepository::FIELD_CREATED_AT;
     public const string UPDATED_AT = UserRepository::FIELD_UPDATED_AT;
+    public const string DELETED_AT = UserRepository::FIELD_DELETED_AT;
 
     /**
      *
@@ -47,6 +49,8 @@ class UserFixture extends AbstractFixture
             createdAt: CreatedAt::fromRaw($attributes[self::CREATED_AT]
                 ?? static::faker()->dateTime()->format(DateTime::FORMAT)),
             updatedAt: UpdatedAt::fromRaw($attributes[self::UPDATED_AT]
+                ?? static::faker()->dateTime()->format(DateTime::FORMAT)),
+            deletedAt: DeletedAt::fromRaw($attributes[self::DELETED_AT]
                 ?? static::faker()->dateTime()->format(DateTime::FORMAT)),
         );
 

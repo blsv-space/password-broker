@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Identity\Integration\Application\User\Service;
+namespace Tests\Module\Identity\Integration\Application\User\Service;
 
 use App\Module\Identity\Application\User\Service\Exception\RefreshTokenException;
 use App\Module\Identity\Application\User\Service\RefreshTokenApplicationService;

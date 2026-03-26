@@ -14,7 +14,10 @@ use App\Module\Identity\Domain\User\ValueObject\UserName;
 use App\Module\Identity\Domain\User\ValueObject\UserPublicKey;
 use App\Module\Identity\Infrastructure\Repository\AbstractIdentityRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
+use App\Shared\Domain\ValueObject\DeletedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
+use App\Shared\Infrastructure\Repository\RepositorySoftDeleteInterface;
+use App\Shared\Infrastructure\Repository\RepositorySoftDeleteTrait;
 use Inquisition\Core\Domain\Entity\EntityInterface;
 use Inquisition\Core\Domain\ValueObject\ValueObjectInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
@@ -30,10 +33,16 @@ use InvalidArgumentException;
  *
  * @extends AbstractIdentityRepository<User>
  * @implements UserRepositoryInterface<User>
+ * @implements RepositorySoftDeleteInterface<User>
  */
-class UserRepository extends AbstractIdentityRepository implements UserRepositoryInterface
+class UserRepository extends AbstractIdentityRepository implements UserRepositoryInterface, RepositorySoftDeleteInterface
 {
     use SingletonTrait;
+
+    /**
+     * @use RepositorySoftDeleteTrait<User>
+     */
+    use RepositorySoftDeleteTrait;
 
     public const string FIELD_ID = 'id';
     public const string FIELD_USER_NAME = 'userName';
@@ -43,6 +52,7 @@ class UserRepository extends AbstractIdentityRepository implements UserRepositor
     public const string FIELD_EMAIL = 'email';
     public const string FIELD_RSA_PUBLIC_KEY = 'publicKey';
     public const string FIELD_IS_ADMIN = 'isAdmin';
+    public const string FIELD_DELETED_AT = 'deletedAt';
 
     protected const string TABLE_NAME = 'users';
     protected const string ENTITY_CLASS_NAME = User::class;
@@ -68,6 +78,7 @@ class UserRepository extends AbstractIdentityRepository implements UserRepositor
             publicKey: UserPublicKey::fromRaw($row[self::FIELD_RSA_PUBLIC_KEY]),
             createdAt: CreatedAt::fromRaw($row[self::FIELD_CREATED_AT]),
             updatedAt: !empty($row[self::FIELD_UPDATED_AT]) ? UpdatedAt::fromRaw($row[self::FIELD_UPDATED_AT]) : null,
+            deletedAt: !empty($row[self::FIELD_DELETED_AT]) ? DeletedAt::fromRaw($row[self::FIELD_DELETED_AT]) : null,
         );
     }
 
@@ -100,6 +111,9 @@ class UserRepository extends AbstractIdentityRepository implements UserRepositor
         $updateAt = isset($array[UserRepository::FIELD_UPDATED_AT])
             ? UpdatedAt::fromRaw($array[UserRepository::FIELD_UPDATED_AT])
             : null;
+        $deletedAt = isset($array[UserRepository::FIELD_DELETED_AT])
+            ? DeletedAt::fromRaw($array[UserRepository::FIELD_DELETED_AT])
+            : null;
 
         return new User(
             id: UserId::fromRaw($array[UserRepository::FIELD_ID]),
@@ -110,6 +124,7 @@ class UserRepository extends AbstractIdentityRepository implements UserRepositor
             publicKey: UserPublicKey::fromRaw($array[UserRepository::FIELD_RSA_PUBLIC_KEY]),
             createdAt: $createdAt,
             updatedAt: $updateAt,
+            deletedAt: $deletedAt,
         );
     }
 }

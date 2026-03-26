@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Module\PasswordBroker\Integration\Application\EntryGroup\Job;
+
+use App\Module\PasswordBroker\Application\EntryGroup\Job\RenameEntryGroupSyncJob;
+use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
+use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
+use Tests\Shared\IntegrationTestCase;
+
+class RenameEntryGroupSyncJobTest extends IntegrationTestCase
+{
+    /**
+     * @throws PersistenceException
+     */
+    public function test_it_should_rename_an_entry_group(): void
+    {
+        $entryGroup = EntryGroupFixture::create(persist: true);
+
+        $oldName = $entryGroup->name->toRaw();
+        $newName = $oldName . ' ' . $this->faker->word();
+
+        $payload = [
+            RenameEntryGroupSyncJob::PAYLOAD_KEY_ID => $entryGroup->id->toRaw(),
+            RenameEntryGroupSyncJob::PAYLOAD_KEY_NAME => $newName,
+        ];
+
+        new RenameEntryGroupSyncJob($payload)->handle();
+
+        $this->assertDatabaseHas(EntryGroupFixture::getTableName(), [
+            EntryGroupFixture::ID => $entryGroup->id->toRaw(),
+            EntryGroupFixture::NAME => $newName,
+        ]);
+    }
+}
