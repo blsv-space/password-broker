@@ -52,6 +52,9 @@ abstract class AbstractTestCase extends TestCase
         );
     }
 
+    /**
+     * @throws PersistenceException
+     */
     private function databaseHas($table, array $param = [], ?string $connectionName = null): bool
     {
         $databaseConnections = DatabaseConnections::getInstance();
@@ -65,7 +68,23 @@ abstract class AbstractTestCase extends TestCase
 
         $where = '';
         if (count($param) > 0) {
-            $where = ' WHERE ' . implode(' AND ', array_map(fn(string $field) => "`$field` = :$field", array_keys($param)));
+            $where = ' WHERE ';
+            $queryParams = [];
+            foreach ($param as $key => $value) {
+                if (!is_string($key)) {
+                    throw new PersistenceException('Invalid parameter key type');
+                }
+                if (!is_string($value) && !is_numeric($value) && !is_null($value)) {
+                    throw new PersistenceException('Invalid parameter value type');
+                }
+                if (is_null($value)) {
+                    $queryParams[] = "`$key` IS NULL";
+                    unset($param[$key]);
+                    continue;
+                }
+                $queryParams[] = "`$key` = :$key";
+            }
+            $where .= implode(' AND ', $queryParams);
         }
 
         $statement = $databaseConnection->connect()->prepare("SELECT COUNT(*) FROM `$table` $where");
@@ -75,6 +94,9 @@ abstract class AbstractTestCase extends TestCase
         return $count > 0;
     }
 
+    /**
+     * @throws PersistenceException
+     */
     protected function assertDatabaseMissing($table, array $param = [], ?string $connectionName = null): void
     {
         $databaseHas = $this->databaseHas($table, $param, $connectionName);
@@ -129,8 +151,6 @@ abstract class AbstractTestCase extends TestCase
         $authApplicationService = AuthApplicationService::getInstance();
         new ReflectionProperty($authApplicationService, 'authUser')->setValue($authApplicationService, $user);
     }
-
-
 
     public function cleanUpStorage(): void
     {

@@ -104,8 +104,8 @@ class EntryGroupRepository extends AbstractPasswordBrokerRepository implements E
         return $this->findBy(
             [
                 new QueryCriteria(
-                    field: EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID,
-                    value: $entryGroup->materializedPath->toRaw() . '%',
+                    field: EntryGroupRepository::FIELD_MATERIALIZED_PATH,
+                    value: $entryGroup->materializedPath->toRaw() . '.%',
                     operator: QueryOperatorEnum::LIKE,
                 ),
             ],

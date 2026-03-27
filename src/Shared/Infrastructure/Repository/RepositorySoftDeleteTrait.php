@@ -34,7 +34,7 @@ trait RepositorySoftDeleteTrait
             ->prepare('UPDATE ' . $this->getTableName() . ' SET `deletedAt` = :deletedAt WHERE `id` = :id')
             ->execute([
                 'deletedAt' => $entity->deletedAt->toRaw(),
-                'id' => $entity->getId(),
+                'id' => $entity->getId()->toRaw(),
             ]);
 
     }
@@ -58,7 +58,7 @@ trait RepositorySoftDeleteTrait
         $this->getConnection()->connect()
             ->prepare('UPDATE ' . $this->getTableName() . ' SET `deletedAt` = NULL WHERE `id` = :id')
             ->execute([
-                'id' => $entity->getId(),
+                'id' => $entity->getId()->toRaw(),
             ]);
 
     }

@@ -141,7 +141,7 @@ class AuthControllerTest extends FunctionalTestCase
         $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
         $this->assertDatabaseMissing(
             table: RefreshTokenFixture::getTableName(),
-            param: [RefreshTokenFixture::USER_ID => $user->id],
+            param: [RefreshTokenFixture::USER_ID => $user->id->toRaw()],
         );
     }
 
