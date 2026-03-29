@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Tests\Module\PasswordBroker\Integration\Domain\EntryGroup\Service;
+namespace Tests\Module\PasswordBroker\Unit\Domain\EntryGroup\Service;
 
 use App\Module\PasswordBroker\Domain\EntryGroup\Service\EntryGroupDomainService;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
-use Tests\Shared\IntegrationTestCase;
+use Tests\Shared\UnitTestCase;
 
-class EntryGroupDomainServiceTest extends IntegrationTestCase
+class EntryGroupDomainServiceTest extends UnitTestCase
 {
     /**
      * @throws PersistenceException

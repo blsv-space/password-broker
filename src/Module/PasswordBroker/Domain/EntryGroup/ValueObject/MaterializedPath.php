@@ -34,7 +34,7 @@ class MaterializedPath extends AbstractValueObject
         $path = explode(self::SEPARATOR, $data);
         foreach ($path as $part) {
             try {
-                ID::validate($part);
+                Id::validate($part);
             } catch (InvalidArgumentException $_) {
                 throw new InvalidArgumentException('Invalid materialized path format');
             }
