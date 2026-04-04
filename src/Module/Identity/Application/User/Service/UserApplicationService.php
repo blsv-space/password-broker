@@ -10,6 +10,7 @@ use App\Module\Identity\Application\User\Job\UpdateUserSyncJob;
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
+use App\Module\Identity\Infrastructure\Security\PasswordHasher;
 use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
 use App\Shared\Domain\ValueObject\Id;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
@@ -22,10 +23,12 @@ final class UserApplicationService implements ApplicationServiceInterface
 {
     use SingletonTrait;
     private UserRepository $userRepository;
+    private PasswordHasher $passwordHasher;
 
     private function __construct()
     {
         $this->userRepository = UserRepository::getInstance();
+        $this->passwordHasher = PasswordHasher::getInstance();
     }
 
     /**
@@ -43,7 +46,7 @@ final class UserApplicationService implements ApplicationServiceInterface
         return new CreateUserSyncJob([
             CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
             CreateUserSyncJob::PAYLOAD_KEY_USER_NAME => $userName,
-            CreateUserSyncJob::PAYLOAD_KEY_PASSWORD => $password,
+            CreateUserSyncJob::PAYLOAD_KEY_HASHED_PASSWORD => $this->passwordHasher->hash($password),
             CreateUserSyncJob::PAYLOAD_KEY_EMAIL => $email,
             CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $isAdmin,
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,
@@ -61,9 +64,9 @@ final class UserApplicationService implements ApplicationServiceInterface
         ?string $password = null,
     ): User {
         return new UpdateUserSyncJob([
-            'id' => $uuid,
-            'userName' => $userName,
-            'password' => $password,
+            UpdateUserSyncJob::PAYLOAD_KEY_ID => $uuid,
+            UpdateUserSyncJob::PAYLOAD_KEY_USER_NAME => $userName,
+            UpdateUserSyncJob::PAYLOAD_KEY_HASHED_PASSWORD => $password ? $this->passwordHasher->hash($password) : null,
         ])->execute();
     }
 
@@ -72,7 +75,7 @@ final class UserApplicationService implements ApplicationServiceInterface
      */
     public function deleteUserSync(string $uuid): void
     {
-        new DeleteUserSyncJob(['id' => $uuid])->execute();
+        new DeleteUserSyncJob([DeleteUserSyncJob::PAYLOAD_KEY_ID => $uuid])->execute();
     }
 
     /**

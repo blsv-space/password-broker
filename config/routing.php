@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Module\Identity\Infrastructure\Http\Route\IdentityRoute;
 use App\Module\PasswordBroker\Infrastructure\Http\Route\PasswordBrokerRoute;
 use App\Shared\Infrastructure\Http\Route\AppRoute;

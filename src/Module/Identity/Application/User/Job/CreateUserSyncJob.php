@@ -9,8 +9,6 @@ use App\Module\Identity\Application\User\Service\UserApplicationService;
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\Identity\Domain\User\Validator\PasswordValidator;
-use App\Module\Identity\Infrastructure\Http\Controller\UserController;
-use App\Module\Identity\Infrastructure\Security\PasswordHasher;
 use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
 use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
@@ -20,7 +18,7 @@ use Throwable;
 final class CreateUserSyncJob extends AbstractReplicableSyncJob
 {
     public const string PAYLOAD_KEY_ID = UserRepository::FIELD_ID;
-    public const string PAYLOAD_KEY_PASSWORD = UserController::FIELD_PASSWORD;
+    public const string PAYLOAD_KEY_HASHED_PASSWORD = 'hashedPassword';
     public const string PAYLOAD_KEY_RSA_PRIVATE_KEY = 'rsaPrivateKey';
     public const string PAYLOAD_KEY_RSA_PUBLIC_KEY = UserRepository::FIELD_RSA_PUBLIC_KEY;
     public const string PAYLOAD_KEY_USER_NAME = UserRepository::FIELD_USER_NAME;
@@ -34,11 +32,9 @@ final class CreateUserSyncJob extends AbstractReplicableSyncJob
     public function handle(): User
     {
         $userRepository = UserRepository::getInstance();
-        $passwordHasher = PasswordHasher::getInstance();
         $userApplicationService = UserApplicationService::getInstance();
         $this->validate();
         $payload = $this->payload;
-        $payload['hashedPassword'] = $passwordHasher->hash($this->payload['password']);
         unset($payload['password']);
 
         $user = $userRepository->mapArrayToEntity($payload);
@@ -56,10 +52,10 @@ final class CreateUserSyncJob extends AbstractReplicableSyncJob
             throw new InvalidArgumentException('User id is required');
         }
 
-        if (empty($this->payload[self::PAYLOAD_KEY_PASSWORD])) {
+        if (empty($this->payload[self::PAYLOAD_KEY_HASHED_PASSWORD])) {
             throw new InvalidArgumentException('Password is required');
         }
-        new PasswordValidator()->validate($this->payload[self::PAYLOAD_KEY_PASSWORD]);
+        new PasswordValidator()->validate($this->payload[self::PAYLOAD_KEY_HASHED_PASSWORD]);
 
         if (empty($this->payload[self::PAYLOAD_KEY_USER_NAME])) {
             throw new InvalidArgumentException('User name is required');

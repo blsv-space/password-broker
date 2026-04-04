@@ -11,6 +11,7 @@ use App\Module\Identity\Domain\User\Validator\PasswordValidator;
 use App\Module\Identity\Domain\User\ValueObject\HashedPassword;
 use App\Module\Identity\Domain\User\ValueObject\UserName;
 use App\Module\Identity\Infrastructure\Security\PasswordHasher;
+use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
 use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 use InvalidArgumentException;
@@ -18,24 +19,24 @@ use Throwable;
 
 class UpdateUserSyncJob extends AbstractReplicableSyncJob
 {
+    public const string PAYLOAD_KEY_ID = UserRepository::FIELD_ID;
+    public const string PAYLOAD_KEY_HASHED_PASSWORD = 'hashedPassword';
+    public const string PAYLOAD_KEY_USER_NAME = UserRepository::FIELD_USER_NAME;
+
     /**
      * @throws Throwable
      */
     #[\Override]
     public function handle(): User
     {
-        $passwordHasher = PasswordHasher::getInstance();
         $userApplicationService = UserApplicationService::getInstance();
         $this->validate();
         $user = $userApplicationService->getUserByUuid($this->payload['id']);
         if (!$user) {
             throw new InvalidArgumentException('User not found');
         }
-        if (!empty($this->payload['password'])) {
-            new PasswordValidator()->validate($this->payload['password']);
-            $user->hashedPassword = HashedPassword::fromRaw(
-                $passwordHasher->hash($this->payload['password']),
-            );
+        if (!empty($this->payload[self::PAYLOAD_KEY_HASHED_PASSWORD])) {
+            $user->hashedPassword = $this->payload[self::PAYLOAD_KEY_HASHED_PASSWORD];
         }
         $user->userName = UserName::fromRaw($this->payload['userName']);
         $userApplicationService->update($user);

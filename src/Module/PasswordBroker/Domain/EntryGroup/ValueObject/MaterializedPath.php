@@ -13,7 +13,7 @@ class MaterializedPath extends AbstractValueObject
     public const string SEPARATOR = '.';
 
     #[\Override]
-    public function toRaw(): mixed
+    public function toRaw(): string
     {
         return $this->value;
     }

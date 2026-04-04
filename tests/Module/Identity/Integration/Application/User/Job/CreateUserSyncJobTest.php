@@ -27,7 +27,7 @@ class CreateUserSyncJobTest extends IntegrationTestCase
         $payload = [
             CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
             CreateUserSyncJob::PAYLOAD_KEY_USER_NAME => $this->faker->userName(),
-            CreateUserSyncJob::PAYLOAD_KEY_PASSWORD => $this->faker->password(),
+            CreateUserSyncJob::PAYLOAD_KEY_HASHED_PASSWORD => $this->faker->password(),
             CreateUserSyncJob::PAYLOAD_KEY_EMAIL => $this->faker->email(),
             CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $this->faker->boolean(),
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,
@@ -52,7 +52,7 @@ class CreateUserSyncJobTest extends IntegrationTestCase
         $payload = [
             CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
             CreateUserSyncJob::PAYLOAD_KEY_USER_NAME => $this->faker->userName(),
-            CreateUserSyncJob::PAYLOAD_KEY_PASSWORD => $this->faker->password(),
+            CreateUserSyncJob::PAYLOAD_KEY_HASHED_PASSWORD => $this->faker->password(),
             CreateUserSyncJob::PAYLOAD_KEY_EMAIL => $this->faker->email(),
             CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $this->faker->boolean(),
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,
@@ -75,7 +75,7 @@ class CreateUserSyncJobTest extends IntegrationTestCase
         $payload = [
             CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
             CreateUserSyncJob::PAYLOAD_KEY_USER_NAME => $this->faker->userName(),
-            CreateUserSyncJob::PAYLOAD_KEY_PASSWORD => $this->faker->password(),
+            CreateUserSyncJob::PAYLOAD_KEY_HASHED_PASSWORD => $this->faker->password(),
             CreateUserSyncJob::PAYLOAD_KEY_EMAIL => $this->faker->email(),
             CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $this->faker->boolean(),
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,

@@ -6,6 +6,7 @@ namespace App\Module\Identity\Application\User\Job;
 
 use App\Module\Identity\Application\User\Event\UserDeletedEvent;
 use App\Module\Identity\Application\User\Service\UserApplicationService;
+use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
 use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 use InvalidArgumentException;
@@ -13,6 +14,8 @@ use Throwable;
 
 class DeleteUserSyncJob extends AbstractReplicableSyncJob
 {
+    public const string PAYLOAD_KEY_ID = UserRepository::FIELD_ID;
+
     /**
      * @throws Throwable
      */

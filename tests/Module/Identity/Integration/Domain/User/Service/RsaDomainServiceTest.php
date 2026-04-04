@@ -7,8 +7,7 @@ namespace Tests\Module\Identity\Integration\Domain\User\Service;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
-use phpseclib3\Crypt\RSA\PrivateKey;
-use phpseclib3\Crypt\RSA\PublicKey;
+use OpenSSLAsymmetricKey;
 use Tests\Shared\IntegrationTestCase;
 
 class RsaDomainServiceTest extends IntegrationTestCase
@@ -32,15 +31,14 @@ class RsaDomainServiceTest extends IntegrationTestCase
         $rsaDomainService = RsaDomainService::getInstance();
         $rsaKeyPair = $rsaDomainService->generateKeyPair(masterPassword: $password);
         $publicKey = $rsaDomainService->getPublicKeyFromString($rsaKeyPair->publicKey);
-        $this->assertInstanceOf(PublicKey::class, $publicKey);
-        $messageEncrypted = $publicKey->encrypt($message);
+        $this->assertInstanceOf(OpenSSLAsymmetricKey::class, $publicKey);
+        $messageEncrypted = $rsaDomainService->encryptByPublic($message, $publicKey);
         $rsaDomainService->storeUserPrivateKeyFromString($userId, $rsaKeyPair->privateKey);
-        $keyFromStorage = $rsaDomainService->getUserPrivateKey($userId, $password);
-        $this->assertInstanceOf(PrivateKey::class, $keyFromStorage);
+        $keyFromStorage = $rsaDomainService->getUserPrivateKeyString($userId);
         $this->assertNotEmpty($keyFromStorage);
-        $privateKey = $rsaDomainService->getPrivateKeyFromString(privateKey: $keyFromStorage->toString(type: 'PKCS8'), masterPassword: $password);
-        $this->assertInstanceOf(PrivateKey::class, $privateKey);
-        $messageDecrypt = $privateKey->decrypt($messageEncrypted);
+        $privateKey = $rsaDomainService->getPrivateKeyFromString(privateKey: $keyFromStorage, masterPassword: $password);
+        $this->assertInstanceOf(OpenSSLAsymmetricKey::class, $privateKey);
+        $messageDecrypt = $rsaDomainService->decryptByPrivate($messageEncrypted, $privateKey);
         $this->assertEquals($message, $messageDecrypt);
     }
 }
