@@ -50,6 +50,11 @@ class EntryGroupRepository extends AbstractPasswordBrokerRepository implements E
     protected const string TABLE_NAME = 'entryGroups';
     protected const string ENTITY_CLASS_NAME = EntryGroup::class;
 
+    private function __construct()
+    {
+        parent::__construct();
+    }
+
     /**
      * @throws InvalidArgumentException
      * @return EntryGroup

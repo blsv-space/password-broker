@@ -37,6 +37,11 @@ class EntryGroupUserRepository extends AbstractPasswordBrokerRepository implemen
     public const string FIELD_CREATED_AT = 'createdAt';
     public const string FIELD_UPDATED_AT = 'updatedAt';
 
+    private function __construct()
+    {
+        parent::__construct();
+    }
+
     #[Override]
     protected function mapRowToEntity(array $row): EntityInterface
     {
