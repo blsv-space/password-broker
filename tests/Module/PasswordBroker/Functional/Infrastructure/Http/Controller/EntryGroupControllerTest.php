@@ -6,7 +6,7 @@ namespace Tests\Module\PasswordBroker\Functional\Infrastructure\Http\Controller;
 
 use App\Module\PasswordBroker\Application\EntryGroup\DTO\EntryGroupTreeResponse;
 use App\Module\PasswordBroker\Domain\EntryGroup\DTO\EntryGroupTreeNode;
-use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Module\PasswordBroker\Infrastructure\Http\Controller\EntryGroupController;
 use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryGroupRoute;
 use App\Module\PasswordBroker\Infrastructure\Http\Route\PasswordBrokerRoute;

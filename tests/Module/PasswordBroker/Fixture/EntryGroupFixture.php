@@ -9,7 +9,7 @@ use App\Module\PasswordBroker\Domain\EntryGroup\Service\EntryGroupDomainService;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupName;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\MaterializedPath;
-use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\DateTime;
 use App\Shared\Domain\ValueObject\DeletedAt;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Module\PasswordBroker\Integration\Ifrastructure\EntryGroup;
+namespace PasswordBroker\Integration\Ifrastructure\EntryGroup\Repository;
 
-use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
 use Tests\Shared\IntegrationTestCase;

@@ -6,7 +6,7 @@ namespace Tests\Module\PasswordBroker\Integration\Application\EntryGroup\Service
 
 use App\Module\PasswordBroker\Application\EntryGroup\Service\EntryGroupApplicationService;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
-use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Shared\Domain\ValueObject\DateTime;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;

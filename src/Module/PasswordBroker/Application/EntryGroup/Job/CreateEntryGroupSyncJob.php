@@ -8,7 +8,7 @@ use App\Module\PasswordBroker\Application\EntryGroup\Event\EntryGroupCreatedEven
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Service\EntryGroupDomainService;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
-use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Module\PasswordBroker\Application\EntryGroup\DTO;
 
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
-use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use Inquisition\Core\Application\DTO\EntityResponseInterface;
 use Inquisition\Core\Domain\Entity\EntityInterface;
 use InvalidArgumentException;

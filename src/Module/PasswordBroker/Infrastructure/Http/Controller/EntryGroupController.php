@@ -8,7 +8,7 @@ use App\Module\Identity\Application\User\Service\Exception\AuthException;
 use App\Module\PasswordBroker\Application\EntryGroup\DTO\EntryGroupResponse;
 use App\Module\PasswordBroker\Application\EntryGroup\DTO\EntryGroupTreeResponse;
 use App\Module\PasswordBroker\Application\EntryGroup\Service\EntryGroupApplicationService;
-use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Shared\Application\Validation\Rule\ValidUuidRule;
 use Inquisition\Core\Application\Validation\Exception\ValidationException;
 use Inquisition\Core\Application\Validation\HttpRequestValidator;

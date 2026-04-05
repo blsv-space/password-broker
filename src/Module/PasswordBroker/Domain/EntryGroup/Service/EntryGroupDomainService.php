@@ -8,7 +8,7 @@ use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Repository\EntryGroupRepositoryInterface;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\MaterializedPath;
-use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use Inquisition\Core\Domain\Service\DomainServiceInterface;
 use Inquisition\Foundation\Singleton\SingletonTrait;
 

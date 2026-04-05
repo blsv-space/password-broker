@@ -14,7 +14,7 @@ use App\Module\PasswordBroker\Domain\EntryGroup\DTO\EntryGroupTreeNode;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Service\EntryGroupDomainService;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
-use App\Module\PasswordBroker\Infrastructure\EntryGroup\EntryGroupRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\AbstractRepository;

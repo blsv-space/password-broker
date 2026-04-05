@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Module\PasswordBroker\Infrastructure\EntryGroup;
+namespace App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository;
 
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Repository\EntryGroupRepositoryInterface;
@@ -49,11 +49,6 @@ class EntryGroupRepository extends AbstractPasswordBrokerRepository implements E
 
     protected const string TABLE_NAME = 'entryGroups';
     protected const string ENTITY_CLASS_NAME = EntryGroup::class;
-
-    private function __construct()
-    {
-        parent::__construct();
-    }
 
     /**
      * @throws InvalidArgumentException
