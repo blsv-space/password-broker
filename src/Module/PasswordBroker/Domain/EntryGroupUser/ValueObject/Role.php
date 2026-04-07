@@ -8,6 +8,9 @@ use App\Module\PasswordBroker\Domain\EntryGroupUser\Enum\RoleEnum;
 use Inquisition\Core\Domain\ValueObject\AbstractValueObject;
 use InvalidArgumentException;
 
+/**
+ * @property RoleEnum $value
+ */
 class Role extends AbstractValueObject
 {
     #[\Override]

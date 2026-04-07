@@ -79,6 +79,8 @@ class AuthApplicationServiceTest extends IntegrationTestCase
     }
 
     /**
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
      * @throws PersistenceException
      */
     public function test_it_should_logout_user(): void
@@ -115,6 +117,7 @@ class AuthApplicationServiceTest extends IntegrationTestCase
     /**
      * @throws PersistenceException
      * @throws RefreshTokenDomainException
+     * @throws RefreshTokenException
      */
     public function test_it_should_refresh_user_token(): void
     {
