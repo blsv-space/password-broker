@@ -11,3 +11,4 @@
 *.rnd
 
 /var
+/.php-cs-fixer.cache
