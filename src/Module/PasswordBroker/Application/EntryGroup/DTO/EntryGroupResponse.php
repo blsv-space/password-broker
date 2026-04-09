@@ -15,7 +15,6 @@ class EntryGroupResponse implements EntityResponseInterface
     private EntryGroup $entryGroup;
 
     /**
-     *
      * @throws InvalidArgumentException
      */
     #[\Override]

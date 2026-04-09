@@ -10,6 +10,10 @@ use App\Module\PasswordBroker\Domain\EntryGroupUser\Entity\EntryGroupUser;
 use App\Shared\Infrastructure\Repository\EntityRepositoryInterface;
 use Inquisition\Core\Domain\Repository\RepositoryInterface;
 
+/**
+ * @extends RepositoryInterface<EntryGroupUser>
+ * @extends EntityRepositoryInterface<EntryGroupUser>
+ */
 interface EntryGroupUserRepositoryInterface extends RepositoryInterface, EntityRepositoryInterface
 {
     public function findByUserId(UserId $userId): array;

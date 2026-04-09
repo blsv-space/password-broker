@@ -24,7 +24,7 @@ final readonly class EntryGroupRoute extends AbstractRouterRegistry
         );
 
         $routeGroup
-            ->prefix('/entryGroup')
+            ->prefix('/' . self::GROUP_NAME)
             ->get('', EntryGroupController::class, RestControllerInterface::ACTION_INDEX)
             ->post('', EntryGroupController::class, RestControllerInterface::ACTION_STORE)
             ->get('/{id}', EntryGroupController::class, RestControllerInterface::ACTION_SHOW)

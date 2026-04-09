@@ -75,6 +75,9 @@ class EntryGroupRepositoryTest extends IntegrationTestCase
 
         $this->repository->restore($entryGroup);
 
+        /**
+         * @psalm-suppress TypeDoesNotContainNull
+         */
         $this->assertNull($entryGroup->deletedAt);
         $this->assertDatabaseHas(EntryGroupFixture::getTableName(), [
             EntryGroupFixture::ID => $entryGroup->id->toRaw(),

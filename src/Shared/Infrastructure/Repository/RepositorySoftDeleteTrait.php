@@ -28,12 +28,14 @@ trait RepositorySoftDeleteTrait
             return;
         }
 
-        $entity->deletedAt = DeletedAt::now();
+        $deletedAt = DeletedAt::now();
+        $deletedAtRaw = $deletedAt->toRaw();
+        $entity->deletedAt = $deletedAt;
 
         $this->getConnection()->connect()
             ->prepare('UPDATE ' . $this->getTableName() . ' SET `deletedAt` = :deletedAt WHERE `id` = :id')
             ->execute([
-                'deletedAt' => $entity->deletedAt->toRaw(),
+                'deletedAt' => $deletedAtRaw,
                 'id' => $entity->getId()->toRaw(),
             ]);
 

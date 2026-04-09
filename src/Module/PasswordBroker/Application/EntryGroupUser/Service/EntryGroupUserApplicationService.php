@@ -12,11 +12,13 @@ use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
+use App\Module\PasswordBroker\Application\EntryGroup\Job\DeleteEntryGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Job\AddUserToGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Job\ChangeUserRoleInGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Job\DeleteUserFromGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserNotHasNoRights;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserNotInEntryGroupException;
+use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\EntryGroupUserNotFoundException;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\TargetGroupNotFoundException;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\TargetUserNotFoundException;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\TargetUserNotInEntryGroupException;
@@ -144,6 +146,16 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
     }
 
     /**
+     * @throws PersistenceException
+     */
+    public function deleteEntryGroupSync(EntryGroupUserId $entryGroupUserId): void
+    {
+        new DeleteEntryGroupSyncJob([
+            DeleteEntryGroupSyncJob::PAYLOAD_KEY_ID => $entryGroupUserId->toRaw(),
+        ])->handle();
+    }
+
+    /**
      * @throws AuthException
      * @throws AuthUserNotHasNoRights
      * @throws AuthUserNotInEntryGroupException
@@ -154,7 +166,7 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
      * @throws TargetUserNotFoundException
      * @throws TargetUserNotInEntryGroupException
      */
-    public function changeUserRole(UserId $targetUserId, EntryGroupId $entryGroupId, Role $role): void
+    public function changeUserRole(UserId $targetUserId, EntryGroupId $entryGroupId, Role $role): EntryGroupUser
     {
         $targetUser = $this->getTargetUser($targetUserId);
         $entryGroup = $this->getTargetEntryGroup($entryGroupId);
@@ -168,11 +180,46 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
             throw new AuthUserNotHasNoRights();
         }
 
-        new ChangeUserRoleInGroupSyncJob([
+        return new ChangeUserRoleInGroupSyncJob([
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_USER_ID => $targetUser->getId()->toRaw(),
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroup->getId()->toRaw(),
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_ROLE => $role->value,
         ])->handle();
+    }
+
+    /**
+     * @throws AuthException
+     * @throws AuthUserNotHasNoRights
+     * @throws AuthUserNotInEntryGroupException
+     * @throws EntryGroupUserNotFoundException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
+     * @throws PersistenceException
+     * @throws TargetGroupNotFoundException
+     * @throws TargetUserNotFoundException
+     * @throws TargetUserNotInEntryGroupException
+     */
+    public function changeUserRoleByEntryGroupUserId(EntryGroupUserId $entryGroupUserId, Role $role): EntryGroupUser
+    {
+        $entryGroupUser = $this->entryGroupUserRepository->findById($entryGroupUserId);
+
+        if (!$entryGroupUser) {
+            throw new EntryGroupUserNotFoundException($entryGroupUserId);
+        }
+
+        return $this->changeUserRole(
+            targetUserId: $entryGroupUser->userId,
+            entryGroupId: $entryGroupUser->entryGroupId,
+            role: $role,
+        );
+    }
+
+    /**
+     * @throws PersistenceException
+     */
+    public function getEntryGroupUserById(EntryGroupUserId $entryGroupUserId): ?EntryGroupUser
+    {
+        return $this->entryGroupUserRepository->findById($entryGroupUserId);
     }
 
     /**

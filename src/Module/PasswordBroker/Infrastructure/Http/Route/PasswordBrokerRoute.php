@@ -25,6 +25,7 @@ final readonly class PasswordBrokerRoute extends AbstractRouterRegistry
             ->prefix('/passwordBroker');
 
         EntryGroupRoute::register($routeGroup);
+        EntryGroupUserRoute::register($routeGroup);
     }
 
 }
