@@ -33,7 +33,8 @@ final readonly class CreateEntryGroupUserTable_20260128_031434 extends AbstractM
                 `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updatedAt` TIMESTAMP DEFAULT NULL,
                 FOREIGN KEY (`entryGroupId`) REFERENCES `passwordBrokerEntryGroups`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-                FOREIGN KEY (`userId`) REFERENCES `identityUsers`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+                FOREIGN KEY (`userId`) REFERENCES `identityUsers`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT `idxEntryGroupIdUserId` UNIQUE (`entryGroupId`, `userId`)
             );
         ");
     }

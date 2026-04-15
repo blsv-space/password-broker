@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Module\PasswordBroker\Integration\Application\EntryGroup\Service;
 
+use App\Module\Identity\Domain\User\Entity\User;
+use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\PasswordBroker\Application\EntryGroup\Service\EntryGroupApplicationService;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
@@ -12,12 +14,29 @@ use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryOperatorEnum;
 use InvalidArgumentException;
+use ReflectionException;
+use Tests\Module\Identity\Fixture\UserFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
 use Tests\Shared\IntegrationTestCase;
 use Throwable;
 
 class EntryGroupApplicationServiceTest extends IntegrationTestCase
 {
+    private User $user;
+
+    /**
+     * @throws PersistenceException
+     * @throws ReflectionException
+     * @throws RsaDomainServiceException
+     */
+    #[\Override]
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->user = UserFixture::create(persist: true);
+        $this->actAs($this->user);
+    }
+
     /**
      * @throws Throwable
      * @throws PersistenceException
@@ -82,6 +101,7 @@ class EntryGroupApplicationServiceTest extends IntegrationTestCase
      */
     public function test_it_should_create_an_entry_group_from_primitives(): void
     {
+        $this->actAs(UserFixture::create(persist: true));
         $entryGroupApplicationService = EntryGroupApplicationService::getInstance();
         $name = $this->faker->word();
         $parentEntryGroupId = EntryGroupFixture::create(persist: true)->id->toRaw();

@@ -9,24 +9,18 @@ use Inquisition\Core\Infrastructure\Http\Request\HttpRequest;
 use Inquisition\Core\Infrastructure\Http\Response\HttpResponse;
 use Inquisition\Core\Infrastructure\Http\Router\Exception\RouteNotFoundException;
 use Inquisition\Core\Infrastructure\Http\Router\RequestDispatcher;
-use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use InvalidArgumentException;
 
 class FunctionalTestCase extends AbstractTestCase
 {
     protected RequestDispatcher $dispatcher;
 
-    /**
-     * @throws PersistenceException
-     */
     #[\Override]
     public function setUp(): void
     {
-        parent::setUp();
-
         $this->dispatcher = RequestDispatcher::getInstance();
-        $this->flushDatabase();
-        $this->resetFixtures();
+
+        parent::setUp();
     }
 
     protected function buildUri(

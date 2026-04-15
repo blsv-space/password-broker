@@ -22,6 +22,10 @@ class Role extends AbstractValueObject
     #[\Override]
     public static function fromRaw(mixed $data): static
     {
+        if ($data instanceof RoleEnum) {
+            return new static($data);
+        }
+
         static::validate($data);
 
         return new static(RoleEnum::from($data));

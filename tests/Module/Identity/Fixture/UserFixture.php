@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Module\Identity\Fixture;
 
 use App\Module\Identity\Domain\User\Entity\User;
+use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
+use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\Identity\Domain\User\ValueObject\Email;
 use App\Module\Identity\Domain\User\ValueObject\HashedPassword;
 use App\Module\Identity\Domain\User\ValueObject\IsAdmin;
@@ -30,22 +32,32 @@ class UserFixture extends AbstractFixture
     public const string CREATED_AT = UserRepository::FIELD_CREATED_AT;
     public const string UPDATED_AT = UserRepository::FIELD_UPDATED_AT;
     public const string DELETED_AT = UserRepository::FIELD_DELETED_AT;
+    public const string MASTER_PASSWORD = 'masterPassword';
+    public const string DEFAULT_MASTER_PASSWORD = 'password_master';
 
     /**
-     *
-     *
      * @throws PersistenceException
+     * @throws RsaDomainServiceException
      */
     #[\Override]
     public static function create(array $attributes = [], bool $persist = false): User
     {
+        $userId = UserId::fromRaw(static::generateId($attributes[self::ID] ?? UserId::generate()->toRaw()));
+        if (array_key_exists(self::RSA_PUBLIC_KEY, $attributes)) {
+            $publicKey = UserPublicKey::fromRaw($attributes[self::RSA_PUBLIC_KEY]);
+        } else {
+            $rsaDomainService = RsaDomainService::getInstance();
+            $rsaKeyPair = $rsaDomainService->generateKeyPair($attributes[self::MASTER_PASSWORD] ?? self::DEFAULT_MASTER_PASSWORD);
+            $rsaDomainService->storeUserPrivateKeyFromString($userId, $rsaKeyPair->privateKey);
+            $publicKey = UserPublicKey::fromRaw($rsaKeyPair->publicKey);
+        }
         $user = new User(
-            id: UserId::fromRaw(static::generateId($attributes[self::ID] ?? UserId::generate()->toRaw())),
+            id: $userId,
             userName: UserName::fromRaw($attributes[self::USER_NAME] ?? static::faker()->userName()),
             hashedPassword: HashedPassword::fromRaw($attributes[self::HASHED_PASSWORD] ?? static::faker()->sha256()),
             isAdmin: IsAdmin::fromRaw($attributes[self::IS_ADMIN] ?? static::faker()->boolean()),
             email: Email::fromRaw($attributes[self::EMAIL] ?? static::faker()->email()),
-            publicKey: UserPublicKey::fromRaw($attributes[self::RSA_PUBLIC_KEY] ?? static::faker()->sha256()),
+            publicKey: $publicKey,
             createdAt: CreatedAt::fromRaw($attributes[self::CREATED_AT]
                 ?? static::faker()->dateTime()->format(DateTime::FORMAT)),
             updatedAt: UpdatedAt::fromRaw($attributes[self::UPDATED_AT]

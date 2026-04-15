@@ -24,20 +24,34 @@ abstract class AbstractTestCase extends TestCase
 {
     protected Generator $faker;
 
+    /**
+     * @throws PersistenceException
+     */
     #[\Override]
     protected function tearDown(): void
     {
+        BootTestHelper::boot();
+
         parent::tearDown();
     }
 
+    /**
+     * @throws PersistenceException
+     */
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->flushDatabase();
+        $this->resetFixtures();
+
         $this->faker = Factory::create();
     }
 
+    /**
+     * @throws PersistenceException
+     */
     protected function assertDatabaseHas($table, array $param = [], ?string $connectionName = null): void
     {
         $databaseHas = $this->databaseHas($table, $param, $connectionName);

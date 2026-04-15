@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Module\Identity\Functional\Infrastructure\Http\Controller;
 
+use App\Module\Identity\Application\User\Service\AuthApplicationService;
+use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Infrastructure\Http\Controller\UserController;
 use App\Module\Identity\Infrastructure\Http\Route\IdentityRoute;
 use App\Module\Identity\Infrastructure\Http\Route\UserRoute;
@@ -42,6 +44,7 @@ class UserControllerTest extends FunctionalTestCase
      * @throws PersistenceException
      * @throws RouteNotFoundException
      * @throws ReflectionException
+     * @throws RsaDomainServiceException
      */
     public function test_it_should_list_users(): void
     {
@@ -84,6 +87,7 @@ class UserControllerTest extends FunctionalTestCase
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
     public function test_it_should_found_user(): void
     {
@@ -143,6 +147,7 @@ class UserControllerTest extends FunctionalTestCase
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
     public function test_it_should_create_user(): void
     {
@@ -179,6 +184,7 @@ class UserControllerTest extends FunctionalTestCase
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
     public function test_it_should_show_user(): void
     {
@@ -212,6 +218,7 @@ class UserControllerTest extends FunctionalTestCase
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
     public function test_it_should_not_show_user_hashed_password(): void
     {
@@ -245,6 +252,7 @@ class UserControllerTest extends FunctionalTestCase
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
     public function test_it_should_update_user(): void
     {

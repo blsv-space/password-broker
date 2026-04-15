@@ -15,7 +15,7 @@ use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use JsonException;
 use Override;
 
-final readonly class AuthMiddleware implements MiddlewareInterface
+final readonly class AdminMiddleware implements MiddlewareInterface
 {
     private AuthApplicationService $authApplicationService;
 
@@ -33,10 +33,10 @@ final readonly class AuthMiddleware implements MiddlewareInterface
     #[Override]
     public function process(RequestInterface $request, callable $next): ResponseInterface
     {
-        if ($this->authApplicationService->authUser()) {
+        if ($this->authApplicationService->authUser()?->isAdmin) {
             return $next($request);
         }
 
-        return ResponseFactory::unauthorized();
+        return ResponseFactory::forbidden("You don't have permission to access this resource.");
     }
 }

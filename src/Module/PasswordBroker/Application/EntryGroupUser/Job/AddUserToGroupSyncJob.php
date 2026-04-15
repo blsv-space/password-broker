@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Module\PasswordBroker\Application\EntryGroupUser\Job;
 
+use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Event\EntryGroupUserCreatedEvent;
+use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\Entity\EntryGroupUser;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\ValueObject\Role;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
@@ -34,11 +36,12 @@ class AddUserToGroupSyncJob extends AbstractReplicableSyncJob
         $this->validate();
 
         $entryGroupUserRepository = EntryGroupUserRepository::getInstance();
-        $user = UserRepository::getInstance()->findById($this->payload[self::PAYLOAD_KEY_USER_ID]);
+        $user = UserRepository::getInstance()->findById(UserId::fromRaw($this->payload[self::PAYLOAD_KEY_USER_ID]));
         if (is_null($user)) {
             throw new InvalidArgumentException('User not found');
         }
-        $entryGroup = EntryGroupRepository::getInstance()->findById($this->payload[self::PAYLOAD_KEY_ENTRY_GROUP_ID]);
+        $entryGroup = EntryGroupRepository::getInstance()
+            ->findById(EntryGroupId::fromRaw($this->payload[self::PAYLOAD_KEY_ENTRY_GROUP_ID]));
         if (is_null($entryGroup)) {
             throw new InvalidArgumentException('Entry Group not found');
         }

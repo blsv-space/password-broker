@@ -11,6 +11,7 @@ use App\Module\PasswordBroker\Domain\EntryGroupUser\Repository\EntryGroupUserRep
 use App\Module\PasswordBroker\Domain\EntryGroupUser\ValueObject\EncryptedAesPassword;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\ValueObject\EntryGroupUserId;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\ValueObject\Role;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Module\PasswordBroker\Infrastructure\Repository\AbstractPasswordBrokerRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
@@ -36,6 +37,9 @@ class EntryGroupUserRepository extends AbstractPasswordBrokerRepository implemen
     public const string FIELD_ROLE = 'role';
     public const string FIELD_CREATED_AT = 'createdAt';
     public const string FIELD_UPDATED_AT = 'updatedAt';
+
+    protected const string TABLE_NAME = 'entryGroupUser';
+    protected const string ENTITY_CLASS_NAME = EntryGroupUser::class;
 
     private function __construct()
     {
@@ -65,13 +69,17 @@ class EntryGroupUserRepository extends AbstractPasswordBrokerRepository implemen
     #[Override]
     public function mapArrayToEntity(array $array): EntryGroupUser
     {
+        $createdAt = isset($array[EntryGroupRepository::FIELD_CREATED_AT])
+            ? CreatedAt::fromRaw($array[EntryGroupRepository::FIELD_CREATED_AT])
+            : null;
+
         return new EntryGroupUser(
             id: EntryGroupUserId::fromRaw($array[self::FIELD_ID]),
             entryGroupId: EntryGroupId::fromRaw($array[self::FIELD_ENTRY_GROUP_ID]),
             userId: UserId::fromRaw($array[self::FIELD_USER_ID]),
             role: Role::fromRaw($array[self::FIELD_ROLE]),
             encryptedAesPassword: EncryptedAesPassword::fromRaw($array[self::FIELD_ENCRYPTED_AES_PASSWORD]),
-            createdAt: CreatedAt::fromRaw($array[self::FIELD_CREATED_AT]),
+            createdAt: $createdAt,
             updatedAt: !empty($array[self::FIELD_UPDATED_AT]) ? UpdatedAt::fromRaw($array[self::FIELD_UPDATED_AT]) : null,
         );
     }

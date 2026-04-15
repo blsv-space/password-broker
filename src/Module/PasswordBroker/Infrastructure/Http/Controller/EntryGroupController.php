@@ -8,7 +8,11 @@ use App\Module\Identity\Application\User\Service\Exception\AuthException;
 use App\Module\PasswordBroker\Application\EntryGroup\DTO\EntryGroupResponse;
 use App\Module\PasswordBroker\Application\EntryGroup\DTO\EntryGroupTreeResponse;
 use App\Module\PasswordBroker\Application\EntryGroup\Service\EntryGroupApplicationService;
+use App\Module\PasswordBroker\Application\EntryGroupUser\DTO\EntryGroupUserResponse;
+use App\Module\PasswordBroker\Application\EntryGroupUser\Service\EntryGroupUserApplicationService;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroupUser\Repository\EntryGroupUserRepository;
+use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryGroupRoute;
 use App\Shared\Application\Validation\Rule\ValidUuidRule;
 use Inquisition\Core\Application\Validation\Exception\ValidationException;
 use Inquisition\Core\Application\Validation\HttpRequestValidator;
@@ -29,13 +33,16 @@ final readonly class EntryGroupController extends AbstractRestController impleme
 {
     public const string ACTION_MOVE = 'move';
     public const string ACTION_SEARCH = 'search';
+    public const string ACTION_USERS_IN_GROUP = 'usersInGroup';
     public const string FIELD_QUERY = 'query';
 
     private EntryGroupApplicationService $entryGroupApplicationService;
+    private EntryGroupUserApplicationService $entryGroupUserApplicationService;
 
     public function __construct()
     {
         $this->entryGroupApplicationService = EntryGroupApplicationService::getInstance();
+        $this->entryGroupUserApplicationService = EntryGroupUserApplicationService::getInstance();
     }
 
     /**
@@ -95,7 +102,7 @@ final readonly class EntryGroupController extends AbstractRestController impleme
     {
         return $this->jsonResponse(
             $this->normalizeData(
-                data: $this->entryGroupApplicationService->getEntryGroupByUuid($parameters['id']),
+                data: $this->entryGroupApplicationService->getEntryGroupByUuid($parameters[EntryGroupRoute::PARAM_ENTRY_GROUP_ID]),
                 entityResponseClassName: EntryGroupResponse::class,
             ),
         );
@@ -117,7 +124,7 @@ final readonly class EntryGroupController extends AbstractRestController impleme
         ])->validate($request);
 
         $this->entryGroupApplicationService->renameEntryGroupSync(
-            uuid: $parameters['id'],
+            uuid: $parameters[EntryGroupRoute::PARAM_ENTRY_GROUP_ID],
             name: $request->getParameter(EntryGroupRepository::FIELD_NAME),
         );
 
@@ -131,7 +138,7 @@ final readonly class EntryGroupController extends AbstractRestController impleme
     #[\Override]
     public function destroy(RequestInterface $request, array $parameters): ResponseInterface
     {
-        $this->entryGroupApplicationService->deleteEntryGroupSync($parameters['id']);
+        $this->entryGroupApplicationService->deleteEntryGroupSync($parameters[EntryGroupRoute::PARAM_ENTRY_GROUP_ID]);
 
         return $this->jsonResponse([], HttpStatusCode::NO_CONTENT);
     }
@@ -150,7 +157,7 @@ final readonly class EntryGroupController extends AbstractRestController impleme
         ])->validate($request);
 
         $this->entryGroupApplicationService->moveEntryGroupSync(
-            uuid: $parameters['id'],
+            uuid: $parameters[EntryGroupRoute::PARAM_ENTRY_GROUP_ID],
             targetUuid: $request->getParameter('targetId'),
         );
 
@@ -180,5 +187,39 @@ final readonly class EntryGroupController extends AbstractRestController impleme
             data: $entryGroups,
             entityResponseClassName: EntryGroupResponse::class,
         ));
+    }
+
+    /**
+     * @throws JsonException
+     * @throws PersistenceException
+     */
+    public function usersInGroup(RequestInterface $request, array $parameters): ResponseInterface
+    {
+        ['page' => $page, 'per_page' => $per_page] = $this->getPaginationParams($request);
+        $filterParams = $this->getFilterParams(
+            request: $request,
+            allowedFilters: [
+                EntryGroupUserRepository::FIELD_USER_ID,
+                EntryGroupUserRepository::FIELD_ROLE,
+            ],
+        );
+        ['field' => $field, 'direction' => $direction] = $this->getSortParams($request);
+        $offset = ($page - 1) * $per_page;
+
+        $entryGroupUsers = $this->entryGroupUserApplicationService->getEntryGroupUsersBy(
+            criteria: $filterParams,
+            orderBy: [$field => $direction],
+            limit: $per_page,
+            offset: $offset,
+        );
+
+        $total = $this->entryGroupUserApplicationService->countEntryGroupUsersBy($filterParams);
+
+        return $this->jsonPaginatedResponse(
+            data: $this->normalizeData($entryGroupUsers, EntryGroupUserResponse::class),
+            total: $total,
+            page: $page,
+            perPage: $per_page,
+        );
     }
 }

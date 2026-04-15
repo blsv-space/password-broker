@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception;
 
-class AuthUserNotHasNoRights extends EntryGroupUserApplicationException
+class AuthUserHasNoRights extends EntryGroupUserApplicationException
 {
     public function __construct()
     {

@@ -23,6 +23,9 @@ class RsaDomainService implements DomainServiceInterface
     public const string DIGEST_ALG = 'sha512';
     public const int PADDING = OPENSSL_PKCS1_OAEP_PADDING;
 
+    /**
+     * @throws RsaDomainServiceException
+     */
     public function generateKeyPair(string $masterPassword): RsaKeyPair
     {
         $config = [

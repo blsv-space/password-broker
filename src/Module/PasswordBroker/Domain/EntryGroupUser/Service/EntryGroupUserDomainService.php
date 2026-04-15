@@ -10,6 +10,7 @@ use App\Module\PasswordBroker\Domain\EntryGroupUser\ValueObject\Role;
 use Inquisition\Core\Domain\Service\DomainServiceInterface;
 use Inquisition\Foundation\Singleton\SingletonTrait;
 use JsonException;
+use Random\RandomException;
 use RuntimeException;
 
 class EntryGroupUserDomainService implements DomainServiceInterface
@@ -51,5 +52,13 @@ class EntryGroupUserDomainService implements DomainServiceInterface
             RoleEnum::ADMIN => true,
             default => false,
         };
+    }
+
+    /**
+     * @throws RandomException
+     */
+    public function generateEntryGroupAesPassword(): string
+    {
+        return random_bytes(32);
     }
 }

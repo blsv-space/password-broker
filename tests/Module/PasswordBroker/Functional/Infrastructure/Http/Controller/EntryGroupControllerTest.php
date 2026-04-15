@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Module\PasswordBroker\Functional\Infrastructure\Http\Controller;
 
+use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\PasswordBroker\Application\EntryGroup\DTO\EntryGroupTreeResponse;
 use App\Module\PasswordBroker\Domain\EntryGroup\DTO\EntryGroupTreeNode;
+use App\Module\PasswordBroker\Domain\EntryGroupUser\Enum\RoleEnum;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Module\PasswordBroker\Infrastructure\Http\Controller\EntryGroupController;
+use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryGroupAdminRoute;
+use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryGroupModeratorRoute;
 use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryGroupRoute;
 use App\Module\PasswordBroker\Infrastructure\Http\Route\PasswordBrokerRoute;
 use App\Shared\Infrastructure\Http\Route\AppRoute;
@@ -19,11 +23,14 @@ use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use ReflectionException;
 use Tests\Module\Identity\Fixture\UserFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
+use Tests\Module\PasswordBroker\Fixture\EntryGroupUserFixture;
 use Tests\Shared\FunctionalTestCase;
 
 class EntryGroupControllerTest extends FunctionalTestCase
 {
     private array $routePath;
+    private array $routeAdminPath;
+    private array $routeModeratorPath;
 
     /**
      * @throws PersistenceException
@@ -38,12 +45,25 @@ class EntryGroupControllerTest extends FunctionalTestCase
             PasswordBrokerRoute::GROUP_NAME,
             EntryGroupRoute::GROUP_NAME,
         ];
+        $this->routeAdminPath = [
+            AppRoute::GROUP_NAME,
+            PasswordBrokerRoute::GROUP_NAME,
+            EntryGroupRoute::GROUP_NAME,
+            EntryGroupAdminRoute::GROUP_NAME,
+        ];
+        $this->routeModeratorPath = [
+            AppRoute::GROUP_NAME,
+            PasswordBrokerRoute::GROUP_NAME,
+            EntryGroupRoute::GROUP_NAME,
+            EntryGroupModeratorRoute::GROUP_NAME,
+        ];
     }
 
     /**
      * @throws PersistenceException
-     * @throws RouteNotFoundException
      * @throws ReflectionException
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
     public function test_it_should_return_a_tree_view(): void
     {
@@ -79,13 +99,14 @@ class EntryGroupControllerTest extends FunctionalTestCase
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
     public function test_it_should_create_entry_group(): void
     {
         $userActor = UserFixture::create(persist: true);
         $this->actAs($userActor);
 
-        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_STORE);
+        $routeName = $this->buildRouteName($this->routeAdminPath, RestControllerInterface::ACTION_STORE);
         $route = Router::getInstance()->getRouteByName($routeName);
         $this->assertNotNull($route, "Route $routeName not found");
         $httpMethod = $route->methods[0] ?? null;
@@ -112,13 +133,14 @@ class EntryGroupControllerTest extends FunctionalTestCase
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
     public function test_it_should_create_tree_of_entry_groups(): void
     {
         $userActor = UserFixture::create(persist: true);
         $this->actAs($userActor);
 
-        $routeNameCreate = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_STORE);
+        $routeNameCreate = $this->buildRouteName($this->routeAdminPath, RestControllerInterface::ACTION_STORE);
         $routeStore = Router::getInstance()->getRouteByName($routeNameCreate);
         $this->assertNotNull($routeStore, "Route $routeNameCreate not found");
         $httpMethodCreate = $routeStore->methods[0] ?? null;
@@ -153,7 +175,6 @@ class EntryGroupControllerTest extends FunctionalTestCase
                     EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID => $parentId,
                 ],
             );
-
             $this->assertEquals(HttpStatusCode::CREATED, $httpResponse->getStatusCode(), $httpResponse->getContent());
             $httpResponseSearch = $this->sendRequest(
                 method: $httpMethodSearch,
@@ -210,5 +231,111 @@ class EntryGroupControllerTest extends FunctionalTestCase
         }
         $this->assertEmpty($names, "Not all names were found: " . implode(', ', $names));
 
+    }
+
+    /**
+     * @throws PersistenceException
+     * @throws ReflectionException
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     */
+    public function test_it_should_return_users_in_group(): void
+    {
+        $userInGroupMember1 = UserFixture::create(persist: true);
+        $userInGroupMember2 = UserFixture::create(persist: true);
+        $userInGroupModerator = UserFixture::create(persist: true);
+        $userInGroupAdmin = UserFixture::create(persist: true);
+        $userActor = UserFixture::create(persist: true);
+        $this->actAs($userActor);
+
+        $userIds = [
+            $userInGroupMember1->id->toRaw(),
+            $userInGroupMember2->id->toRaw(),
+            $userInGroupModerator->id->toRaw(),
+            $userInGroupAdmin->id->toRaw(),
+            $userActor->id->toRaw(),
+        ];
+
+        $entryGroup = EntryGroupFixture::create(persist: true);
+
+        EntryGroupUserFixture::create(attributes: [
+            EntryGroupUserFixture::USER_ID => $userInGroupMember1->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            EntryGroupUserFixture::ROLE => RoleEnum::MEMBER,
+        ], persist: true);
+
+        EntryGroupUserFixture::create(attributes: [
+            EntryGroupUserFixture::USER_ID => $userInGroupMember2->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            EntryGroupUserFixture::ROLE => RoleEnum::MEMBER,
+        ], persist: true);
+
+        EntryGroupUserFixture::create(attributes: [
+            EntryGroupUserFixture::USER_ID => $userInGroupModerator->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            EntryGroupUserFixture::ROLE => RoleEnum::MODERATOR,
+        ], persist: true);
+
+        EntryGroupUserFixture::create(attributes: [
+            EntryGroupUserFixture::USER_ID => $userInGroupAdmin->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            EntryGroupUserFixture::ROLE => RoleEnum::ADMIN,
+        ], persist: true);
+
+        EntryGroupUserFixture::create(attributes: [
+            EntryGroupUserFixture::USER_ID => $userActor->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            EntryGroupUserFixture::ROLE => RoleEnum::MODERATOR,
+        ], persist: true);
+
+        $routeName = $this->buildRouteName($this->routeModeratorPath, EntryGroupController::ACTION_USERS_IN_GROUP);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupModeratorRoute::PARAM_ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            ],
+        );
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+        );
+
+        $this->assertEquals(HttpStatusCode::OK, $httpResponse->getStatusCode());
+
+        $responseData = json_decode($httpResponse->getContent(), true);
+
+        $this->assertIsArray($responseData);
+        $this->assertNotEmpty($responseData);
+        $this->assertArrayHasKey('pagination', $responseData);
+        $this->assertIsArray($responseData['pagination']);
+        $this->assertArrayHasKey('total', $responseData['pagination']);
+        $this->assertEquals(count($userIds), $responseData['pagination']['total']);
+        $this->assertArrayHasKey('data', $responseData);
+        $this->assertIsArray($responseData['data']);
+        $this->assertNotEmpty($responseData['data']);
+        $this->assertCount(count($userIds), $responseData['data']);
+
+        foreach ($responseData['data'] as $user) {
+            $this->assertArrayHasKey('id', $user);
+            $this->assertArrayHasKey('entryGroupId', $user);
+            $this->assertArrayHasKey('userId', $user);
+            $this->assertArrayHasKey('role', $user);
+            $this->assertArrayHasKey('createdAt', $user);
+            $this->assertArrayHasKey('updatedAt', $user);
+            $this->assertContains(
+                $user['userId'],
+                $userIds,
+                "User with id {$user['id']} does not exist in " . implode(', ', $userIds),
+            );
+            unset($userIds[array_search($user['userId'], $userIds)]);
+        }
+
+        $this->assertEmpty($userIds, "Not all userIds were found: " . implode(', ', $userIds));
     }
 }

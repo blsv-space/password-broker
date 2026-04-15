@@ -11,15 +11,4 @@ abstract class IntegrationTestCase extends AbstractTestCase
 {
     protected PDO $connection;
 
-    /**
-     * @throws PersistenceException
-     */
-    #[\Override]
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->flushDatabase();
-        $this->resetFixtures();
-    }
 }

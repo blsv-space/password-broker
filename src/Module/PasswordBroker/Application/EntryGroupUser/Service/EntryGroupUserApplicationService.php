@@ -16,7 +16,7 @@ use App\Module\PasswordBroker\Application\EntryGroup\Job\DeleteEntryGroupSyncJob
 use App\Module\PasswordBroker\Application\EntryGroupUser\Job\AddUserToGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Job\ChangeUserRoleInGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Job\DeleteUserFromGroupSyncJob;
-use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserNotHasNoRights;
+use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserHasNoRights;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserNotInEntryGroupException;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\EntryGroupUserNotFoundException;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\TargetGroupNotFoundException;
@@ -26,6 +26,7 @@ use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Repository\EntryGroupRepositoryInterface;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\Entity\EntryGroupUser;
+use App\Module\PasswordBroker\Domain\EntryGroupUser\Enum\RoleEnum;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\Repository\EntryGroupUserRepositoryInterface;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\Service\EntryGroupUserDomainService;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\ValueObject\EntryGroupUserId;
@@ -36,7 +37,9 @@ use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
 use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
+use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Foundation\Singleton\SingletonTrait;
+use Random\RandomException;
 
 class EntryGroupUserApplicationService implements ApplicationServiceInterface
 {
@@ -58,8 +61,62 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
     }
 
     /**
+     * @param  QueryCriteria[]      $criteria
+     * @throws PersistenceException
+     */
+    public function getEntryGroupUsersBy(
+        array $criteria = [],
+        ?array $orderBy = null,
+        ?int $limit = null,
+        ?int $offset = null,
+    ): array {
+        return $this->entryGroupUserRepository->findBy(
+            criteria: $criteria,
+            orderBy: $orderBy,
+            limit: $limit,
+            offset: $offset,
+        );
+    }
+
+    /**
+     * @param  QueryCriteria[]      $criteria
+     * @throws PersistenceException
+     */
+    public function countEntryGroupUsersBy(array $criteria = []): int
+    {
+        return $this->entryGroupUserRepository->count($criteria);
+    }
+
+    /**
+     * @throws PersistenceException
+     * @throws RsaDomainServiceException
+     * @throws TargetGroupNotFoundException
+     * @throws TargetUserNotFoundException
+     * @throws RandomException
+     */
+    public function addFirstUserToGroup(UserId $targetUserId, EntryGroupId $entryGroupId): EntryGroupUser
+    {
+        $targetUser = $this->getTargetUser($targetUserId);
+        $this->getTargetEntryGroup($entryGroupId);
+        $targetUserPublicKey = $this->rsaDomainService->getUserPublicKey(user: $targetUser);
+        $entryGroupAesPassword = $this->entryGroupUserDomainService->generateEntryGroupAesPassword();
+        $entryGroupAesPasswordEncrypted = $this->rsaDomainService->encryptByPublic(
+            data: $entryGroupAesPassword,
+            publicKey: $targetUserPublicKey,
+        );
+
+        return new AddUserToGroupSyncJob([
+            AddUserToGroupSyncJob::PAYLOAD_KEY_ID => EntryGroupUserId::generate()->toRaw(),
+            AddUserToGroupSyncJob::PAYLOAD_KEY_USER_ID => $targetUser->getId()->toRaw(),
+            AddUserToGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroupId->toRaw(),
+            AddUserToGroupSyncJob::PAYLOAD_KEY_ROLE => RoleEnum::ADMIN->value,
+            AddUserToGroupSyncJob::PAYLOAD_KEY_ENCRYPTED_AES_PASSWORD => $entryGroupAesPasswordEncrypted,
+        ])->handle();
+    }
+
+    /**
      * @throws AuthException
-     * @throws AuthUserNotHasNoRights
+     * @throws AuthUserHasNoRights
      * @throws AuthUserNotInEntryGroupException
      * @throws JwtInvalidTokenException
      * @throws JwtTokenExpiredException
@@ -80,7 +137,7 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
             entryGroupUserAuthUser: $entryGroupUserAuth,
         )
         ) {
-            throw new AuthUserNotHasNoRights();
+            throw new AuthUserHasNoRights();
         }
 
         $authUserPrivateKey = $this->rsaDomainService->getUserPrivateKey(
@@ -111,7 +168,7 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
 
     /**
      * @throws AuthException
-     * @throws AuthUserNotHasNoRights
+     * @throws AuthUserHasNoRights
      * @throws AuthUserNotInEntryGroupException
      * @throws JwtInvalidTokenException
      * @throws JwtTokenExpiredException
@@ -136,7 +193,7 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
             entryGroupUserTargetUser: $entryGroupUserTarget,
             entryGroupUserAuthUser: $entryGroupUserAuth,
         )) {
-            throw new AuthUserNotHasNoRights();
+            throw new AuthUserHasNoRights();
         }
 
         new DeleteUserFromGroupSyncJob([
@@ -157,7 +214,7 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
 
     /**
      * @throws AuthException
-     * @throws AuthUserNotHasNoRights
+     * @throws AuthUserHasNoRights
      * @throws AuthUserNotInEntryGroupException
      * @throws JwtInvalidTokenException
      * @throws JwtTokenExpiredException
@@ -177,7 +234,7 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
         if (!$this->entryGroupUserDomainService->canChangeUserRoleInEntryGroup(
             entryGroupUserAuthUser: $entryGroupUserAuth,
         )) {
-            throw new AuthUserNotHasNoRights();
+            throw new AuthUserHasNoRights();
         }
 
         return new ChangeUserRoleInGroupSyncJob([
@@ -189,7 +246,7 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
 
     /**
      * @throws AuthException
-     * @throws AuthUserNotHasNoRights
+     * @throws AuthUserHasNoRights
      * @throws AuthUserNotInEntryGroupException
      * @throws EntryGroupUserNotFoundException
      * @throws JwtInvalidTokenException

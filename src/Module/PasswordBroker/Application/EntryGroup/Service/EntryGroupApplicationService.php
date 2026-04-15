@@ -44,10 +44,17 @@ class EntryGroupApplicationService implements ApplicationServiceInterface
         ?EntryGroup $parentEntryGroup = null,
     ): EntryGroup {
 
+        $authUser = AuthApplicationService::getInstance()->authUser();
+
+        if (!$authUser) {
+            throw new AuthException('User not authenticated');
+        }
+
         return new CreateEntryGroupSyncJob([
             CreateEntryGroupSyncJob::PAYLOAD_KEY_ID => EntryGroupId::generate()->toRaw(),
             CreateEntryGroupSyncJob::PAYLOAD_KEY_NAME => $name,
             CreateEntryGroupSyncJob::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID => $parentEntryGroup?->id->toRaw(),
+            CreateEntryGroupSyncJob::PAYLOAD_KEY_USER_ID => $authUser->getId()->toRaw(),
         ])->execute();
     }
 
