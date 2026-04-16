@@ -121,6 +121,8 @@ class UserControllerTest extends FunctionalTestCase
             queryParams: [
                 AbstractRestController::PER_PAGE_PARAM => 20,
                 AbstractRestController::PAGE_PARAM => 1,
+            ],
+            filterParams: [
                 UserFixture::USER_NAME => $userNameTarget,
             ],
         );

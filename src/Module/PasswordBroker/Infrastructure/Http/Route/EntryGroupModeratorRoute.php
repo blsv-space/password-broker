@@ -11,7 +11,7 @@ use Inquisition\Core\Infrastructure\Http\Router\RouteGroupInterface;
 
 final readonly class EntryGroupModeratorRoute extends AbstractRouterRegistry
 {
-    public const string GROUP_NAME = 'entryGroup._moderator';
+    public const string GROUP_NAME = '_moderator';
     public const string PARAM_ENTRY_GROUP_ID = 'entryGroupId';
 
     private function __construct() {}

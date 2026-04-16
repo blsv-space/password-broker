@@ -42,9 +42,9 @@ final readonly class EntryGroupUserController extends AbstractRestController imp
 {
     private EntryGroupUserApplicationService $entryGroupUserApplicationService;
 
-    public function __construct(EntryGroupUserApplicationService $entryGroupUserApplicationService)
+    public function __construct()
     {
-        $this->entryGroupUserApplicationService = $entryGroupUserApplicationService;
+        $this->entryGroupUserApplicationService = EntryGroupUserApplicationService::getInstance();
     }
 
     /**

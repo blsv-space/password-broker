@@ -33,7 +33,7 @@ final readonly class AdminMiddleware implements MiddlewareInterface
     #[Override]
     public function process(RequestInterface $request, callable $next): ResponseInterface
     {
-        if ($this->authApplicationService->authUser()?->isAdmin) {
+        if ($this->authApplicationService->authUser()?->isAdmin->value ?? false) {
             return $next($request);
         }
 

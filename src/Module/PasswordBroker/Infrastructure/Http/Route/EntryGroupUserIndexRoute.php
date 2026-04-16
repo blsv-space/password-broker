@@ -12,7 +12,7 @@ use Inquisition\Core\Infrastructure\Http\Router\RouteGroupInterface;
 
 final readonly class EntryGroupUserIndexRoute extends AbstractRouterRegistry
 {
-    public const string GROUP_NAME = 'entryGroupUser._index';
+    public const string GROUP_NAME = '_index';
 
     private function __construct() {}
 

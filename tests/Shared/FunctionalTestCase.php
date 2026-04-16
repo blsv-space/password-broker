@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Shared;
 
+use Inquisition\Core\Infrastructure\Http\Controller\AbstractRestController;
 use Inquisition\Core\Infrastructure\Http\HttpMethod;
 use Inquisition\Core\Infrastructure\Http\Request\HttpRequest;
 use Inquisition\Core\Infrastructure\Http\Response\HttpResponse;
@@ -27,6 +28,7 @@ class FunctionalTestCase extends AbstractTestCase
         string $path,
         array  $pathParams = [],
         array  $queryParams = [],
+        array  $filterParams = [],
     ): string {
         foreach ($pathParams as $param => $value) {
             $path = preg_replace(
@@ -38,6 +40,12 @@ class FunctionalTestCase extends AbstractTestCase
         }
         if (is_null($path)) {
             throw new InvalidArgumentException('Invalid path');
+        }
+
+        if (!empty($filterParams)) {
+            foreach ($filterParams as $key => $value) {
+                $queryParams[AbstractRestController::FILTER_PARAM_PREFIX . $key] = $value;
+            }
         }
 
         if (empty($queryParams)) {

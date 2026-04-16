@@ -13,7 +13,7 @@ use Inquisition\Core\Infrastructure\Http\Router\RouteGroupInterface;
 
 final readonly class EntryGroupAdminRoute extends AbstractRouterRegistry
 {
-    public const string GROUP_NAME = 'entryGroup._admin';
+    public const string GROUP_NAME = '_admin';
     public const string PARAM_ENTRY_GROUP_ID = 'entryGroupId';
 
     private function __construct() {}
