@@ -12,7 +12,6 @@ use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
-use App\Module\PasswordBroker\Application\EntryGroup\Job\DeleteEntryGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Job\AddUserToGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Job\ChangeUserRoleInGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Job\DeleteUserFromGroupSyncJob;
@@ -203,12 +202,37 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
     }
 
     /**
+     * @throws AuthException
+     * @throws AuthUserHasNoRights
+     * @throws AuthUserNotInEntryGroupException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
      * @throws PersistenceException
+     * @throws TargetUserNotFoundException
+     * @throws TargetUserNotInEntryGroupException
      */
-    public function deleteEntryGroupSync(EntryGroupUserId $entryGroupUserId): void
+    public function deleteEntryUserGroupSync(EntryGroupUserId $entryGroupUserId): void
     {
-        new DeleteEntryGroupSyncJob([
-            DeleteEntryGroupSyncJob::PAYLOAD_KEY_ID => $entryGroupUserId->toRaw(),
+        $entryGroupUser = $this->getEntryGroupUserById($entryGroupUserId);
+        $authUser = $this->getAuthUser();
+        $entryGroupId = $entryGroupUser->entryGroupId;
+        $targetUserId = $entryGroupUser->userId;
+        $targetUser = $this->getTargetUser($targetUserId);
+
+        $entryGroupUserAuth = $this->getEntryGroupUserAuth($authUser, $entryGroupId);
+
+        $entryGroupUserTarget = $this->getEntryGroupUserTarget($targetUser, $entryGroupId, $targetUserId);
+
+        if (!$this->entryGroupUserDomainService->canDeleteUserFromEntryGroup(
+            entryGroupUserTargetUser: $entryGroupUserTarget,
+            entryGroupUserAuthUser: $entryGroupUserAuth,
+        )) {
+            throw new AuthUserHasNoRights();
+        }
+
+        new DeleteUserFromGroupSyncJob([
+            DeleteUserFromGroupSyncJob::PAYLOAD_KEY_USER_ID => $targetUserId->toRaw(),
+            DeleteUserFromGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroupId->toRaw(),
         ])->handle();
     }
 

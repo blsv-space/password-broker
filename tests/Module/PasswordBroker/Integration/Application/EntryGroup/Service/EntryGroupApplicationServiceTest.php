@@ -180,14 +180,14 @@ class EntryGroupApplicationServiceTest extends IntegrationTestCase
     public function test_it_should_search_entry_groups(): void
     {
         $entryGroupApplicationService = EntryGroupApplicationService::getInstance();
-        $search = $this->faker->word();
+        $search = 'search_213 name';
 
         $nameA = $search . 'A';
         $nameB = $search . 'B';
 
         $shouldBeFound = [$nameA, $nameB];
 
-        $nameC = $this->faker->word();
+        $nameC = 'nope';
 
         EntryGroupFixture::create(attributes: [EntryGroupFixture::NAME => $nameA], persist: true);
         EntryGroupFixture::create(attributes: [EntryGroupFixture::NAME => $nameB], persist: true);

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Module\PasswordBroker\Fixture;
 
+use App\Module\Identity\Application\User\Service\UserApplicationService;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
+use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\Entity\EntryGroupUser;
@@ -32,6 +34,7 @@ class EntryGroupUserFixture extends AbstractFixture
     public const string UPDATED_AT = EntryGroupRepository::FIELD_UPDATED_AT;
 
     public const string DEFAULT_ROLE = RoleEnum::MEMBER->value;
+    public const string DEFAULT_AES_PASSWORD = 'asd_';
 
     /**
      * @throws PersistenceException
@@ -40,6 +43,7 @@ class EntryGroupUserFixture extends AbstractFixture
     #[\Override]
     public static function create(array $attributes = [], bool $persist = false): EntryGroupUser
     {
+        $user = null;
         if (!array_key_exists(self::USER_ID, $attributes)) {
             $user = UserFixture::create(persist: true);
             $attributes[self::USER_ID] = $user->getId()->value;
@@ -47,6 +51,17 @@ class EntryGroupUserFixture extends AbstractFixture
         if (!array_key_exists(self::ENTRY_GROUP_ID, $attributes)) {
             $entryGroup = EntryGroupFixture::create(persist: true);
             $attributes[self::ENTRY_GROUP_ID] = $entryGroup->getId()->value;
+        }
+        if (!array_key_exists(self::ENCRYPTED_AES_PASSWORD, $attributes)) {
+            if (!$user) {
+                $user = UserApplicationService::getInstance()->getUserByUuid($attributes[self::USER_ID]);
+            }
+            if (!$user) {
+                throw new PersistenceException('User not found');
+            }
+            $rsaDomainService = RsaDomainService::getInstance();
+            $publicKey = $rsaDomainService->getUserPublicKey($user);
+            $attributes[self::ENCRYPTED_AES_PASSWORD] = $rsaDomainService->encryptByPublic(self::DEFAULT_AES_PASSWORD, $publicKey);
         }
 
         $entryGroupUser = new EntryGroupUser(

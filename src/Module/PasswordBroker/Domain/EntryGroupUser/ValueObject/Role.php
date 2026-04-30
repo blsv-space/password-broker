@@ -34,6 +34,10 @@ class Role extends AbstractValueObject
     #[\Override]
     public static function validate(mixed $data): void
     {
+        if ($data instanceof RoleEnum) {
+            return;
+        }
+
         if (!RoleEnum::tryFrom($data)) {
             throw new InvalidArgumentException('Invalid role');
         }

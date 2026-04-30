@@ -121,12 +121,16 @@ final readonly class EntryGroupUserController extends AbstractRestController imp
             ],
         ])->validate($request);
 
-        $entryGroupUser = $this->entryGroupUserApplicationService->addUserToGroup(
-            targetUserId: UserId::fromRaw($request->getParameter(EntryGroupUserRepository::FIELD_USER_ID)),
-            entryGroupId: EntryGroupId::fromRaw($request->getParameter(EntryGroupUserRepository::FIELD_ENTRY_GROUP_ID)),
-            role: Role::fromRaw($request->getParameter(EntryGroupUserRepository::FIELD_ROLE)),
-            authUserMasterPassword: $request->getParameter(UserController::FIELD_MASTER_PASSWORD),
-        );
+        try {
+            $entryGroupUser = $this->entryGroupUserApplicationService->addUserToGroup(
+                targetUserId: UserId::fromRaw($request->getParameter(EntryGroupUserRepository::FIELD_USER_ID)),
+                entryGroupId: EntryGroupId::fromRaw($request->getParameter(EntryGroupUserRepository::FIELD_ENTRY_GROUP_ID)),
+                role: Role::fromRaw($request->getParameter(EntryGroupUserRepository::FIELD_ROLE)),
+                authUserMasterPassword: $request->getParameter(UserController::FIELD_MASTER_PASSWORD),
+            );
+        } catch (AuthUserHasNoRights $e) {
+            return $this->jsonResponse(['message' => $e->getMessage()], HttpStatusCode::FORBIDDEN);
+        }
 
         return $this->jsonResponse(
             $this->normalizeData(
@@ -147,7 +151,7 @@ final readonly class EntryGroupUserController extends AbstractRestController imp
         return $this->jsonResponse(
             $this->normalizeData(
                 data: $this->entryGroupUserApplicationService->getEntryGroupUserById(
-                    $parameters[EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID],
+                    EntryGroupUserId::fromRaw($parameters[EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID]),
                 ),
                 entityResponseClassName: EntryGroupUserResponse::class,
             ),
@@ -179,25 +183,38 @@ final readonly class EntryGroupUserController extends AbstractRestController imp
                 ),
             ],
         ])->validate($request);
-
-        $this->entryGroupUserApplicationService->changeUserRoleByEntryGroupUserId(
-            entryGroupUserId: EntryGroupUserId::fromRaw($parameters[EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID]),
-            role: Role::fromRaw($request->getParameter(EntryGroupUserRepository::FIELD_ROLE)),
-        );
+        try {
+            $this->entryGroupUserApplicationService->changeUserRoleByEntryGroupUserId(
+                entryGroupUserId: EntryGroupUserId::fromRaw($parameters[EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID]),
+                role: Role::fromRaw($request->getParameter(EntryGroupUserRepository::FIELD_ROLE)),
+            );
+        } catch (AuthUserHasNoRights $e) {
+            return $this->jsonResponse(['message' => $e->getMessage()], HttpStatusCode::FORBIDDEN);
+        }
 
         return $this->jsonResponse([], HttpStatusCode::NO_CONTENT);
     }
 
     /**
+     * @throws AuthException
+     * @throws AuthUserNotInEntryGroupException
      * @throws JsonException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
      * @throws PersistenceException
+     * @throws TargetUserNotFoundException
+     * @throws TargetUserNotInEntryGroupException
      */
     #[Override]
     public function destroy(RequestInterface $request, array $parameters): ResponseInterface
     {
-        $this->entryGroupUserApplicationService->deleteEntryGroupSync(
-            EntryGroupUserId::fromRaw($parameters[EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID]),
-        );
+        try {
+            $this->entryGroupUserApplicationService->deleteEntryUserGroupSync(
+                EntryGroupUserId::fromRaw($parameters[EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID]),
+            );
+        } catch (AuthUserHasNoRights $e) {
+            return $this->jsonResponse(['message' => $e->getMessage()], HttpStatusCode::FORBIDDEN);
+        }
 
         return $this->jsonResponse([], HttpStatusCode::NO_CONTENT);
     }
