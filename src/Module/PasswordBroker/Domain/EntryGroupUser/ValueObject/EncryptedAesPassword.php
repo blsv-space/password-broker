@@ -27,7 +27,7 @@ class EncryptedAesPassword extends AbstractValueObject
     public static function validate(mixed $data): void
     {
         if (!is_string($data)) {
-            throw new InvalidArgumentException('EncryptedAesPassword must be a string');
+            throw new InvalidArgumentException('Invalid data type');
         }
     }
 }
