@@ -38,9 +38,9 @@ class EntryGroupUserDomainService implements DomainServiceInterface
             throw new RuntimeException('Failed to compare user IDs', 0, $e);
         }
 
-        return match ($entryGroupUserAuthUser->role->value) {
-            RoleEnum::ADMIN => true,
-            RoleEnum::MODERATOR => $entryGroupUserTargetUser->role->value === RoleEnum::MEMBER,
+        return match ($entryGroupUserAuthUser->role->toRaw()) {
+            RoleEnum::ADMIN->value => true,
+            RoleEnum::MODERATOR->value => $entryGroupUserTargetUser->role->toRaw() === RoleEnum::MEMBER->value,
             default => false,
         };
     }

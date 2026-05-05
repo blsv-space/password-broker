@@ -205,6 +205,7 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
      * @throws AuthException
      * @throws AuthUserHasNoRights
      * @throws AuthUserNotInEntryGroupException
+     * @throws EntryGroupUserNotFoundException
      * @throws JwtInvalidTokenException
      * @throws JwtTokenExpiredException
      * @throws PersistenceException
@@ -214,6 +215,9 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
     public function deleteEntryUserGroupSync(EntryGroupUserId $entryGroupUserId): void
     {
         $entryGroupUser = $this->getEntryGroupUserById($entryGroupUserId);
+        if (!$entryGroupUser) {
+            throw new EntryGroupUserNotFoundException($entryGroupUserId);
+        }
         $authUser = $this->getAuthUser();
         $entryGroupId = $entryGroupUser->entryGroupId;
         $targetUserId = $entryGroupUser->userId;

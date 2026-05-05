@@ -93,7 +93,6 @@ final readonly class EntryGroupUserController extends AbstractRestController imp
      * @throws AuthException
      * @throws RsaDomainServiceException
      * @throws AuthUserHasNoRights
-     * @throws AuthUserNotInEntryGroupException
      * @throws TargetGroupNotFoundException
      * @throws TargetUserNotFoundException
      * @throws JwtInvalidTokenException
@@ -128,7 +127,7 @@ final readonly class EntryGroupUserController extends AbstractRestController imp
                 role: Role::fromRaw($request->getParameter(EntryGroupUserRepository::FIELD_ROLE)),
                 authUserMasterPassword: $request->getParameter(UserController::FIELD_MASTER_PASSWORD),
             );
-        } catch (AuthUserHasNoRights $e) {
+        } catch (AuthUserHasNoRights|AuthUserNotInEntryGroupException $e) {
             return $this->jsonResponse(['message' => $e->getMessage()], HttpStatusCode::FORBIDDEN);
         }
 
@@ -160,8 +159,6 @@ final readonly class EntryGroupUserController extends AbstractRestController imp
 
     /**
      * @throws AuthException
-     * @throws AuthUserHasNoRights
-     * @throws AuthUserNotInEntryGroupException
      * @throws JsonException
      * @throws JwtInvalidTokenException
      * @throws JwtTokenExpiredException
@@ -188,7 +185,7 @@ final readonly class EntryGroupUserController extends AbstractRestController imp
                 entryGroupUserId: EntryGroupUserId::fromRaw($parameters[EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID]),
                 role: Role::fromRaw($request->getParameter(EntryGroupUserRepository::FIELD_ROLE)),
             );
-        } catch (AuthUserHasNoRights $e) {
+        } catch (AuthUserHasNoRights|AuthUserNotInEntryGroupException $e) {
             return $this->jsonResponse(['message' => $e->getMessage()], HttpStatusCode::FORBIDDEN);
         }
 
@@ -197,7 +194,7 @@ final readonly class EntryGroupUserController extends AbstractRestController imp
 
     /**
      * @throws AuthException
-     * @throws AuthUserNotInEntryGroupException
+     * @throws EntryGroupUserNotFoundException
      * @throws JsonException
      * @throws JwtInvalidTokenException
      * @throws JwtTokenExpiredException
@@ -212,7 +209,7 @@ final readonly class EntryGroupUserController extends AbstractRestController imp
             $this->entryGroupUserApplicationService->deleteEntryUserGroupSync(
                 EntryGroupUserId::fromRaw($parameters[EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID]),
             );
-        } catch (AuthUserHasNoRights $e) {
+        } catch (AuthUserHasNoRights|AuthUserNotInEntryGroupException $e) {
             return $this->jsonResponse(['message' => $e->getMessage()], HttpStatusCode::FORBIDDEN);
         }
 

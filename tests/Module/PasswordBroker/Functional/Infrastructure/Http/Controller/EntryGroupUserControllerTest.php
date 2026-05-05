@@ -711,4 +711,401 @@ class EntryGroupUserControllerTest extends FunctionalTestCase
             EntryGroupUserFixture::ROLE => RoleEnum::MEMBER->value,
         ]);
     }
+
+    /**
+     * @throws PersistenceException
+     * @throws ReflectionException
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     */
+    public function test_admin_can_remove_user_from_group(): void
+    {
+        $userActor = UserFixture::create(attributes: [UserFixture::IS_ADMIN => false], persist: true);
+        $user = UserFixture::create(persist: true);
+        $this->actAs($userActor);
+        $entryGroupUser = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userActor->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::ADMIN->value,
+            ],
+            persist: true,
+        );
+        $entryGroupUserTarget = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $user->id->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+            ],
+            persist: true,
+        );
+
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_DESTROY);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID => $entryGroupUserTarget->id->toRaw(),
+            ],
+        );
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+        );
+
+        $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
+
+        $this->assertDatabaseMissing(EntryGroupUserFixture::getTableName(), [
+            EntryGroupUserFixture::USER_ID => $user->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+        ]);
+    }
+
+    /**
+     * @throws PersistenceException
+     * @throws ReflectionException
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     */
+    public function test_moderator_can_remove_user_with_member_role_from_group(): void
+    {
+        $userActor = UserFixture::create(attributes: [UserFixture::IS_ADMIN => false], persist: true);
+        $user = UserFixture::create(persist: true);
+        $this->actAs($userActor);
+        $entryGroupUser = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userActor->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::MODERATOR->value,
+            ],
+            persist: true,
+        );
+        $entryGroupUserTarget = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $user->id->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::MEMBER->value,
+            ],
+            persist: true,
+        );
+
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_DESTROY);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID => $entryGroupUserTarget->id->toRaw(),
+            ],
+        );
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+        );
+
+        $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
+
+        $this->assertDatabaseMissing(EntryGroupUserFixture::getTableName(), [
+            EntryGroupUserFixture::USER_ID => $user->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+        ]);
+    }
+
+    /**
+     * @throws PersistenceException
+     * @throws ReflectionException
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     */
+    public function test_moderator_cannot_remove_user_with_moderator_or_admin_role_from_group(): void
+    {
+        $userActor = UserFixture::create(attributes: [UserFixture::IS_ADMIN => false], persist: true);
+        $userAdmin = UserFixture::create(persist: true);
+        $userModerator = UserFixture::create(persist: true);
+        $this->actAs($userActor);
+        $entryGroupUser = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userActor->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::MODERATOR->value,
+            ],
+            persist: true,
+        );
+        $entryGroupUserAdminTarget = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userAdmin->id->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::ADMIN->value,
+            ],
+            persist: true,
+        );
+        $entryGroupUserModeratorTarget = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userModerator->id->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::MODERATOR->value,
+            ],
+            persist: true,
+        );
+
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_DESTROY);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uriAdmin = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID => $entryGroupUserAdminTarget->id->toRaw(),
+            ],
+        );
+        $uriModerator = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID => $entryGroupUserModeratorTarget->id->toRaw(),
+            ],
+        );
+
+        $httpResponseAdmin = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uriAdmin,
+        );
+
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponseAdmin->getStatusCode());
+
+        $this->assertDatabaseHas(EntryGroupUserFixture::getTableName(), [
+            EntryGroupUserFixture::USER_ID => $userAdmin->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+        ]);
+
+        $httpResponseModerator = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uriModerator,
+        );
+
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponseModerator->getStatusCode());
+
+        $this->assertDatabaseHas(EntryGroupUserFixture::getTableName(), [
+            EntryGroupUserFixture::USER_ID => $userModerator->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+        ]);
+    }
+
+    /**
+     * @throws PersistenceException
+     * @throws ReflectionException
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     */
+    public function test_member_cannot_remove_user_from_group(): void
+    {
+        $userActor = UserFixture::create(attributes: [UserFixture::IS_ADMIN => false], persist: true);
+        $userAdmin = UserFixture::create(persist: true);
+        $userModerator = UserFixture::create(persist: true);
+        $userMember = UserFixture::create(persist: true);
+        $this->actAs($userActor);
+        $entryGroupUser = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userActor->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::MEMBER->value,
+            ],
+            persist: true,
+        );
+        $entryGroupUserAdminTarget = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userAdmin->id->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::ADMIN->value,
+            ],
+            persist: true,
+        );
+        $entryGroupUserModeratorTarget = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userModerator->id->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::MODERATOR->value,
+            ],
+            persist: true,
+        );
+        $entryGroupUserMemberTarget = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userMember->id->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::MODERATOR->value,
+            ],
+            persist: true,
+        );
+
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_DESTROY);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uriAdmin = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID => $entryGroupUserAdminTarget->id->toRaw(),
+            ],
+        );
+        $uriModerator = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID => $entryGroupUserModeratorTarget->id->toRaw(),
+            ],
+        );
+        $uriMember = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID => $entryGroupUserMemberTarget->id->toRaw(),
+            ],
+        );
+
+        $httpResponseAdmin = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uriAdmin,
+        );
+
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponseAdmin->getStatusCode());
+
+        $this->assertDatabaseHas(EntryGroupUserFixture::getTableName(), [
+            EntryGroupUserFixture::USER_ID => $userAdmin->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+        ]);
+
+        $httpResponseModerator = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uriModerator,
+        );
+
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponseModerator->getStatusCode());
+
+        $this->assertDatabaseHas(EntryGroupUserFixture::getTableName(), [
+            EntryGroupUserFixture::USER_ID => $userModerator->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+        ]);
+
+        $httpResponseMember = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uriMember,
+        );
+
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponseMember->getStatusCode());
+
+        $this->assertDatabaseHas(EntryGroupUserFixture::getTableName(), [
+            EntryGroupUserFixture::USER_ID => $userMember->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+        ]);
+    }
+
+
+    /**
+     * @throws PersistenceException
+     * @throws ReflectionException
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     */
+    public function test_admin_from_other_group_cannot_remove_user_from_a_group(): void
+    {
+        $userActor = UserFixture::create(attributes: [UserFixture::IS_ADMIN => false], persist: true);
+        $userAdmin = UserFixture::create(persist: true);
+        $userModerator = UserFixture::create(persist: true);
+        $userMember = UserFixture::create(persist: true);
+        $this->actAs($userActor);
+        $entryGroupUser = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userActor->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::ADMIN->value,
+            ],
+            persist: true,
+        );
+        $entryGroupUserAdminTarget = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userAdmin->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::ADMIN->value,
+            ],
+            persist: true,
+        );
+        $entryGroupUserModeratorTarget = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userModerator->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::MODERATOR->value,
+            ],
+            persist: true,
+        );
+        $entryGroupUserMemberTarget = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userMember->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::MODERATOR->value,
+            ],
+            persist: true,
+        );
+
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_DESTROY);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uriAdmin = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID => $entryGroupUserAdminTarget->id->toRaw(),
+            ],
+        );
+        $uriModerator = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID => $entryGroupUserModeratorTarget->id->toRaw(),
+            ],
+        );
+        $uriMember = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupUserRoute::PARAM_ENTRY_GROUP_USER_ID => $entryGroupUserMemberTarget->id->toRaw(),
+            ],
+        );
+
+        $httpResponseAdmin = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uriAdmin,
+        );
+
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponseAdmin->getStatusCode());
+
+        $this->assertDatabaseHas(EntryGroupUserFixture::getTableName(), [
+            EntryGroupUserFixture::USER_ID => $userAdmin->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUserAdminTarget->entryGroupId->toRaw(),
+        ]);
+
+        $httpResponseModerator = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uriModerator,
+        );
+
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponseModerator->getStatusCode());
+
+        $this->assertDatabaseHas(EntryGroupUserFixture::getTableName(), [
+            EntryGroupUserFixture::USER_ID => $userModerator->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUserModeratorTarget->entryGroupId->toRaw(),
+        ]);
+
+        $httpResponseMember = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uriMember,
+        );
+
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponseMember->getStatusCode());
+
+        $this->assertDatabaseHas(EntryGroupUserFixture::getTableName(), [
+            EntryGroupUserFixture::USER_ID => $userMember->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUserMemberTarget->entryGroupId->toRaw(),
+        ]);
+    }
 }

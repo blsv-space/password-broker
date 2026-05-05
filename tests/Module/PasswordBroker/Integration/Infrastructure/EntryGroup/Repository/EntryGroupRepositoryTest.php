@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PasswordBroker\Integration\Ifrastructure\EntryGroup\Repository;
+namespace Tests\Module\PasswordBroker\Integration\Infrastructure\EntryGroup\Repository;
 
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
