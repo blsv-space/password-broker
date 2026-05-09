@@ -12,6 +12,9 @@ use InvalidArgumentException;
 
 class EntryResponse implements EntityResponseInterface
 {
+    public const string RESPONSE_NAME = 'entry';
+    public const string RESPONSE_MANY_NAME = 'entries';
+
     private Entry $entry;
 
     /**

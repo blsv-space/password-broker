@@ -113,7 +113,7 @@ class EntryApplicationService implements ApplicationServiceInterface
      * @throws RsaDomainServiceException
      * @throws PersistenceException
      */
-    public function moveEntryGroupSync(string $uuid, string $targetUuid, string $authUserMasterPassword): Entry
+    public function moveEntrySync(string $uuid, string $targetUuid, string $authUserMasterPassword): Entry
     {
         $authUser = $this->getAuthUser();
         $entry = $this->entryRepository->findById(EntryId::fromRaw($uuid));
@@ -162,9 +162,11 @@ class EntryApplicationService implements ApplicationServiceInterface
     }
 
     /**
+     * @param QueryCriteria[] $criteria
+     *
      * @throws PersistenceException
      */
-    public function search(string $query, ?array $orderBy = null, ?int $limit = null): array
+    public function search(string $query, ?array $criteria = [], ?array $orderBy = null, ?int $limit = null): array
     {
         $query = trim($query);
         $queryParts = explode(' ', $query)
@@ -176,6 +178,7 @@ class EntryApplicationService implements ApplicationServiceInterface
 
         return $this->entryRepository->findBy(
             criteria: [
+                ...$criteria,
                 new QueryCriteria(
                     field: EntryRepository::FIELD_TITLE,
                     value: $query,

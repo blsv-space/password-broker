@@ -36,5 +36,6 @@ final readonly class EntryGroupRoute extends AbstractRouterRegistry
 
         EntryGroupAdminRoute::register($routeGroup);
         EntryGroupModeratorRoute::register($routeGroup);
+        EntryRoute::register($routeGroup);
     }
 }
