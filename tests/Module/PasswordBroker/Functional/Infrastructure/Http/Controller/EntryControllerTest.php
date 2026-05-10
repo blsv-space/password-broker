@@ -20,6 +20,7 @@ use ReflectionException;
 use Tests\Module\Identity\Fixture\UserFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
+use Tests\Module\PasswordBroker\Fixture\EntryGroupUserFixture;
 use Tests\Shared\FunctionalTestCase;
 
 class EntryControllerTest extends FunctionalTestCase
@@ -28,7 +29,6 @@ class EntryControllerTest extends FunctionalTestCase
     private User $userActor;
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws RsaDomainServiceException
      * @throws ReflectionException
@@ -53,10 +53,18 @@ class EntryControllerTest extends FunctionalTestCase
      * @return void
      * @throws PersistenceException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
     public function test_it_should_return_entries_in_entry_group(): void
     {
         $entryGroup = EntryGroupFixture::create(persist: true);
+        EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $this->userActor->getId()->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroup->getId()->toRaw(),
+            ],
+            persist: true,
+        );
         $entry = EntryFixture::create(attributes: [EntryFixture::ENTRY_GROUP => $entryGroup], persist: true);
 
         $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_INDEX);
@@ -87,5 +95,36 @@ class EntryControllerTest extends FunctionalTestCase
         $this->assertEquals($entry->id->toRaw(), $response['data'][0][EntryRepository::FIELD_ID]);
         $this->assertArrayHasKey('total', $response['pagination']);
         $this->assertEquals(1, $response['pagination']['total']);
+    }
+
+    /**
+     * @return void
+     * @throws PersistenceException
+     * @throws RouteNotFoundException
+     */
+    public function test_it_should_return_403_for_users_not_in_entry_group(): void
+    {
+        $entryGroup = EntryGroupFixture::create(persist: true);
+        EntryFixture::create(attributes: [EntryFixture::ENTRY_GROUP => $entryGroup], persist: true);
+
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_INDEX);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            ],
+        );
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+        );
+
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponse->getStatusCode());
     }
 }

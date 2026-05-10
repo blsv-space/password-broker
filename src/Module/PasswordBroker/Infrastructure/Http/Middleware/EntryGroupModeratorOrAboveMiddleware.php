@@ -15,6 +15,7 @@ use Inquisition\Core\Infrastructure\Http\Middleware\MiddlewareInterface;
 use Inquisition\Core\Infrastructure\Http\Request\RequestInterface;
 use Inquisition\Core\Infrastructure\Http\Response\ResponseFactory;
 use Inquisition\Core\Infrastructure\Http\Response\ResponseInterface;
+use Inquisition\Core\Infrastructure\Http\Router\RouteInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryOperatorEnum;
@@ -32,22 +33,19 @@ final readonly class EntryGroupModeratorOrAboveMiddleware implements MiddlewareI
     }
 
     /**
-     * @param RequestInterface $request
-     * @param callable $next
-     * @return ResponseInterface
      * @throws JwtInvalidTokenException
      * @throws JwtTokenExpiredException
      * @throws PersistenceException
      * @throws JsonException
      */
     #[\Override]
-    public function process(RequestInterface $request, callable $next): ResponseInterface
+    public function process(RequestInterface $request, RouteInterface $route, callable $next): ResponseInterface
     {
         $user = $this->authApplicationService->authUser();
         if (!$user) {
             return ResponseFactory::unauthorized();
         }
-        $entryGroupId = $request->getParameter(EntryGroupRoute::PARAM_ENTRY_GROUP_ID);
+        $entryGroupId = $route->getParameters()[EntryGroupRoute::PARAM_ENTRY_GROUP_ID] ?? null;
 
         if (!$entryGroupId) {
             return $next($request);

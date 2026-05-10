@@ -11,6 +11,7 @@ use Inquisition\Core\Infrastructure\Http\Middleware\MiddlewareInterface;
 use Inquisition\Core\Infrastructure\Http\Request\RequestInterface;
 use Inquisition\Core\Infrastructure\Http\Response\ResponseFactory;
 use Inquisition\Core\Infrastructure\Http\Response\ResponseInterface;
+use Inquisition\Core\Infrastructure\Http\Router\RouteInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use JsonException;
 use Override;
@@ -31,7 +32,7 @@ final readonly class AdminMiddleware implements MiddlewareInterface
      * @throws JwtTokenExpiredException
      */
     #[Override]
-    public function process(RequestInterface $request, callable $next): ResponseInterface
+    public function process(RequestInterface $request, RouteInterface $route, callable $next): ResponseInterface
     {
         if ($this->authApplicationService->authUser()?->isAdmin->value ?? false) {
             return $next($request);

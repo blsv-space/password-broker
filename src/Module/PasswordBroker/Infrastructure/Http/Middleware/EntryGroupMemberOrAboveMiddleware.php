@@ -14,6 +14,7 @@ use Inquisition\Core\Infrastructure\Http\Middleware\MiddlewareInterface;
 use Inquisition\Core\Infrastructure\Http\Request\RequestInterface;
 use Inquisition\Core\Infrastructure\Http\Response\ResponseFactory;
 use Inquisition\Core\Infrastructure\Http\Response\ResponseInterface;
+use Inquisition\Core\Infrastructure\Http\Router\RouteInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use JsonException;
@@ -36,13 +37,13 @@ final readonly class EntryGroupMemberOrAboveMiddleware implements MiddlewareInte
      * @throws JsonException
      */
     #[\Override]
-    public function process(RequestInterface $request, callable $next): ResponseInterface
+    public function process(RequestInterface $request, RouteInterface $route, callable $next): ResponseInterface
     {
         $user = $this->authApplicationService->authUser();
         if (!$user) {
             return ResponseFactory::unauthorized();
         }
-        $entryGroupId = $request->getParameter(EntryGroupRoute::PARAM_ENTRY_GROUP_ID);
+        $entryGroupId = $route->getParameters()[EntryGroupRoute::PARAM_ENTRY_GROUP_ID] ?? null;
 
         if (!$entryGroupId) {
             return $next($request);
@@ -60,7 +61,7 @@ final readonly class EntryGroupMemberOrAboveMiddleware implements MiddlewareInte
         ]);
 
         if ($hasAccess === 0) {
-            return ResponseFactory::forbidden("You don't have Memeber access to this entry group.");
+            return ResponseFactory::forbidden("You don't have Member access to this entry group.");
         }
 
         return $next($request);
