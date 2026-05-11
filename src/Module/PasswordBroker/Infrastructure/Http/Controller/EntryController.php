@@ -37,6 +37,7 @@ final readonly class EntryController extends AbstractRestController implements R
     public const string ACTION_MOVE = 'move';
     public const string ACTION_SEARCH = 'search';
     public const string FIELD_QUERY = 'query';
+    public const string FIELD_TARGET_ENTRY_GROUP_ID = 'taegetEntryGroupId';
 
     private EntryApplicationService $entryApplicationService;
 
@@ -188,7 +189,7 @@ final readonly class EntryController extends AbstractRestController implements R
     public function move(RequestInterface $request, array $parameters): ResponseInterface
     {
         new HttpRequestValidator()->addRules([
-            'targetId' => [
+            self::FIELD_TARGET_ENTRY_GROUP_ID => [
                 new ValidUuidRule(),
             ],
             UserController::FIELD_MASTER_PASSWORD => [
@@ -199,7 +200,7 @@ final readonly class EntryController extends AbstractRestController implements R
 
         $this->entryApplicationService->moveEntrySync(
             uuid: $parameters[EntryRoute::PARAM_ENTRY_ID],
-            targetUuid: $request->getParameter('targetId'),
+            targetUuid: $request->getParameter(self::FIELD_TARGET_ENTRY_GROUP_ID),
             authUserMasterPassword: $request->getParameter(UserController::FIELD_MASTER_PASSWORD),
         );
 

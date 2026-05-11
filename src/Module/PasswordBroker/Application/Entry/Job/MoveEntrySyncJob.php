@@ -42,7 +42,7 @@ final class MoveEntrySyncJob extends AbstractReplicableSyncJob
         if (is_null($entry)) {
             throw new InvalidArgumentException('Entry not found');
         }
-        $entryGroupId = EntryGroupId::fromRaw($this->payload[self::PAYLOAD_KEY_ID]);
+        $entryGroupId = EntryGroupId::fromRaw($this->payload[self::PAYLOAD_KEY_ENTRY_GROUP_TARGET_ID]);
         /**
          * @var EntryGroup $entryGroup
          */

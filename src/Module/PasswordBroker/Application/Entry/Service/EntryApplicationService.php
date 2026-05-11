@@ -69,7 +69,6 @@ class EntryApplicationService implements ApplicationServiceInterface
         string $title,
         string $entryGroupId,
     ): Entry {
-
         $entryGroup = $this->entryGroupRepository->findById(EntryId::fromRaw($entryGroupId));
 
         if (!$entryGroup) {
@@ -178,7 +177,7 @@ class EntryApplicationService implements ApplicationServiceInterface
 
         return $this->entryRepository->findBy(
             criteria: [
-                ...$criteria,
+                ...$criteria ?? [],
                 new QueryCriteria(
                     field: EntryRepository::FIELD_TITLE,
                     value: $query,
