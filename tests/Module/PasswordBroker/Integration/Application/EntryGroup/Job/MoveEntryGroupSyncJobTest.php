@@ -32,6 +32,7 @@ class MoveEntryGroupSyncJobTest extends IntegrationTestCase
         $payload = [
             MoveEntryGroupSyncJob::PAYLOAD_KEY_ID => $lastEntryGroup->getId()->toRaw(),
             MoveEntryGroupSyncJob::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID => $rootEntryGroup->getId()->toRaw(),
+            MoveEntryGroupSyncJob::PAYLOAD_UPDATED_AT => $this->faker->dateTime()->format('Y-m-d H:i:s'),
         ];
 
         new MoveEntryGroupSyncJob($payload)->handle();

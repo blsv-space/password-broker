@@ -26,6 +26,7 @@ class ChangeUserEncryptedAesPasswordInGroupSyncJobTest extends IntegrationTestCa
             ChangeUserEncryptedAesPasswordInGroupSyncJob::PAYLOAD_KEY_USER_ID => $entryGroupUser->userId->toRaw(),
             ChangeUserEncryptedAesPasswordInGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
             ChangeUserEncryptedAesPasswordInGroupSyncJob::PAYLOAD_KEY_ENCRYPTED_AES_PASSWORD => 'new_encrypted_aes_password',
+            ChangeUserEncryptedAesPasswordInGroupSyncJob::PAYLOAD_UPDATED_AT => $this->faker->dateTime()->format('Y-m-d H:i:s'),
         ];
 
         new ChangeUserEncryptedAesPasswordInGroupSyncJob($payload)->handle();
@@ -50,6 +51,7 @@ class ChangeUserEncryptedAesPasswordInGroupSyncJobTest extends IntegrationTestCa
             ChangeUserEncryptedAesPasswordInGroupSyncJob::PAYLOAD_KEY_USER_ID => $entryGroupUser->userId->toRaw(),
             ChangeUserEncryptedAesPasswordInGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
             ChangeUserEncryptedAesPasswordInGroupSyncJob::PAYLOAD_KEY_ENCRYPTED_AES_PASSWORD => 'new_encrypted_aes_password',
+            ChangeUserEncryptedAesPasswordInGroupSyncJob::PAYLOAD_UPDATED_AT => $this->faker->dateTime()->format('Y-m-d H:i:s'),
         ];
 
         $testEventHandler = new TestEventHandler(

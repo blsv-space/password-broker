@@ -32,8 +32,9 @@ class UpdateUserSyncJobTest extends IntegrationTestCase
         );
 
         $payload = [
-            UserFixture::ID => $user->id->toRaw(),
-            UserFixture::USER_NAME => $nameNew,
+            UpdateUserSyncJob::PAYLOAD_KEY_ID => $user->id->toRaw(),
+            UpdateUserSyncJob::PAYLOAD_KEY_USER_NAME => $nameNew,
+            UpdateUserSyncJob::PAYLOAD_UPDATED_AT => $user->updatedAt->toRaw(),
         ];
 
         $testEventHandler = new TestEventHandler(eventNames: [UserUpdatedEvent::class]);

@@ -15,6 +15,8 @@ use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Service\EntryGroupDomainService;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
+use App\Shared\Domain\ValueObject\CreatedAt;
+use App\Shared\Domain\ValueObject\UpdatedAt;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\AbstractRepository;
@@ -55,6 +57,7 @@ class EntryGroupApplicationService implements ApplicationServiceInterface
             CreateEntryGroupSyncJob::PAYLOAD_KEY_NAME => $name,
             CreateEntryGroupSyncJob::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID => $parentEntryGroup?->id->toRaw(),
             CreateEntryGroupSyncJob::PAYLOAD_KEY_USER_ID => $authUser->getId()->toRaw(),
+            CreateEntryGroupSyncJob::PAYLOAD_CREATED_AT => CreatedAt::now()->toRaw(),
         ])->execute();
     }
 
@@ -83,6 +86,7 @@ class EntryGroupApplicationService implements ApplicationServiceInterface
         return new RenameEntryGroupSyncJob([
             RenameEntryGroupSyncJob::PAYLOAD_KEY_ID => $uuid,
             RenameEntryGroupSyncJob::PAYLOAD_KEY_NAME => $name,
+            RenameEntryGroupSyncJob::PAYLOAD_UPDATED_AT => UpdatedAt::now()->toRaw(),
         ])->handle();
     }
 
@@ -104,6 +108,7 @@ class EntryGroupApplicationService implements ApplicationServiceInterface
         return new MoveEntryGroupSyncJob([
             MoveEntryGroupSyncJob::PAYLOAD_KEY_ID => $uuid,
             MoveEntryGroupSyncJob::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID => $targetUuid,
+            MoveEntryGroupSyncJob::PAYLOAD_UPDATED_AT => UpdatedAt::now()->toRaw(),
         ])->handle();
     }
 

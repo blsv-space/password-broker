@@ -29,7 +29,7 @@ final readonly class CreateEntryGroupsTable_20251226_042945 extends AbstractMigr
                 `parentEntryGroupId` VARCHAR(36) DEFAULT NULL,
                 `materializedPath` VARCHAR(1024) NOT NULL,
                 `name` VARCHAR(255) NOT NULL,
-                `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                `createdAt` TIMESTAMP NOT NULL,
                 `updatedAt` TIMESTAMP DEFAULT NULL,
                 `deletedAt` TIMESTAMP DEFAULT NULL,
                 FOREIGN KEY (`parentEntryGroupId`) 

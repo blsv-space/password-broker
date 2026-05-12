@@ -24,6 +24,7 @@ class RenameEntryGroupSyncJobTest extends IntegrationTestCase
         $payload = [
             RenameEntryGroupSyncJob::PAYLOAD_KEY_ID => $entryGroup->id->toRaw(),
             RenameEntryGroupSyncJob::PAYLOAD_KEY_NAME => $newName,
+            RenameEntryGroupSyncJob::PAYLOAD_UPDATED_AT => $this->faker->dateTime()->format('Y-m-d H:i:s'),
         ];
 
         new RenameEntryGroupSyncJob($payload)->handle();

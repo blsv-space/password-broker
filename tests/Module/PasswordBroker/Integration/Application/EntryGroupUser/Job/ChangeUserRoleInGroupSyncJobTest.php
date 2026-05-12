@@ -30,6 +30,7 @@ class ChangeUserRoleInGroupSyncJobTest extends IntegrationTestCase
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_USER_ID => $entryGroupUser->userId->toRaw(),
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_ROLE => RoleEnum::MODERATOR->value,
+            ChangeUserRoleInGroupSyncJob::PAYLOAD_UPDATED_AT => $this->faker->dateTime()->format('Y-m-d H:i:s'),
         ];
 
         new ChangeUserRoleInGroupSyncJob($payload)->handle();
@@ -58,6 +59,7 @@ class ChangeUserRoleInGroupSyncJobTest extends IntegrationTestCase
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_USER_ID => $entryGroupUser->userId->toRaw(),
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_ROLE => RoleEnum::MODERATOR->value,
+            ChangeUserRoleInGroupSyncJob::PAYLOAD_UPDATED_AT => $this->faker->dateTime()->format('Y-m-d H:i:s'),
         ];
 
         $testEventHandler = new TestEventHandler(

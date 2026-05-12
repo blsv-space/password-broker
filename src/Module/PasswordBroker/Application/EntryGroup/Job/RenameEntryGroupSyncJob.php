@@ -18,6 +18,7 @@ final class RenameEntryGroupSyncJob extends AbstractReplicableSyncJob
 {
     public const string PAYLOAD_KEY_ID = EntryGroupRepository::FIELD_ID;
     public const string PAYLOAD_KEY_NAME = EntryGroupRepository::FIELD_NAME;
+    public const string PAYLOAD_UPDATED_AT = EntryGroupRepository::FIELD_UPDATED_AT;
 
     /**
      * @throws PersistenceException
@@ -52,6 +53,12 @@ final class RenameEntryGroupSyncJob extends AbstractReplicableSyncJob
 
         if (empty($this->payload[self::PAYLOAD_KEY_NAME])) {
             throw new InvalidArgumentException('Entry Group name is required');
+        }
+
+        if (empty($this->payload[self::PAYLOAD_UPDATED_AT])
+            || !is_string($this->payload[self::PAYLOAD_UPDATED_AT])
+        ) {
+            throw new InvalidArgumentException('UpdatedAt is required');
         }
     }
 }

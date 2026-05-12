@@ -35,6 +35,7 @@ final readonly class EntryGroupController extends AbstractRestController impleme
     public const string ACTION_SEARCH = 'search';
     public const string ACTION_USERS_IN_GROUP = 'usersInGroup';
     public const string FIELD_QUERY = 'query';
+    public const string FIELD_TARGET_ENTRY_GROUP_ID = 'taegetEntryGroupId';
 
     private EntryGroupApplicationService $entryGroupApplicationService;
     private EntryGroupUserApplicationService $entryGroupUserApplicationService;
@@ -151,14 +152,14 @@ final readonly class EntryGroupController extends AbstractRestController impleme
     public function move(RequestInterface $request, array $parameters): ResponseInterface
     {
         new HttpRequestValidator()->addRules([
-            'targetId' => [
+            self::FIELD_TARGET_ENTRY_GROUP_ID => [
                 new ValidUuidRule(),
             ],
         ])->validate($request);
 
         $this->entryGroupApplicationService->moveEntryGroupSync(
             uuid: $parameters[EntryGroupRoute::PARAM_ENTRY_GROUP_ID],
-            targetUuid: $request->getParameter('targetId'),
+            targetUuid: $request->getParameter(self::FIELD_TARGET_ENTRY_GROUP_ID),
         );
 
         return $this->jsonResponse([], HttpStatusCode::NO_CONTENT);

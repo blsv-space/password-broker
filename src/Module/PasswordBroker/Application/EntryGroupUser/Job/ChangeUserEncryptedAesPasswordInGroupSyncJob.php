@@ -21,6 +21,7 @@ final class ChangeUserEncryptedAesPasswordInGroupSyncJob extends AbstractReplica
     public const string PAYLOAD_KEY_USER_ID = EntryGroupUserRepository::FIELD_USER_ID;
     public const string PAYLOAD_KEY_ENTRY_GROUP_ID = EntryGroupUserRepository::FIELD_ENTRY_GROUP_ID;
     public const string PAYLOAD_KEY_ENCRYPTED_AES_PASSWORD = EntryGroupUserRepository::FIELD_ENCRYPTED_AES_PASSWORD;
+    public const string PAYLOAD_UPDATED_AT = EntryGroupUserRepository::FIELD_UPDATED_AT;
 
     /**
      * @throws PersistenceException
@@ -70,6 +71,12 @@ final class ChangeUserEncryptedAesPasswordInGroupSyncJob extends AbstractReplica
 
         if (empty($this->payload[self::PAYLOAD_KEY_ENCRYPTED_AES_PASSWORD])) {
             throw new InvalidArgumentException('Encrypted Aes Password is required');
+        }
+
+        if (empty($this->payload[self::PAYLOAD_UPDATED_AT])
+            || !is_string($this->payload[self::PAYLOAD_UPDATED_AT])
+        ) {
+            throw new InvalidArgumentException('UpdatedAt is required');
         }
     }
 }

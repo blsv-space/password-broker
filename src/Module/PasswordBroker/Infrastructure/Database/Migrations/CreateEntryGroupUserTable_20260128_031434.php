@@ -30,7 +30,7 @@ final readonly class CreateEntryGroupUserTable_20260128_031434 extends AbstractM
                 `userId` VARCHAR(36) NOT NULL,
                 `role` ENUM('admin', 'moderator', 'member') NOT NULL DEFAULT 'member',
                 `encryptedAesPassword` BLOB NOT NULL,
-                `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                `createdAt` TIMESTAMP NOT NULL,
                 `updatedAt` TIMESTAMP DEFAULT NULL,
                 FOREIGN KEY (`entryGroupId`) REFERENCES `passwordBrokerEntryGroups`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
                 FOREIGN KEY (`userId`) REFERENCES `identityUsers`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,

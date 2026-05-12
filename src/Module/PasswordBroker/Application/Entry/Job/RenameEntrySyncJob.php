@@ -18,6 +18,7 @@ final class RenameEntrySyncJob extends AbstractReplicableSyncJob
 {
     public const string PAYLOAD_KEY_ID = EntryRepository::FIELD_ID;
     public const string PAYLOAD_KEY_TITLE = EntryRepository::FIELD_TITLE;
+    public const string PAYLOAD_UPDATED_AT = EntryRepository::FIELD_UPDATED_AT;
 
     /**
      * @throws PersistenceException
@@ -52,6 +53,12 @@ final class RenameEntrySyncJob extends AbstractReplicableSyncJob
 
         if (empty($this->payload[self::PAYLOAD_KEY_TITLE])) {
             throw new InvalidArgumentException('Entry Title is required');
+        }
+
+        if (empty($this->payload[self::PAYLOAD_UPDATED_AT])
+            || !is_string($this->payload[self::PAYLOAD_UPDATED_AT])
+        ) {
+            throw new InvalidArgumentException('UpdatedAt is required');
         }
     }
 }

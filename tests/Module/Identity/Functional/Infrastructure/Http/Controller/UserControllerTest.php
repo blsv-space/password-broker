@@ -174,7 +174,6 @@ class UserControllerTest extends FunctionalTestCase
                 UserController::FIELD_IS_ADMIN => $this->faker->boolean(),
             ],
         );
-
         $this->assertEquals(HttpStatusCode::CREATED, $httpResponse->getStatusCode());
 
         $this->assertDatabaseHas(UserFixture::getTableName(), [

@@ -16,7 +16,7 @@ readonly class CreateRefreshTokensTable_20250929_081344 extends AbstractMigratio
                 `id` VARCHAR(36) NOT NULL PRIMARY KEY,
                 `userId` varchar(255) NOT NULL,
                 `token` varchar(255) NOT NULL,
-                `createdAt` datatime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `createdAt` datatime NOT NULL,
                 `expirationAt` datatime NOT NULL,
                 FOREIGN KEY (`userId`) REFERENCES `identityUsers`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
             );    

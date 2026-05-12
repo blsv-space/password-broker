@@ -40,7 +40,7 @@ final readonly class CreateEntryFieldsTable_20260128_032733 extends AbstractMigr
                 `initializationVector` BINARY(12) NOT NULL,
                 `createdBy` VARCHAR(36) DEFAULT NULL,
                 `updatedBy` VARCHAR(36) DEFAULT NULL,
-                `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                `createdAt` TIMESTAMP NOT NULL,
                 `updatedAt` TIMESTAMP DEFAULT NULL,
                 `deletedAt` TIMESTAMP DEFAULT NULL,
                 FOREIGN KEY (`entryId`) REFERENCES `passwordBrokerEntries`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,

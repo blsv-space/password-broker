@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Module\PasswordBroker\Application\Entry\Job;
 
+use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
 use App\Module\PasswordBroker\Application\Entry\Event\EntryMovedEvent;
 use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;
@@ -22,6 +23,7 @@ final class MoveEntrySyncJob extends AbstractReplicableSyncJob
     public const string PAYLOAD_KEY_ENTRY_GROUP_TARGET_ID = EntryRepository::FIELD_ENTRY_GROUP_ID;
     public const string PAYLOAD_KEY_ENTRY_GROUP_ORIGIN_AES_PASSWORD = 'originAesPassword';
     public const string PAYLOAD_KEY_ENTRY_GROUP_TARGET_AES_PASSWORD = 'targetAesPassword';
+    public const string PAYLOAD_UPDATED_AT = EntryRepository::FIELD_UPDATED_AT;
 
 
     /**
@@ -85,6 +87,12 @@ final class MoveEntrySyncJob extends AbstractReplicableSyncJob
 
         if (empty($this->payload[self::PAYLOAD_KEY_ENTRY_GROUP_TARGET_AES_PASSWORD])) {
             throw new InvalidArgumentException('Target Group AES password is required');
+        }
+
+        if (empty($this->payload[self::PAYLOAD_UPDATED_AT])
+            || !is_string($this->payload[self::PAYLOAD_UPDATED_AT])
+        ) {
+            throw new InvalidArgumentException('UpdatedAt is required');
         }
     }
 }

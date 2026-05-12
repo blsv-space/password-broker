@@ -28,7 +28,7 @@ final readonly class CreateEntriesTable_20260128_032315 extends AbstractMigratio
                 `id` VARCHAR(36) NOT NULL PRIMARY KEY,
                 `entryGroupId` VARCHAR(36) NOT NULL,
                 `title` VARCHAR(255) NOT NULL,
-                `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                `createdAt` TIMESTAMP NOT NULL,
                 `updatedAt` TIMESTAMP DEFAULT NULL,
                 `deletedAt` TIMESTAMP DEFAULT NULL,
                 FOREIGN KEY (`entryGroupId`) REFERENCES `passwordBrokerEntryGroups`(`id`) ON DELETE CASCADE ON UPDATE CASCADE

@@ -19,6 +19,7 @@ final class MoveEntryGroupSyncJob extends AbstractReplicableSyncJob
 {
     public const string PAYLOAD_KEY_ID = EntryGroupRepository::FIELD_ID;
     public const string PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID = EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID;
+    public const string PAYLOAD_UPDATED_AT = EntryGroupRepository::FIELD_UPDATED_AT;
 
     /**
      * @throws PersistenceException
@@ -50,7 +51,7 @@ final class MoveEntryGroupSyncJob extends AbstractReplicableSyncJob
             }
         }
         $entryGroup->materializedPath = $entryGroupDomainService->makeMaterializedPath($entryGroup->id, $parentEntryGroup);
-        $entryGroup->parentEntryGroupId = $parentEntryGroup?->id;
+        $entryGroup->parentEntryGroupId = $parentEntryGroup?->id ?? null;
         $entryGroupNewPath = $entryGroup->materializedPath->toRaw();
         $entryGroupRepository->beginTransaction();
         $entryGroupRepository->save($entryGroup);
@@ -71,6 +72,12 @@ final class MoveEntryGroupSyncJob extends AbstractReplicableSyncJob
     {
         if (empty($this->payload[self::PAYLOAD_KEY_ID])) {
             throw new InvalidArgumentException('Entry Group id is required');
+        }
+
+        if (empty($this->payload[self::PAYLOAD_UPDATED_AT])
+            || !is_string($this->payload[self::PAYLOAD_UPDATED_AT])
+        ) {
+            throw new InvalidArgumentException('UpdatedAt is required');
         }
     }
 }

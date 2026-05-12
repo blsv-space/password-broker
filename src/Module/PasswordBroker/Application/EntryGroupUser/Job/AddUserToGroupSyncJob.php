@@ -25,6 +25,7 @@ class AddUserToGroupSyncJob extends AbstractReplicableSyncJob
     public const string PAYLOAD_KEY_ENTRY_GROUP_ID = EntryGroupUserRepository::FIELD_ENTRY_GROUP_ID;
     public const string PAYLOAD_KEY_ROLE = EntryGroupUserRepository::FIELD_ROLE;
     public const string PAYLOAD_KEY_ENCRYPTED_AES_PASSWORD = EntryGroupUserRepository::FIELD_ENCRYPTED_AES_PASSWORD;
+    public const string PAYLOAD_CREATED_AT = EntryGroupUserRepository::FIELD_CREATED_AT;
 
 
     /**
@@ -77,6 +78,12 @@ class AddUserToGroupSyncJob extends AbstractReplicableSyncJob
 
         if (empty($this->payload[self::PAYLOAD_KEY_ENCRYPTED_AES_PASSWORD])) {
             throw new InvalidArgumentException('Encrypted AES Password is required');
+        }
+
+        if (empty($this->payload[self::PAYLOAD_CREATED_AT])
+            || !is_string($this->payload[self::PAYLOAD_CREATED_AT])
+        ) {
+            throw new InvalidArgumentException('CreatedAt is required');
         }
 
         Role::validate($this->payload[self::PAYLOAD_KEY_ROLE]);

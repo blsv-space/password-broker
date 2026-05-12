@@ -8,6 +8,7 @@ use App\Module\Identity\Application\User\Event\UserCreatedEvent;
 use App\Module\Identity\Application\User\Job\CreateUserSyncJob;
 use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
+use App\Shared\Domain\ValueObject\CreatedAt;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use PDOException;
 use Tests\Module\Identity\Fixture\UserFixture;
@@ -24,6 +25,7 @@ class CreateUserSyncJobTest extends IntegrationTestCase
     {
         $rsaKeyPair = RsaDomainService::getInstance()->generateKeyPair($this->faker->password());
 
+        $date = CreatedAt::now()->toRaw();
         $payload = [
             CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
             CreateUserSyncJob::PAYLOAD_KEY_USER_NAME => $this->faker->userName(),
@@ -32,6 +34,8 @@ class CreateUserSyncJobTest extends IntegrationTestCase
             CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $this->faker->boolean(),
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PUBLIC_KEY => $rsaKeyPair->publicKey,
+            CreateUserSyncJob::PAYLOAD_CREATED_AT => $date,
+            CreateUserSyncJob::PAYLOAD_UPDATED_AT => $date,
         ];
 
         $createUserSyncJob = new CreateUserSyncJob($payload);
@@ -49,6 +53,7 @@ class CreateUserSyncJobTest extends IntegrationTestCase
     {
         $rsaKeyPair = RsaDomainService::getInstance()->generateKeyPair($this->faker->password());
 
+        $date = CreatedAt::now()->toRaw();
         $payload = [
             CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
             CreateUserSyncJob::PAYLOAD_KEY_USER_NAME => $this->faker->userName(),
@@ -57,6 +62,8 @@ class CreateUserSyncJobTest extends IntegrationTestCase
             CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $this->faker->boolean(),
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PUBLIC_KEY => $rsaKeyPair->publicKey,
+            CreateUserSyncJob::PAYLOAD_CREATED_AT => $date,
+            CreateUserSyncJob::PAYLOAD_UPDATED_AT => $date,
         ];
         UserFixture::create([UserFixture::USER_NAME => $payload['userName']], true);
         $this->expectException(PDOException::class);
@@ -72,6 +79,7 @@ class CreateUserSyncJobTest extends IntegrationTestCase
     {
         $rsaKeyPair = RsaDomainService::getInstance()->generateKeyPair($this->faker->password());
 
+        $date = CreatedAt::now()->toRaw();
         $payload = [
             CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
             CreateUserSyncJob::PAYLOAD_KEY_USER_NAME => $this->faker->userName(),
@@ -80,6 +88,8 @@ class CreateUserSyncJobTest extends IntegrationTestCase
             CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $this->faker->boolean(),
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PUBLIC_KEY => $rsaKeyPair->publicKey,
+            CreateUserSyncJob::PAYLOAD_CREATED_AT => $date,
+            CreateUserSyncJob::PAYLOAD_UPDATED_AT => $date,
         ];
         $testEventHandler = new TestEventHandler(
             eventNames: [UserCreatedEvent::class],

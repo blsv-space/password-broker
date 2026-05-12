@@ -36,7 +36,7 @@ final readonly class CreateEntryFieldHistoryTable_20260128_034036 extends Abstra
               `initializationVector` BINARY(12) NOT NULL,
               `isDeleted` TINYINT(1) NOT NULL,
               `updatedBy` VARCHAR(36) DEFAULT NULL,
-              `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              `createdAt` TIMESTAMP NOT NULL,
               `updatedAt` TIMESTAMP DEFAULT NULL,
               FOREIGN KEY (`entryFieldId`) REFERENCES `passwordBrokerEntryFields`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
               FOREIGN KEY (`updatedBy`) REFERENCES `identityUsers`(`id`) ON DELETE SET NULL ON UPDATE CASCADE

@@ -41,6 +41,7 @@ class AddUserToGroupSyncJobTest extends IntegrationTestCase
             AddUserToGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroup->getId()->toRaw(),
             AddUserToGroupSyncJob::PAYLOAD_KEY_ROLE => RoleEnum::MEMBER->value,
             AddUserToGroupSyncJob::PAYLOAD_KEY_ENCRYPTED_AES_PASSWORD => $entryGroupAesPasswordEncrypted,
+            AddUserToGroupSyncJob::PAYLOAD_CREATED_AT => $this->faker->dateTime()->format('Y-m-d H:i:s'),
         ];
 
         new AddUserToGroupSyncJob($payload)->handle();
@@ -78,6 +79,7 @@ class AddUserToGroupSyncJobTest extends IntegrationTestCase
             AddUserToGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroup->getId()->toRaw(),
             AddUserToGroupSyncJob::PAYLOAD_KEY_ROLE => RoleEnum::MEMBER->value,
             AddUserToGroupSyncJob::PAYLOAD_KEY_ENCRYPTED_AES_PASSWORD => $entryGroupAesPasswordEncrypted,
+            AddUserToGroupSyncJob::PAYLOAD_CREATED_AT => $this->faker->dateTime()->format('Y-m-d H:i:s'),
         ];
 
         $testEventHandler = new TestEventHandler(

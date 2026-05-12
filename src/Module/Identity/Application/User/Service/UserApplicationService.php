@@ -12,7 +12,9 @@ use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\Identity\Infrastructure\Security\PasswordHasher;
 use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
+use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\Id;
+use App\Shared\Domain\ValueObject\UpdatedAt;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
@@ -42,6 +44,7 @@ final class UserApplicationService implements ApplicationServiceInterface
         bool $isAdmin,
     ): User {
         $rsaKeyPair = RsaDomainService::getInstance()->generateKeyPair($masterPassword);
+        $dateTime = CreatedAt::now();
 
         return new CreateUserSyncJob([
             CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
@@ -51,6 +54,8 @@ final class UserApplicationService implements ApplicationServiceInterface
             CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $isAdmin,
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,
             CreateUserSyncJob::PAYLOAD_KEY_RSA_PUBLIC_KEY => $rsaKeyPair->publicKey,
+            CreateUserSyncJob::PAYLOAD_CREATED_AT => $dateTime->toRaw(),
+            CreateUserSyncJob::PAYLOAD_UPDATED_AT => $dateTime->toRaw(),
         ])->execute();
     }
 
@@ -63,10 +68,13 @@ final class UserApplicationService implements ApplicationServiceInterface
         string  $userName,
         ?string $password = null,
     ): User {
+        $dateTime = UpdatedAt::now();
+
         return new UpdateUserSyncJob([
             UpdateUserSyncJob::PAYLOAD_KEY_ID => $uuid,
             UpdateUserSyncJob::PAYLOAD_KEY_USER_NAME => $userName,
             UpdateUserSyncJob::PAYLOAD_KEY_HASHED_PASSWORD => $password ? $this->passwordHasher->hash($password) : null,
+            UpdateUserSyncJob::PAYLOAD_UPDATED_AT => $dateTime->toRaw(),
         ])->execute();
     }
 

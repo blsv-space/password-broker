@@ -20,6 +20,8 @@ use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Infrastructure\Entry\Repository\EntryRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryGroupUser\Repository\EntryGroupUserRepository;
+use App\Shared\Domain\ValueObject\CreatedAt;
+use App\Shared\Domain\ValueObject\UpdatedAt;
 use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
 use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
@@ -58,6 +60,7 @@ class EntryApplicationService implements ApplicationServiceInterface
             CreateEntrySyncJob::PAYLOAD_KEY_ID => EntryGroupId::generate()->toRaw(),
             CreateEntrySyncJob::PAYLOAD_KEY_TITLE => $title,
             CreateEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            CreateEntrySyncJob::PAYLOAD_CREATED_AT => CreatedAt::now()->toRaw(),
         ])->execute();
     }
 
@@ -89,6 +92,7 @@ class EntryApplicationService implements ApplicationServiceInterface
         return new RenameEntrySyncJob([
             RenameEntrySyncJob::PAYLOAD_KEY_ID => $uuid,
             RenameEntrySyncJob::PAYLOAD_KEY_TITLE => $title,
+            RenameEntrySyncJob::PAYLOAD_UPDATED_AT => UpdatedAt::now()->toRaw(),
         ])->handle();
     }
 
@@ -157,6 +161,7 @@ class EntryApplicationService implements ApplicationServiceInterface
             MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_TARGET_ID => $targetUuid,
             MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_ORIGIN_AES_PASSWORD => $originAesPassword,
             MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_TARGET_AES_PASSWORD => $targetAesPassword,
+            MoveEntrySyncJob::PAYLOAD_UPDATED_AT => UpdatedAt::now()->toRaw(),
         ])->handle();
     }
 

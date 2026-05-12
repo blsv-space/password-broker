@@ -27,6 +27,7 @@ final class CreateEntryGroupSyncJob extends AbstractReplicableSyncJob
     public const string PAYLOAD_KEY_NAME = EntryGroupRepository::FIELD_NAME;
     public const string PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID = EntryGroupRepository::FIELD_PARENT_ENTRY_GROUP_ID;
     public const string PAYLOAD_KEY_USER_ID = EntryGroupUserRepository::FIELD_USER_ID;
+    public const string PAYLOAD_CREATED_AT = EntryGroupRepository::FIELD_CREATED_AT;
 
     /**
      * @throws PersistenceException
@@ -78,6 +79,12 @@ final class CreateEntryGroupSyncJob extends AbstractReplicableSyncJob
 
         if (empty($this->payload[self::PAYLOAD_KEY_USER_ID])) {
             throw new InvalidArgumentException('User id is required');
+        }
+
+        if (empty($this->payload[self::PAYLOAD_CREATED_AT])
+            || !is_string($this->payload[self::PAYLOAD_CREATED_AT])
+        ) {
+            throw new InvalidArgumentException('CreatedAt is required');
         }
     }
 

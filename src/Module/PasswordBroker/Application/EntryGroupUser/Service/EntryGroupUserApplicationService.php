@@ -32,6 +32,8 @@ use App\Module\PasswordBroker\Domain\EntryGroupUser\ValueObject\EntryGroupUserId
 use App\Module\PasswordBroker\Domain\EntryGroupUser\ValueObject\Role;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryGroupUser\Repository\EntryGroupUserRepository;
+use App\Shared\Domain\ValueObject\CreatedAt;
+use App\Shared\Domain\ValueObject\UpdatedAt;
 use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
 use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
@@ -110,6 +112,7 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
             AddUserToGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroupId->toRaw(),
             AddUserToGroupSyncJob::PAYLOAD_KEY_ROLE => RoleEnum::ADMIN->value,
             AddUserToGroupSyncJob::PAYLOAD_KEY_ENCRYPTED_AES_PASSWORD => $entryGroupAesPasswordEncrypted,
+            AddUserToGroupSyncJob::PAYLOAD_CREATED_AT => CreatedAt::now()->toRaw(),
         ])->handle();
     }
 
@@ -162,6 +165,7 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
             AddUserToGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroupId->toRaw(),
             AddUserToGroupSyncJob::PAYLOAD_KEY_ROLE => $role->value,
             AddUserToGroupSyncJob::PAYLOAD_KEY_ENCRYPTED_AES_PASSWORD => $entryGroupAesPasswordEncrypted,
+            AddUserToGroupSyncJob::PAYLOAD_CREATED_AT => CreatedAt::now()->toRaw(),
         ])->handle();
     }
 
@@ -269,6 +273,7 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_USER_ID => $targetUser->getId()->toRaw(),
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroup->getId()->toRaw(),
             ChangeUserRoleInGroupSyncJob::PAYLOAD_KEY_ROLE => $role->value,
+            ChangeUserRoleInGroupSyncJob::PAYLOAD_UPDATED_AT => UpdatedAt::now()->toRaw(),
         ])->handle();
     }
 

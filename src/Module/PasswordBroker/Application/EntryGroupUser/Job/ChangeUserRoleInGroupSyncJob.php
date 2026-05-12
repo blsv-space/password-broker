@@ -21,6 +21,7 @@ final class ChangeUserRoleInGroupSyncJob extends AbstractReplicableSyncJob
     public const string PAYLOAD_KEY_USER_ID = EntryGroupUserRepository::FIELD_USER_ID;
     public const string PAYLOAD_KEY_ENTRY_GROUP_ID = EntryGroupUserRepository::FIELD_ENTRY_GROUP_ID;
     public const string PAYLOAD_KEY_ROLE = EntryGroupUserRepository::FIELD_ROLE;
+    public const string PAYLOAD_UPDATED_AT = EntryGroupUserRepository::FIELD_UPDATED_AT;
 
     /**
      * @throws PersistenceException
@@ -70,6 +71,12 @@ final class ChangeUserRoleInGroupSyncJob extends AbstractReplicableSyncJob
 
         if (empty($this->payload[self::PAYLOAD_KEY_ROLE])) {
             throw new InvalidArgumentException('Role is required');
+        }
+
+        if (empty($this->payload[self::PAYLOAD_UPDATED_AT])
+            || !is_string($this->payload[self::PAYLOAD_UPDATED_AT])
+        ) {
+            throw new InvalidArgumentException('UpdatedAt is required');
         }
 
         Role::validate($this->payload[self::PAYLOAD_KEY_ROLE]);

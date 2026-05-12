@@ -24,6 +24,8 @@ final class CreateUserSyncJob extends AbstractReplicableSyncJob
     public const string PAYLOAD_KEY_USER_NAME = UserRepository::FIELD_USER_NAME;
     public const string PAYLOAD_KEY_EMAIL = UserRepository::FIELD_EMAIL;
     public const string PAYLOAD_KEY_IS_ADMIN = UserRepository::FIELD_IS_ADMIN;
+    public const string PAYLOAD_CREATED_AT = UserRepository::FIELD_CREATED_AT;
+    public const string PAYLOAD_UPDATED_AT = UserRepository::FIELD_UPDATED_AT;
 
     /**
      * @throws Throwable
@@ -76,8 +78,21 @@ final class CreateUserSyncJob extends AbstractReplicableSyncJob
         if (!isset($this->payload[self::PAYLOAD_KEY_IS_ADMIN])) {
             throw new InvalidArgumentException('Is Admin is required');
         }
+
         if (!is_bool($this->payload[self::PAYLOAD_KEY_IS_ADMIN])) {
             throw new InvalidArgumentException('Is Admin must be a boolean');
+        }
+
+        if (empty($this->payload[self::PAYLOAD_CREATED_AT])
+            || !is_string($this->payload[self::PAYLOAD_CREATED_AT])
+        ) {
+            throw new InvalidArgumentException('CreatedAt is required');
+        }
+
+        if (empty($this->payload[self::PAYLOAD_UPDATED_AT])
+            || !is_string($this->payload[self::PAYLOAD_UPDATED_AT])
+        ) {
+            throw new InvalidArgumentException('UpdatedAt is required');
         }
 
     }

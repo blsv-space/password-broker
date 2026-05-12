@@ -34,6 +34,7 @@ class CreateEntryGroupSyncJobTest extends IntegrationTestCase
             CreateEntryGroupSyncJob::PAYLOAD_KEY_ID => EntryGroupId::generate()->toRaw(),
             CreateEntryGroupSyncJob::PAYLOAD_KEY_NAME => $this->faker->name(),
             CreateEntryGroupSyncJob::PAYLOAD_KEY_USER_ID => $user->getId()->toRaw(),
+            CreateEntryGroupSyncJob::PAYLOAD_CREATED_AT => $this->faker->dateTime()->format('Y-m-d H:i:s'),
         ];
 
         new CreateEntryGroupSyncJob($payload)->handle();
@@ -58,6 +59,7 @@ class CreateEntryGroupSyncJobTest extends IntegrationTestCase
             CreateEntryGroupSyncJob::PAYLOAD_KEY_ID => EntryGroupId::generate()->toRaw(),
             CreateEntryGroupSyncJob::PAYLOAD_KEY_NAME => $this->faker->name(),
             CreateEntryGroupSyncJob::PAYLOAD_KEY_USER_ID => $user->getId()->toRaw(),
+            CreateEntryGroupSyncJob::PAYLOAD_CREATED_AT => $this->faker->dateTime()->format('Y-m-d H:i:s'),
         ];
 
         $testEventHandler = new TestEventHandler(
@@ -89,6 +91,7 @@ class CreateEntryGroupSyncJobTest extends IntegrationTestCase
             CreateEntryGroupSyncJob::PAYLOAD_KEY_NAME => $this->faker->name(),
             CreateEntryGroupSyncJob::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID => $entryGroupParent->getId()->toRaw(),
             CreateEntryGroupSyncJob::PAYLOAD_KEY_USER_ID => $user->getId()->toRaw(),
+            CreateEntryGroupSyncJob::PAYLOAD_CREATED_AT => $this->faker->dateTime()->format('Y-m-d H:i:s'),
         ];
 
         new CreateEntryGroupSyncJob($payload)->handle();
