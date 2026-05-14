@@ -863,6 +863,7 @@ class EntryGroupControllerTest extends FunctionalTestCase
             EntryGroupFixture::PARENT_ENTRY_GROUP_ID => null,
         ]);
     }
+
     /**
      * @throws RouteNotFoundException
      * @throws RsaDomainServiceException
@@ -870,6 +871,65 @@ class EntryGroupControllerTest extends FunctionalTestCase
      * @throws PersistenceException
      */
     public function test_admin_should_be_able_to_move_entry_group_to_another_group(): void
+    {
+        $userActor = UserFixture::create(persist: true);
+        $this->actAs($userActor);
+
+        $entryGroup = EntryGroupFixture::create(persist: true);
+        $entryGroupTarget = EntryGroupFixture::create(persist: true);
+        EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userActor->id->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::ADMIN,
+            ],
+            persist: true,
+        );
+        EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userActor->id->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupTarget->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::ADMIN,
+            ],
+            persist: true,
+        );
+
+        $routeName = $this->buildRouteName($this->routeAdminPath, EntryGroupController::ACTION_MOVE);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupAdminRoute::PARAM_ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            ],
+        );
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+            body: [
+                EntryGroupController::FIELD_TARGET_ENTRY_GROUP_ID => $entryGroupTarget->id->toRaw(),
+            ],
+        );
+
+        $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
+        $this->assertDatabaseHas(EntryGroupFixture::getTableName(), [
+            EntryGroupFixture::ID => $entryGroup->id->toRaw(),
+            EntryGroupFixture::PARENT_ENTRY_GROUP_ID => $entryGroupTarget->id->toRaw(),
+        ]);
+    }
+
+    /**
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     * @throws ReflectionException
+     * @throws PersistenceException
+     */
+    public function test_admin_should_be_unable_to_move_entry_group_to_non_their_group(): void
     {
         $userActor = UserFixture::create(persist: true);
         $this->actAs($userActor);
@@ -907,10 +967,116 @@ class EntryGroupControllerTest extends FunctionalTestCase
             ],
         );
 
-        $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponse->getStatusCode());
         $this->assertDatabaseHas(EntryGroupFixture::getTableName(), [
             EntryGroupFixture::ID => $entryGroup->id->toRaw(),
-            EntryGroupFixture::PARENT_ENTRY_GROUP_ID => $entryGroupTarget->id->toRaw(),
+            EntryGroupFixture::PARENT_ENTRY_GROUP_ID => null,
+        ]);
+    }
+
+    /**
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     * @throws ReflectionException
+     * @throws PersistenceException
+     */
+    public function test_moderator_should_be_unable_to_move_entry_group(): void
+    {
+        $userActor = UserFixture::create(persist: true);
+        $this->actAs($userActor);
+
+        $entryGroupSource = EntryGroupFixture::create(persist: true);
+        $entryGroup = EntryGroupFixture::create(
+            attributes: [
+                EntryGroupFixture::PARENT_ENTRY_GROUP_ID => $entryGroupSource->id->toRaw() ,
+            ],
+            persist: true,
+        );
+        EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userActor->id->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::MODERATOR,
+            ],
+            persist: true,
+        );
+
+        $routeName = $this->buildRouteName($this->routeAdminPath, EntryGroupController::ACTION_MOVE);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupAdminRoute::PARAM_ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            ],
+        );
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+        );
+
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponse->getStatusCode());
+
+        $this->assertDatabaseHas(EntryGroupFixture::getTableName(), [
+            EntryGroupFixture::ID => $entryGroup->id->toRaw(),
+            EntryGroupFixture::PARENT_ENTRY_GROUP_ID => $entryGroupSource->id->toRaw(),
+        ]);
+    }
+
+    /**
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     * @throws ReflectionException
+     * @throws PersistenceException
+     */
+    public function test_member_should_be_unable_to_move_entry_group(): void
+    {
+        $userActor = UserFixture::create(persist: true);
+        $this->actAs($userActor);
+
+        $entryGroupSource = EntryGroupFixture::create(persist: true);
+        $entryGroup = EntryGroupFixture::create(
+            attributes: [
+                EntryGroupFixture::PARENT_ENTRY_GROUP_ID => $entryGroupSource->id->toRaw() ,
+            ],
+            persist: true,
+        );
+        EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userActor->id->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::MODERATOR,
+            ],
+            persist: true,
+        );
+
+        $routeName = $this->buildRouteName($this->routeAdminPath, EntryGroupController::ACTION_MOVE);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupAdminRoute::PARAM_ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            ],
+        );
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+        );
+
+        $this->assertEquals(HttpStatusCode::FORBIDDEN, $httpResponse->getStatusCode());
+
+        $this->assertDatabaseHas(EntryGroupFixture::getTableName(), [
+            EntryGroupFixture::ID => $entryGroup->id->toRaw(),
+            EntryGroupFixture::PARENT_ENTRY_GROUP_ID => $entryGroupSource->id->toRaw(),
         ]);
     }
 }

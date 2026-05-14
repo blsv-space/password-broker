@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Module\PasswordBroker\Integration\Application\EntryGroup\Job;
 
+use App\Module\PasswordBroker\Application\EntryGroup\Event\EntryGroupDeletedEvent;
 use App\Module\PasswordBroker\Application\EntryGroup\Job\DeleteEntryGroupSyncJob;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
 use Tests\Shared\IntegrationTestCase;
+use Tests\Shared\TestEventHandler;
 
 class DeleteEntryGroupSyncJobTest extends IntegrationTestCase
 {
@@ -33,5 +35,27 @@ class DeleteEntryGroupSyncJobTest extends IntegrationTestCase
                 EntryGroupFixture::DELETED_AT => null,
             ],
         );
+    }
+
+    /**
+     * @throws PersistenceException
+     */
+    public function test_it_should_dispatch_an_event(): void
+    {
+        $entryGroup = EntryGroupFixture::create(persist: true);
+
+        $this->assertDatabaseHas(EntryGroupFixture::getTableName(), [EntryGroupFixture::ID => $entryGroup->id->toRaw()]);
+
+        $payload = [
+            DeleteEntryGroupSyncJob::PAYLOAD_KEY_ID => $entryGroup->id->toRaw(),
+        ];
+
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryGroupDeletedEvent::class],
+        );
+
+        new DeleteEntryGroupSyncJob($payload)->handle();
+
+        $this->assertTrue($testEventHandler->wasDispatched());
     }
 }

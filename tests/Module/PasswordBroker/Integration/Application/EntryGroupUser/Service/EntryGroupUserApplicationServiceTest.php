@@ -334,4 +334,29 @@ class EntryGroupUserApplicationServiceTest extends IntegrationTestCase
         $result = $entryGroupUserApplicationService->getEntryGroupUserById($entryGroupUser->id);
         $this->assertEquals($entryGroupUser->id, $result->id);
     }
+
+    /**
+     * @throws AuthException
+     * @throws AuthUserNotInEntryGroupException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
+     * @throws PersistenceException
+     * @throws RsaDomainServiceException
+     */
+    public function test_it_should_get_entry_group_user_for_auth_user_by_and_entry_group_id(): void
+    {
+        $entryGroupUserApplicationService = EntryGroupUserApplicationService::getInstance();
+        $entryGroupUserOwn = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $this->user->getId()->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::ADMIN->value,
+            ],
+            persist: true,
+        );
+
+        $entryGroupUser = $entryGroupUserApplicationService->getEntryGroupUseForAuthUserByAndEntryGroupId($entryGroupUserOwn->entryGroupId);
+
+        $this->assertEquals($entryGroupUserOwn->id->toRaw(), $entryGroupUser->id->toRaw());
+    }
+
 }

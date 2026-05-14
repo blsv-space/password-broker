@@ -10,10 +10,12 @@ use App\Module\PasswordBroker\Application\EntryGroup\Job\CreateEntryGroupSyncJob
 use App\Module\PasswordBroker\Application\EntryGroup\Job\DeleteEntryGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroup\Job\MoveEntryGroupSyncJob;
 use App\Module\PasswordBroker\Application\EntryGroup\Job\RenameEntryGroupSyncJob;
+use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserHasNoRights;
 use App\Module\PasswordBroker\Domain\EntryGroup\DTO\EntryGroupTreeNode;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\Service\EntryGroupDomainService;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
+use App\Module\PasswordBroker\Domain\EntryGroupUser\Entity\EntryGroupUser;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
@@ -101,10 +103,21 @@ class EntryGroupApplicationService implements ApplicationServiceInterface
     }
 
     /**
+     * @throws AuthUserHasNoRights
      * @throws PersistenceException
      */
-    public function moveEntryGroupSync(string $uuid, ?string $targetUuid = null): EntryGroup
+    public function moveEntryGroupSync(string $uuid, ?string $targetUuid = null, ?EntryGroupUser $targetEntryGroupAuthUser = null): EntryGroup
     {
+        if ($targetUuid && !$targetEntryGroupAuthUser) {
+            throw new RuntimeException('Target EntryGroupUser must be provided if target EntryGroup is provided.');
+        }
+
+        if ($targetEntryGroupAuthUser
+            && !$this->entryGroupDomainService->canMoveEntryGroupToAnotherEntryGroup($targetEntryGroupAuthUser)
+        ) {
+            throw new AuthUserHasNoRights();
+        }
+
         return new MoveEntryGroupSyncJob([
             MoveEntryGroupSyncJob::PAYLOAD_KEY_ID => $uuid,
             MoveEntryGroupSyncJob::PAYLOAD_KEY_PARENT_ENTRY_GROUP_ID => $targetUuid,

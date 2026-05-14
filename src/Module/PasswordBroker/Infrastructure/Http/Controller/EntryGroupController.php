@@ -10,10 +10,15 @@ use App\Module\PasswordBroker\Application\EntryGroup\DTO\EntryGroupTreeResponse;
 use App\Module\PasswordBroker\Application\EntryGroup\Service\EntryGroupApplicationService;
 use App\Module\PasswordBroker\Application\EntryGroupUser\DTO\EntryGroupUserResponse;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\EntryGroupUserApplicationService;
+use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserHasNoRights;
+use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserNotInEntryGroupException;
+use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryGroupUser\Repository\EntryGroupUserRepository;
 use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryGroupRoute;
 use App\Shared\Application\Validation\Rule\ValidUuidRule;
+use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
+use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use Inquisition\Core\Application\Validation\Exception\ValidationException;
 use Inquisition\Core\Application\Validation\HttpRequestValidator;
 use Inquisition\Core\Application\Validation\Rule\MaxLengthRule;
@@ -23,6 +28,7 @@ use Inquisition\Core\Infrastructure\Http\Controller\AbstractRestController;
 use Inquisition\Core\Infrastructure\Http\Controller\RestControllerInterface;
 use Inquisition\Core\Infrastructure\Http\HttpStatusCode;
 use Inquisition\Core\Infrastructure\Http\Request\RequestInterface;
+use Inquisition\Core\Infrastructure\Http\Response\ResponseFactory;
 use Inquisition\Core\Infrastructure\Http\Response\ResponseInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\AbstractRepository;
@@ -148,6 +154,8 @@ final readonly class EntryGroupController extends AbstractRestController impleme
      * @throws JsonException
      * @throws PersistenceException
      * @throws ValidationException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
      */
     public function move(RequestInterface $request, array $parameters): ResponseInterface
     {
@@ -157,10 +165,27 @@ final readonly class EntryGroupController extends AbstractRestController impleme
             ],
         ])->validate($request);
 
-        $this->entryGroupApplicationService->moveEntryGroupSync(
-            uuid: $parameters[EntryGroupRoute::PARAM_ENTRY_GROUP_ID],
-            targetUuid: $request->getParameter(self::FIELD_TARGET_ENTRY_GROUP_ID),
-        );
+        $targetGroupIdRaw = $request->getParameter(self::FIELD_TARGET_ENTRY_GROUP_ID);
+
+        $targetEntryGroupAuthUser = null;
+        if ($targetGroupIdRaw) {
+            $targetGroupId = EntryGroupId::fromRaw($targetGroupIdRaw);
+            try {
+                $targetEntryGroupAuthUser = $this->entryGroupUserApplicationService->getEntryGroupUseForAuthUserByAndEntryGroupId($targetGroupId);
+            } catch (AuthException|AuthUserNotInEntryGroupException $e) {
+                return ResponseFactory::forbidden($e->getMessage());
+            }
+        }
+
+        try {
+            $this->entryGroupApplicationService->moveEntryGroupSync(
+                uuid: $parameters[EntryGroupRoute::PARAM_ENTRY_GROUP_ID],
+                targetUuid: $targetGroupIdRaw,
+                targetEntryGroupAuthUser: $targetEntryGroupAuthUser,
+            );
+        } catch (AuthUserHasNoRights $e) {
+            return ResponseFactory::forbidden($e->getMessage());
+        }
 
         return $this->jsonResponse([], HttpStatusCode::NO_CONTENT);
     }

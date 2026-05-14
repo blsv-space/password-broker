@@ -313,6 +313,21 @@ class EntryGroupUserApplicationService implements ApplicationServiceInterface
     }
 
     /**
+     * @throws AuthException
+     * @throws AuthUserNotInEntryGroupException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
+     * @throws PersistenceException
+     */
+    public function getEntryGroupUseForAuthUserByAndEntryGroupId(EntryGroupId $entryGroupId): EntryGroupUser
+    {
+        return $this->getEntryGroupUserAuth(
+            authUser: $this->getAuthUser(),
+            entryGroupId: $entryGroupId,
+        );
+    }
+
+    /**
      * @throws PersistenceException
      * @throws TargetUserNotFoundException
      */

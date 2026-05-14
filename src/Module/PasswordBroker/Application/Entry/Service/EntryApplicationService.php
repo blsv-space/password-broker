@@ -96,7 +96,6 @@ class EntryApplicationService implements ApplicationServiceInterface
         ])->handle();
     }
 
-
     /**
      * @throws PersistenceException
      */

@@ -7,7 +7,9 @@ namespace Tests\Module\PasswordBroker\Integration\Application\EntryGroup\Service
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\PasswordBroker\Application\EntryGroup\Service\EntryGroupApplicationService;
+use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserHasNoRights;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
+use App\Module\PasswordBroker\Domain\EntryGroupUser\Enum\RoleEnum;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Shared\Domain\ValueObject\DateTime;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
@@ -17,6 +19,7 @@ use InvalidArgumentException;
 use ReflectionException;
 use Tests\Module\Identity\Fixture\UserFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
+use Tests\Module\PasswordBroker\Fixture\EntryGroupUserFixture;
 use Tests\Shared\IntegrationTestCase;
 use Throwable;
 
@@ -158,13 +161,27 @@ class EntryGroupApplicationServiceTest extends IntegrationTestCase
 
     /**
      * @throws PersistenceException
+     * @throws RsaDomainServiceException
+     * @throws AuthUserHasNoRights
      */
     public function test_it_should_move_an_entry_group(): void
     {
         $entryGroupApplicationService = EntryGroupApplicationService::getInstance();
         $entryGroup = EntryGroupFixture::create(persist: true);
         $newParentEntryGroup = EntryGroupFixture::create(persist: true);
-        $entryGroupApplicationService->moveEntryGroupSync($entryGroup->id->toRaw(), $newParentEntryGroup->id->toRaw());
+        $entryGroupUser = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+                EntryGroupUserFixture::USER_ID => $this->user->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::ADMIN->value,
+            ],
+            persist: true,
+        );
+        $entryGroupApplicationService->moveEntryGroupSync(
+            uuid: $entryGroup->id->toRaw(),
+            targetUuid: $newParentEntryGroup->id->toRaw(),
+            targetEntryGroupAuthUser: $entryGroupUser,
+        );
         $this->assertDatabaseHas(
             table: EntryGroupFixture::getTableName(),
             param: [
