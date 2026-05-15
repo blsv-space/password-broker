@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace Tests\Module\PasswordBroker\Unit\Domain\Entry\ValueObject;
 
-use App\Module\PasswordBroker\Domain\Entry\ValueObject\Title;
+use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryTitle;
 use InvalidArgumentException;
 use stdClass;
 use Tests\Shared\UnitTestCase;
 
-class TitleTest extends UnitTestCase
+class EntryTitleTest extends UnitTestCase
 {
     public function test_it_should_create_instance_from_valid_string(): void
     {
         $rawValue = 'My Entry';
 
-        $name = Title::fromRaw($rawValue);
+        $name = EntryTitle::fromRaw($rawValue);
 
-        $this->assertSame(Title::class, get_class($name));
+        $this->assertSame(EntryTitle::class, get_class($name));
     }
 
     public function test_it_should_create_instance_from_empty_string(): void
     {
-        $name = Title::fromRaw('');
+        $name = EntryTitle::fromRaw('');
 
         $this->assertSame('', $name->toRaw());
     }
@@ -31,7 +31,7 @@ class TitleTest extends UnitTestCase
     {
         $this->expectNotToPerformAssertions();
 
-        Title::validate('valid string');
+        EntryTitle::validate('valid string');
     }
 
     public function test_it_should_throw_exception_for_invalid_data_type_integer(): void
@@ -39,7 +39,7 @@ class TitleTest extends UnitTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid data type');
 
-        Title::validate(123);
+        EntryTitle::validate(123);
     }
 
     public function test_it_should_throw_exception_for_invalid_data_type_float(): void
@@ -47,7 +47,7 @@ class TitleTest extends UnitTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid data type');
 
-        Title::validate(1.5);
+        EntryTitle::validate(1.5);
     }
 
     public function test_it_should_throw_exception_for_invalid_data_type_null(): void
@@ -55,7 +55,7 @@ class TitleTest extends UnitTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid data type');
 
-        Title::validate(null);
+        EntryTitle::validate(null);
     }
 
     public function test_it_should_throw_exception_for_invalid_data_type_array(): void
@@ -63,7 +63,7 @@ class TitleTest extends UnitTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid data type');
 
-        Title::validate(['group name']);
+        EntryTitle::validate(['group name']);
     }
 
     public function test_it_should_throw_exception_for_invalid_data_type_boolean(): void
@@ -71,7 +71,7 @@ class TitleTest extends UnitTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid data type');
 
-        Title::validate(true);
+        EntryTitle::validate(true);
     }
 
     public function test_it_should_throw_exception_for_invalid_data_type_object(): void
@@ -79,21 +79,21 @@ class TitleTest extends UnitTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid data type');
 
-        Title::validate(new stdClass());
+        EntryTitle::validate(new stdClass());
     }
 
     public function tets_it_should_return_origin_value(): void
     {
         $rawValue = 'Test Group Name';
 
-        $name = Title::fromRaw($rawValue);
+        $name = EntryTitle::fromRaw($rawValue);
 
         $this->assertSame($rawValue, $name->toRaw());
     }
 
     public function test_it_should_return_string(): void
     {
-        $name = Title::fromRaw('Any Name');
+        $name = EntryTitle::fromRaw('Any Name');
         $this->assertIsString($name->toRaw());
     }
 }

@@ -51,7 +51,7 @@ final class CreateEntrySyncJob extends AbstractReplicableSyncJob
         }
 
         if (empty($this->payload[self::PAYLOAD_KEY_TITLE])) {
-            throw new InvalidArgumentException('Entry Title is required');
+            throw new InvalidArgumentException('Entry EntryTitle is required');
         }
 
         if (empty($this->payload[self::PAYLOAD_KEY_ENTRY_GROUP_ID])) {

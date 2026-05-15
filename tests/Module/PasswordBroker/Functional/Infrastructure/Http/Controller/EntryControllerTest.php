@@ -7,7 +7,7 @@ namespace Tests\Module\PasswordBroker\Functional\Infrastructure\Http\Controller;
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Infrastructure\Http\Controller\UserController;
-use App\Module\PasswordBroker\Domain\Entry\ValueObject\Title;
+use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryTitle;
 use App\Module\PasswordBroker\Infrastructure\Entry\Repository\EntryRepository;
 use App\Module\PasswordBroker\Infrastructure\Http\Controller\EntryController;
 use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryGroupRoute;
@@ -308,7 +308,7 @@ class EntryControllerTest extends FunctionalTestCase
         );
         $entry = EntryFixture::create(attributes: [EntryFixture::ENTRY_GROUP => $entryGroup], persist: true);
         $oldTitle = $entry->title;
-        $entry->title = Title::fromRaw('Updated title');
+        $entry->title = EntryTitle::fromRaw('Updated title');
 
         $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_UPDATE);
         $route = Router::getInstance()->getRouteByName($routeName);
@@ -350,7 +350,7 @@ class EntryControllerTest extends FunctionalTestCase
         $entryGroup = EntryGroupFixture::create(persist: true);
         $entry = EntryFixture::create(attributes: [EntryFixture::ENTRY_GROUP => $entryGroup], persist: true);
         $oldTitle = $entry->title;
-        $entry->title = Title::fromRaw('Updated title');
+        $entry->title = EntryTitle::fromRaw('Updated title');
 
         $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_UPDATE);
         $route = Router::getInstance()->getRouteByName($routeName);

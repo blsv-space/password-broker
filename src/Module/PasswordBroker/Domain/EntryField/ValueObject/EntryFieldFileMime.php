@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Module\PasswordBroker\Domain\Entry\ValueObject;
+namespace App\Module\PasswordBroker\Domain\EntryField\ValueObject;
 
 use Inquisition\Core\Domain\ValueObject\AbstractValueObject;
 use InvalidArgumentException;
@@ -10,7 +10,7 @@ use InvalidArgumentException;
 /**
  * @property string $value
  */
-class Title extends AbstractValueObject
+class EntryFieldFileMime extends AbstractValueObject
 {
     #[\Override]
     public function toRaw(): string

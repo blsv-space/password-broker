@@ -6,7 +6,7 @@ namespace Tests\Module\PasswordBroker\Fixture;
 
 use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;
-use App\Module\PasswordBroker\Domain\Entry\ValueObject\Title;
+use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryTitle;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Infrastructure\Entry\Repository\EntryRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
@@ -45,7 +45,7 @@ class EntryFixture extends AbstractFixture
         $entry = new Entry(
             id: $entryId,
             entryGroupId: EntryGroupId::fromRaw($attributes[self::ENTRY_GROUP_ID]),
-            title: Title::fromRaw($attributes[self::TITLE] ?? static::faker()->word()),
+            title: EntryTitle::fromRaw($attributes[self::TITLE] ?? static::faker()->word()),
             createdAt: CreatedAt::fromRaw($attributes[self::CREATED_AT]
                 ?? static::faker()->dateTime()->format(DateTime::FORMAT)),
             updatedAt: UpdatedAt::fromRaw($attributes[self::UPDATED_AT]

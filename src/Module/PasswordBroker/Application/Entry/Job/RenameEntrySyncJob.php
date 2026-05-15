@@ -7,7 +7,7 @@ namespace App\Module\PasswordBroker\Application\Entry\Job;
 use App\Module\PasswordBroker\Application\Entry\Event\EntryRenamedEvent;
 use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;
-use App\Module\PasswordBroker\Domain\Entry\ValueObject\Title;
+use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryTitle;
 use App\Module\PasswordBroker\Infrastructure\Entry\Repository\EntryRepository;
 use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
@@ -37,7 +37,7 @@ final class RenameEntrySyncJob extends AbstractReplicableSyncJob
         if (is_null($entry)) {
             throw new InvalidArgumentException('Entry not found');
         }
-        $entry->title = Title::fromRaw($this->payload[self::PAYLOAD_KEY_TITLE]);
+        $entry->title = EntryTitle::fromRaw($this->payload[self::PAYLOAD_KEY_TITLE]);
         $entryRepository->save($entry);
 
         EventDispatcher::getInstance()->dispatch(new EntryRenamedEvent($entry));
@@ -52,7 +52,7 @@ final class RenameEntrySyncJob extends AbstractReplicableSyncJob
         }
 
         if (empty($this->payload[self::PAYLOAD_KEY_TITLE])) {
-            throw new InvalidArgumentException('Entry Title is required');
+            throw new InvalidArgumentException('Entry EntryTitle is required');
         }
 
         if (empty($this->payload[self::PAYLOAD_UPDATED_AT])

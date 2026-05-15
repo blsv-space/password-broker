@@ -7,7 +7,7 @@ namespace App\Module\PasswordBroker\Infrastructure\Entry\Repository;
 use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
 use App\Module\PasswordBroker\Domain\Entry\Repository\EntryRepositoryInterface;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;
-use App\Module\PasswordBroker\Domain\Entry\ValueObject\Title;
+use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryTitle;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Infrastructure\Repository\AbstractPasswordBrokerRepository;
@@ -64,7 +64,7 @@ class EntryRepository extends AbstractPasswordBrokerRepository implements EntryR
         return new Entry(
             id: EntryId::fromRaw($row[self::FIELD_ID]),
             entryGroupId: EntryGroupId::fromRaw($row[self::FIELD_ENTRY_GROUP_ID]),
-            title: Title::fromRaw($row[self::FIELD_TITLE]),
+            title: EntryTitle::fromRaw($row[self::FIELD_TITLE]),
             createdAt: CreatedAt::fromRaw($row[self::FIELD_CREATED_AT]),
             updatedAt: !empty($row[self::FIELD_UPDATED_AT]) ? UpdatedAt::fromRaw($row[self::FIELD_UPDATED_AT]) : null,
             deletedAt: !empty($row[self::FIELD_DELETED_AT]) ? DeletedAt::fromRaw($row[self::FIELD_DELETED_AT]) : null,
@@ -78,12 +78,12 @@ class EntryRepository extends AbstractPasswordBrokerRepository implements EntryR
     }
 
     /**
-     * @param Title $title
+     * @param EntryTitle $title
      * @return Entry|null
      * @throws PersistenceException
      */
     #[\Override]
-    public function findEntryByTitle(Title $title): ?Entry
+    public function findEntryByTitle(EntryTitle $title): ?Entry
     {
         return $this->findOneBy(
             [new QueryCriteria(
@@ -109,7 +109,7 @@ class EntryRepository extends AbstractPasswordBrokerRepository implements EntryR
         return new Entry(
             id: EntryId::fromRaw($array[EntryRepository::FIELD_ID]),
             entryGroupId: EntryGroupId::fromRaw($array[EntryRepository::FIELD_ENTRY_GROUP_ID]),
-            title: Title::fromRaw($array[EntryRepository::FIELD_TITLE]),
+            title: EntryTitle::fromRaw($array[EntryRepository::FIELD_TITLE]),
             createdAt: $createdAt,
             updatedAt: $updateAt,
             deletedAt: $deletedAt,
