@@ -20,7 +20,7 @@ use Inquisition\Core\Domain\Entity\BaseEntityWithId;
 use Inquisition\Core\Domain\Entity\EntityInterface;
 use Inquisition\Core\Domain\ValueObject\ValueObjectInterface;
 
-abstract class EntryField extends BaseEntityWithId implements EntityInterface, EntitySoftDeleteInterface
+abstract class AbstractEntryField extends BaseEntityWithId implements EntityInterface, EntitySoftDeleteInterface
 {
     protected function __construct(
         public EntryFieldId $id {

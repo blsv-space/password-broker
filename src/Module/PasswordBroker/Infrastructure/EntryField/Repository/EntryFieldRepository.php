@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace App\Module\PasswordBroker\Infrastructure\EntryField\Repository;
 
 use App\Module\Identity\Domain\User\ValueObject\UserId;
-use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;
-use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryField;
+use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldFile;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldLink;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldNote;
@@ -39,17 +38,17 @@ use Inquisition\Foundation\Singleton\SingletonTrait;
 use InvalidArgumentException;
 
 /**
- * @method EntryField|null findById(ValueObjectInterface $id)
+ * @method AbstractEntryField|null findById(ValueObjectInterface $id)
  *
- * @extends AbstractPasswordBrokerRepository<EntryField>
- * @implements RepositorySoftDeleteInterface<EntryField>
+ * @extends AbstractPasswordBrokerRepository<AbstractEntryField>
+ * @implements RepositorySoftDeleteInterface<AbstractEntryField>
  */
 class EntryFieldRepository extends AbstractPasswordBrokerRepository implements EntryFieldRepositoryInterface, RepositorySoftDeleteInterface
 {
     use SingletonTrait;
 
     /**
-     * @use RepositorySoftDeleteTrait<EntryField>
+     * @use RepositorySoftDeleteTrait<AbstractEntryField>
      */
     use RepositorySoftDeleteTrait;
 
@@ -73,7 +72,7 @@ class EntryFieldRepository extends AbstractPasswordBrokerRepository implements E
     public const string FIELD_DELETED_AT = 'deletedAt';
 
     protected const string TABLE_NAME = 'entryFields';
-    protected const string ENTITY_CLASS_NAME = EntryField::class;
+    protected const string ENTITY_CLASS_NAME = AbstractEntryField::class;
 
     private function __construct()
     {
@@ -82,7 +81,7 @@ class EntryFieldRepository extends AbstractPasswordBrokerRepository implements E
 
     /**
      * @throws InvalidArgumentException
-     * @return EntryField
+     * @return AbstractEntryField
      */
     #[\Override]
     protected function mapRowToEntity(array $row): EntityInterface
@@ -189,7 +188,7 @@ class EntryFieldRepository extends AbstractPasswordBrokerRepository implements E
     }
 
     #[\Override]
-    public function mapArrayToEntity(array $array): EntryField
+    public function mapArrayToEntity(array $array): AbstractEntryField
     {
         return $this->mapRowToEntity($array);
     }

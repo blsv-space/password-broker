@@ -19,7 +19,7 @@ use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\DeletedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
 
-final class EntryFieldTotp extends EntryField
+final class EntryFieldTotp extends AbstractEntryField
 {
     public function __construct(
         EntryFieldId $id,
