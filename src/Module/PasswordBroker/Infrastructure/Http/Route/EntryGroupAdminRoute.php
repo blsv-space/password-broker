@@ -6,7 +6,6 @@ namespace App\Module\PasswordBroker\Infrastructure\Http\Route;
 
 use App\Module\PasswordBroker\Infrastructure\Http\Controller\EntryGroupController;
 use App\Module\PasswordBroker\Infrastructure\Http\Middleware\EntryGroupAdminMiddleware;
-use App\Module\PasswordBroker\Infrastructure\Http\Middleware\EntryGroupMemberOrAboveMiddleware;
 use App\Shared\Infrastructure\Http\Route\AbstractRouterRegistry;
 use Inquisition\Core\Infrastructure\Http\Controller\RestControllerInterface;
 use Inquisition\Core\Infrastructure\Http\Router\RouteGroupInterface;

@@ -14,7 +14,6 @@ use App\Module\Identity\Infrastructure\Repository\AbstractIdentityRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use DateTimeImmutable;
 use Inquisition\Core\Domain\Entity\EntityInterface;
-use Inquisition\Core\Domain\ValueObject\ValueObjectInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryOperatorEnum;

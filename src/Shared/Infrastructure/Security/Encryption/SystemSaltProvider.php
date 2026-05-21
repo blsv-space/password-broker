@@ -10,9 +10,8 @@ use Inquisition\Foundation\Storage\StorageRegistry;
 
 final class SystemSaltProvider implements SaltProviderInterface
 {
-    public const string SALT_KEY = 'pbkdf2_salt';
-
     use SingletonTrait;
+    public const string SALT_KEY = 'pbkdf2_salt';
 
     #[\Override]
     public function getSalt(): string

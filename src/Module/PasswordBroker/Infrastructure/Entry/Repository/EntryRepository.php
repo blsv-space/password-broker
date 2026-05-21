@@ -8,7 +8,6 @@ use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
 use App\Module\PasswordBroker\Domain\Entry\Repository\EntryRepositoryInterface;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryTitle;
-use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Infrastructure\Repository\AbstractPasswordBrokerRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
@@ -78,8 +77,6 @@ class EntryRepository extends AbstractPasswordBrokerRepository implements EntryR
     }
 
     /**
-     * @param EntryTitle $title
-     * @return Entry|null
      * @throws PersistenceException
      */
     #[\Override]

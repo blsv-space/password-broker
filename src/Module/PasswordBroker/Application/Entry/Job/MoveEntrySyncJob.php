@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Module\PasswordBroker\Application\Entry\Job;
 
-use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
 use App\Module\PasswordBroker\Application\Entry\Event\EntryMovedEvent;
 use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;

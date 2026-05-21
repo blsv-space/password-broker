@@ -285,7 +285,7 @@ class EntryApplicationServiceTest extends IntegrationTestCase
             count: 5,
             attributes: [
                 EntryFixture::ENTRY_GROUP => $entryGroup,
-            ]
+            ],
         );
 
         EntryFixture::createMany(count: 2);

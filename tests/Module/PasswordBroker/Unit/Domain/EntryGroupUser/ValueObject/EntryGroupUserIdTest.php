@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\PasswordBroker\Unit\Domain\EntryGroupUser\ValueObject;
 
 use App\Module\PasswordBroker\Domain\EntryGroupUser\ValueObject\EntryGroupUserId;

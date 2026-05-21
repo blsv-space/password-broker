@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Module\Identity\Functional\Infrastructure\Http\Controller;
 
-use App\Module\Identity\Application\User\Service\AuthApplicationService;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Infrastructure\Http\Controller\UserController;
 use App\Module\Identity\Infrastructure\Http\Route\IdentityRoute;

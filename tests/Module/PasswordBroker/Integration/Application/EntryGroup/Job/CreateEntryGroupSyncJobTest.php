@@ -20,7 +20,6 @@ use Tests\Shared\TestEventHandler;
 class CreateEntryGroupSyncJobTest extends IntegrationTestCase
 {
     /**
-     * @return void
      * @throws PersistenceException
      * @throws RandomException
      * @throws RsaDomainServiceException
@@ -72,7 +71,6 @@ class CreateEntryGroupSyncJobTest extends IntegrationTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws RsaDomainServiceException
      * @throws TargetGroupNotFoundException

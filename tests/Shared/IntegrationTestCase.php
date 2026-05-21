@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Shared;
 
-use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use PDO;
 
 abstract class IntegrationTestCase extends AbstractTestCase

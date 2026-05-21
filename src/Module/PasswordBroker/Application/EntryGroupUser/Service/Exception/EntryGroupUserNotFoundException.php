@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception;
 
 use App\Module\PasswordBroker\Domain\EntryGroupUser\ValueObject\EntryGroupUserId;

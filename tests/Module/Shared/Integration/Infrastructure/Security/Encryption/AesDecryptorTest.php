@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Shared\Integration\Infrastructure\Security\Encryption;
 
 use App\Shared\Domain\Security\Encryption\Exception\DecryptionException;

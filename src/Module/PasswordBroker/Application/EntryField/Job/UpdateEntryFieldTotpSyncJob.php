@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Module\PasswordBroker\Application\EntryField\Job;
 
 use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldTotpCreatedEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldTotpUpdatedEvent;
 use App\Module\PasswordBroker\Application\EntryField\Job\ValidateTrait\EntryFieldTotpValidate;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldTotp;
@@ -12,15 +13,24 @@ use Inquisition\Core\Application\Event\EventInterface;
 use Override;
 
 /**
- * @extends AbstractCreateEntryFieldSyncJob<EntryFieldTotp, EntryFieldTotpCreatedEvent>
+ * @extends AbstractUpdateEntryFieldSyncJob<EntryFieldTotp, EntryFieldTotpCreatedEvent>
  */
-final class CreateEntryFieldTotpSyncJob extends AbstractCreateEntryFieldSyncJob
+final class UpdateEntryFieldTotpSyncJob extends AbstractUpdateEntryFieldSyncJob
 {
     use EntryFieldTotpValidate;
 
     #[Override]
     protected function getEvent(AbstractEntryField $entry): EventInterface
     {
-        return new EntryFieldTotpCreatedEvent($entry);
+        return new EntryFieldTotpUpdatedEvent(
+            $entry,
+        );
+    }
+
+    #[Override]
+    protected function updateByEntryFieldType(AbstractEntryField $entry): void
+    {
+        $entry->totpHashAlgorithm = $this->payload[self::PAYLOAD_KEY_TOTP_HASH_ALGORITHM];
+        $entry->totpTimeout = $this->payload[self::PAYLOAD_KEY_TOTP_TIMEOUT];
     }
 }

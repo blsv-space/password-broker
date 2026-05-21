@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Shared\Unit\Infrastructure\Security\Encryption;
 
 use App\Shared\Infrastructure\Security\Encryption\InitialVectorProvider;

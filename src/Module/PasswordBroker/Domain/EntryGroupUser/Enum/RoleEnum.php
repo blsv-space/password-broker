@@ -9,7 +9,6 @@ use Override;
 
 enum RoleEnum: string implements EnumToArrayInterface
 {
-
     case ADMIN = 'admin';
     case MEMBER = 'member';
     case MODERATOR = 'moderator';

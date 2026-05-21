@@ -27,10 +27,10 @@ class EntryResponse implements EntityResponseInterface
             throw new InvalidArgumentException('Invalid entity type');
         }
 
-        $entryGroupResponse = new static();
-        $entryGroupResponse->entry = $entity;
+        $entryResponse = new static();
+        $entryResponse->entry = $entity;
 
-        return $entryGroupResponse;
+        return $entryResponse;
     }
 
     #[\Override]
