@@ -162,7 +162,7 @@ class EntryGroupApplicationService implements ApplicationServiceInterface
      * @throws PersistenceException
      * @return EntryGroup[]
      */
-    public function getEntryGroupBy(
+    public function getEntryGroupsBy(
         array  $criteria,
         ?array $orderBy = null,
         ?int   $limit = null,

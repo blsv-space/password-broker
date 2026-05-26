@@ -6,6 +6,7 @@ namespace App\Module\PasswordBroker\Application\EntryField\Job;
 
 use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldCreatedGeneralEvent;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
+use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTypeEnum;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldId;
 use App\Module\PasswordBroker\Infrastructure\Entry\Repository\EntryRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
@@ -26,8 +27,8 @@ abstract class AbstractCreateEntryFieldSyncJob extends AbstractReplicableSyncJob
     public const string PAYLOAD_KEY_FIELD_TYPE = EntryFieldRepository::FIELD_TYPE;
     public const string PAYLOAD_KEY_TITLE = EntryFieldRepository::FIELD_TITLE;
     public const string PAYLOAD_KEY_VALUE_ENCRYPTED = EntryFieldRepository::FIELD_VALUE_ENCRYPTED;
-    public const string PAYLOAD_KEY_FIELD_TAG = EntryFieldRepository::FIELD_TAG;
-    public const string PAYLOAD_KEY_FIELD_INITIALIZATION_VECTOR = EntryFieldRepository::FIELD_INITIALIZATION_VECTOR;
+    public const string PAYLOAD_KEY_TAG = EntryFieldRepository::FIELD_TAG;
+    public const string PAYLOAD_KEY_INITIALIZATION_VECTOR = EntryFieldRepository::FIELD_INITIALIZATION_VECTOR;
     public const string PAYLOAD_KEY_CREATED_AT = EntryFieldRepository::FIELD_CREATED_AT;
     public const string PAYLOAD_KEY_CREATED_BY = EntryFieldRepository::FIELD_CREATED_BY;
 
@@ -89,15 +90,19 @@ abstract class AbstractCreateEntryFieldSyncJob extends AbstractReplicableSyncJob
             throw new InvalidArgumentException('Entry Field Type is required');
         }
 
+        if (!in_array($this->payload[self::PAYLOAD_KEY_FIELD_TYPE], EntryFieldTypeEnum::toArray(), true)) {
+            throw new InvalidArgumentException('Entry Field Type is invalid');
+        }
+
         if (empty($this->payload[self::PAYLOAD_KEY_VALUE_ENCRYPTED])) {
             throw new InvalidArgumentException('Entry Field Value Encrypted is required');
         }
 
-        if (empty($this->payload[self::PAYLOAD_KEY_FIELD_TAG])) {
+        if (empty($this->payload[self::PAYLOAD_KEY_TAG])) {
             throw new InvalidArgumentException('Entry Field Tag is required');
         }
 
-        if (empty($this->payload[self::PAYLOAD_KEY_FIELD_INITIALIZATION_VECTOR])) {
+        if (empty($this->payload[self::PAYLOAD_KEY_INITIALIZATION_VECTOR])) {
             throw new InvalidArgumentException('Entry Field Initialization Vector is required');
         }
 

@@ -22,8 +22,8 @@ abstract class AbstractUpdateEntryFieldSyncJob extends AbstractReplicableSyncJob
     public const string PAYLOAD_KEY_ID = EntryFieldRepository::FIELD_ID;
     public const string PAYLOAD_KEY_TITLE = EntryFieldRepository::FIELD_TITLE;
     public const string PAYLOAD_KEY_VALUE_ENCRYPTED = EntryFieldRepository::FIELD_VALUE_ENCRYPTED;
-    public const string PAYLOAD_KEY_FIELD_TAG = EntryFieldRepository::FIELD_TAG;
-    public const string PAYLOAD_KEY_FIELD_INITIALIZATION_VECTOR = EntryFieldRepository::FIELD_INITIALIZATION_VECTOR;
+    public const string PAYLOAD_KEY_TAG = EntryFieldRepository::FIELD_TAG;
+    public const string PAYLOAD_KEY_INITIALIZATION_VECTOR = EntryFieldRepository::FIELD_INITIALIZATION_VECTOR;
     public const string PAYLOAD_KEY_UPDATED_AT = EntryFieldRepository::FIELD_UPDATED_AT;
     public const string PAYLOAD_KEY_UPDATED_BY = EntryFieldRepository::FIELD_UPDATED_BY;
 
@@ -48,12 +48,12 @@ abstract class AbstractUpdateEntryFieldSyncJob extends AbstractReplicableSyncJob
         $entryField->title = $this->payload[self::PAYLOAD_KEY_TITLE];
         if (isset($this->payload[self::PAYLOAD_KEY_VALUE_ENCRYPTED])) {
             $entryField->valueEncrypted = $this->payload[self::PAYLOAD_KEY_VALUE_ENCRYPTED];
-            $entryField->tag = $this->payload[self::PAYLOAD_KEY_FIELD_TAG];
-            $entryField->initializationVector = $this->payload[self::PAYLOAD_KEY_FIELD_INITIALIZATION_VECTOR];
+            $entryField->tag = $this->payload[self::PAYLOAD_KEY_TAG];
+            $entryField->initializationVector = $this->payload[self::PAYLOAD_KEY_INITIALIZATION_VECTOR];
+            $this->updateByEntryFieldType($entryField);
         }
         $entryField->updatedAt = $this->payload[self::PAYLOAD_KEY_UPDATED_AT];
         $entryField->updatedBy = $this->payload[self::PAYLOAD_KEY_UPDATED_BY];
-        $this->updateByEntryFieldType($entryField);
 
         $entryFieldRepository->save($entryField);
         EventDispatcher::getInstance()->dispatch($this->getEvent($entryField));
@@ -73,8 +73,6 @@ abstract class AbstractUpdateEntryFieldSyncJob extends AbstractReplicableSyncJob
 
     protected function validate(): void
     {
-        $this->validateByEntryFieldType();
-
         if (empty($this->payload[self::PAYLOAD_KEY_ID])) {
             throw new InvalidArgumentException('Entry Field id is required');
         }
@@ -84,13 +82,15 @@ abstract class AbstractUpdateEntryFieldSyncJob extends AbstractReplicableSyncJob
         }
 
         if (!empty($this->payload[self::PAYLOAD_KEY_VALUE_ENCRYPTED])) {
-            if (empty($this->payload[self::PAYLOAD_KEY_FIELD_TAG])) {
+            if (empty($this->payload[self::PAYLOAD_KEY_TAG])) {
                 throw new InvalidArgumentException('Entry Field Tag is required');
             }
 
-            if (empty($this->payload[self::PAYLOAD_KEY_FIELD_INITIALIZATION_VECTOR])) {
+            if (empty($this->payload[self::PAYLOAD_KEY_INITIALIZATION_VECTOR])) {
                 throw new InvalidArgumentException('Entry Field Initialization Vector is required');
             }
+
+            $this->validateByEntryFieldType();
         }
 
         if (empty($this->payload[self::PAYLOAD_KEY_UPDATED_AT])
