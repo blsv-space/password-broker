@@ -12,6 +12,8 @@ use InvalidArgumentException;
  */
 class EntryFieldTag extends AbstractValueObject
 {
+    const TAG_LENGTH = 16;
+
     #[\Override]
     public function toRaw(): string
     {
@@ -33,7 +35,7 @@ class EntryFieldTag extends AbstractValueObject
             throw new InvalidArgumentException('Invalid data type');
         }
 
-        if (strlen($data) !== 16) {
+        if (strlen($data) !== self::TAG_LENGTH) {
             throw new InvalidArgumentException('Invalid tag length');
         }
     }

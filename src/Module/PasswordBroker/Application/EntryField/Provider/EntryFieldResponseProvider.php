@@ -16,7 +16,7 @@ use Inquisition\Core\Application\Service\ApplicationServiceInterface;
 use Inquisition\Foundation\Singleton\SingletonTrait;
 use InvalidArgumentException;
 
-final readonly class EntryFieldResponseProvider implements ApplicationServiceInterface
+final class EntryFieldResponseProvider implements ApplicationServiceInterface
 {
     use SingletonTrait;
 

@@ -12,6 +12,8 @@ use InvalidArgumentException;
  */
 class EntryFieldInitializationVector extends AbstractValueObject
 {
+    public const IV_LENGTH = 12;
+
     #[\Override]
     public function toRaw(): string
     {
@@ -31,6 +33,10 @@ class EntryFieldInitializationVector extends AbstractValueObject
     {
         if (!is_string($data)) {
             throw new InvalidArgumentException('Invalid data type');
+        }
+
+        if (strlen($data) !== self::IV_LENGTH) {
+            throw new InvalidArgumentException('Invalid IV length');
         }
     }
 }

@@ -50,6 +50,7 @@ abstract class AbstractEntryFieldResponse implements EntityResponseInterface
             EntryFieldRepository::FIELD_ID => $this->entryField->id->toRaw(),
             EntryFieldRepository::FIELD_ENTRY_ID => $this->entryField->entryId->toRaw(),
             EntryFieldRepository::FIELD_TYPE => $this->entryField->type->value,
+            EntryFieldRepository::FIELD_TITLE => $this->entryField->title->toRaw(),
             EntryFieldRepository::FIELD_CREATED_AT => $this->entryField->createdAt?->toRaw(),
             EntryFieldRepository::FIELD_UPDATED_AT => $this->entryField->updatedAt?->toRaw(),
             EntryFieldRepository::FIELD_DELETED_AT => $this->entryField->deletedAt?->toRaw(),
