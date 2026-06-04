@@ -12,7 +12,7 @@ use InvalidArgumentException;
  */
 class EntryFieldTag extends AbstractValueObject
 {
-    const TAG_LENGTH = 16;
+    public const int TAG_LENGTH = 16;
 
     #[\Override]
     public function toRaw(): string

@@ -9,6 +9,9 @@ use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldFileUpdated
 use App\Module\PasswordBroker\Application\EntryField\Job\ValidateTrait\EntryFieldFiledValidate;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldFile;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldFileMime;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldFileName;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldFileSize;
 use Inquisition\Core\Application\Event\EventInterface;
 use Override;
 
@@ -28,8 +31,8 @@ final class UpdateEntryFieldFileSyncJob extends AbstractUpdateEntryFieldSyncJob
     #[Override]
     protected function updateByEntryFieldType(AbstractEntryField $entry): void
     {
-        $entry->fileMime = $this->payload[self::PAYLOAD_KEY_FILE_MIME];
-        $entry->fileName = $this->payload[self::PAYLOAD_KEY_FILE_NAME];
-        $entry->fileSize = $this->payload[self::PAYLOAD_KEY_FILE_SIZE];
+        $entry->fileMime = EntryFieldFileMime::fromRaw($this->payload[self::PAYLOAD_KEY_FILE_MIME]);
+        $entry->fileName = EntryFieldFileName::fromRaw($this->payload[self::PAYLOAD_KEY_FILE_NAME]);
+        $entry->fileSize = EntryFieldFileSize::fromRaw($this->payload[self::PAYLOAD_KEY_FILE_SIZE]);
     }
 }

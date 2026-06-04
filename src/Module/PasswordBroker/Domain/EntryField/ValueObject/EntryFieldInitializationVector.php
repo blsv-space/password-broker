@@ -12,7 +12,7 @@ use InvalidArgumentException;
  */
 class EntryFieldInitializationVector extends AbstractValueObject
 {
-    public const IV_LENGTH = 12;
+    public const int IV_LENGTH = 12;
 
     #[\Override]
     public function toRaw(): string

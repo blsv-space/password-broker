@@ -34,6 +34,7 @@ final readonly class EntryFieldRoute extends AbstractRouterRegistry
             ->post('', EntryFieldController::class, RestControllerInterface::ACTION_STORE)
             ->put("/{{$PARAM_ENTRY_FIELD_ID}}", EntryFieldController::class, RestControllerInterface::ACTION_UPDATE)
             ->delete("/{{$PARAM_ENTRY_FIELD_ID}}", EntryFieldController::class, RestControllerInterface::ACTION_DESTROY)
+            ->post("/{{$PARAM_ENTRY_FIELD_ID}}", EntryFieldController::class, EntryFieldController::ACTION_DECRYPT)
         ;
     }
 }

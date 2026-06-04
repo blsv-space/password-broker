@@ -9,6 +9,8 @@ use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldTotpUpdated
 use App\Module\PasswordBroker\Application\EntryField\Job\ValidateTrait\EntryFieldTotpValidate;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldTotp;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldTotpHashAlgorithm;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldTotpTimeout;
 use Inquisition\Core\Application\Event\EventInterface;
 use Override;
 
@@ -30,7 +32,7 @@ final class UpdateEntryFieldTotpSyncJob extends AbstractUpdateEntryFieldSyncJob
     #[Override]
     protected function updateByEntryFieldType(AbstractEntryField $entry): void
     {
-        $entry->totpHashAlgorithm = $this->payload[self::PAYLOAD_KEY_TOTP_HASH_ALGORITHM];
-        $entry->totpTimeout = $this->payload[self::PAYLOAD_KEY_TOTP_TIMEOUT];
+        $entry->totpHashAlgorithm = EntryFieldTotpHashAlgorithm::fromRaw($this->payload[self::PAYLOAD_KEY_TOTP_HASH_ALGORITHM]);
+        $entry->totpTimeout = EntryFieldTotpTimeout::fromRaw($this->payload[self::PAYLOAD_KEY_TOTP_TIMEOUT]);
     }
 }

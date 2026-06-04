@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace App\Module\PasswordBroker\Application\EntryField\Job;
 
+use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldUpdatedGeneralEvent;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldId;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldInitializationVector;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldTag;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldTitle;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldValueEncrypted;
 use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
 use App\Shared\Application\Job\AbstractReplicableSyncJob;
+use App\Shared\Domain\ValueObject\UpdatedAt;
 use Inquisition\Core\Application\Event\EventInterface;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
@@ -41,19 +48,19 @@ abstract class AbstractUpdateEntryFieldSyncJob extends AbstractReplicableSyncJob
         /**
          * @var T $entryField
          */
-        $entryField = $entryFieldRepository->findById($this->payload[self::PAYLOAD_KEY_ID]);
+        $entryField = $entryFieldRepository->findById(EntryFieldId::fromRaw($this->payload[self::PAYLOAD_KEY_ID]));
         if (is_null($entryField)) {
             throw new InvalidArgumentException("Entry Field with ID {$this->payload[self::PAYLOAD_KEY_ID]} not found");
         }
-        $entryField->title = $this->payload[self::PAYLOAD_KEY_TITLE];
+        $entryField->title = EntryFieldTitle::fromRaw($this->payload[self::PAYLOAD_KEY_TITLE]);
         if (isset($this->payload[self::PAYLOAD_KEY_VALUE_ENCRYPTED])) {
-            $entryField->valueEncrypted = $this->payload[self::PAYLOAD_KEY_VALUE_ENCRYPTED];
-            $entryField->tag = $this->payload[self::PAYLOAD_KEY_TAG];
-            $entryField->initializationVector = $this->payload[self::PAYLOAD_KEY_INITIALIZATION_VECTOR];
+            $entryField->valueEncrypted = EntryFieldValueEncrypted::fromRaw($this->payload[self::PAYLOAD_KEY_VALUE_ENCRYPTED]);
+            $entryField->tag = EntryFieldTag::fromRaw($this->payload[self::PAYLOAD_KEY_TAG]);
+            $entryField->initializationVector = EntryFieldInitializationVector::fromRaw($this->payload[self::PAYLOAD_KEY_INITIALIZATION_VECTOR]);
             $this->updateByEntryFieldType($entryField);
         }
-        $entryField->updatedAt = $this->payload[self::PAYLOAD_KEY_UPDATED_AT];
-        $entryField->updatedBy = $this->payload[self::PAYLOAD_KEY_UPDATED_BY];
+        $entryField->updatedAt = UpdatedAt::fromRaw($this->payload[self::PAYLOAD_KEY_UPDATED_AT]);
+        $entryField->updatedBy = UserId::fromRaw($this->payload[self::PAYLOAD_KEY_UPDATED_BY]);
 
         $entryFieldRepository->save($entryField);
         EventDispatcher::getInstance()->dispatch($this->getEvent($entryField));

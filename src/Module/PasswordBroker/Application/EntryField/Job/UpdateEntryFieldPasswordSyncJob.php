@@ -9,6 +9,7 @@ use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldPasswordUpd
 use App\Module\PasswordBroker\Application\EntryField\Job\ValidateTrait\EntryFieldPasswordValidate;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldPassword;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldLogin;
 use Inquisition\Core\Application\Event\EventInterface;
 use Override;
 
@@ -28,6 +29,6 @@ final class UpdateEntryFieldPasswordSyncJob extends AbstractUpdateEntryFieldSync
     #[Override]
     protected function updateByEntryFieldType(AbstractEntryField $entry): void
     {
-        $entry->login = $this->payload[self::PAYLOAD_KEY_LOGIN];
+        $entry->login = EntryFieldLogin::fromRaw($this->payload[self::PAYLOAD_KEY_LOGIN]);
     }
 }

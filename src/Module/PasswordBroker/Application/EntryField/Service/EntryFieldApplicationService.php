@@ -22,6 +22,7 @@ use App\Module\PasswordBroker\Application\EntryField\Job\UpdateEntryFieldLinkSyn
 use App\Module\PasswordBroker\Application\EntryField\Job\UpdateEntryFieldNoteSyncJob;
 use App\Module\PasswordBroker\Application\EntryField\Job\UpdateEntryFieldPasswordSyncJob;
 use App\Module\PasswordBroker\Application\EntryField\Job\UpdateEntryFieldTotpSyncJob;
+use App\Module\PasswordBroker\Application\EntryField\Service\Exception\EntryFieldException;
 use App\Module\PasswordBroker\Application\EntryField\Service\Exception\EntryFieldNotFountException;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserNotInEntryGroupException;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;
@@ -31,8 +32,10 @@ use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldId;
 use App\Module\PasswordBroker\Infrastructure\Entry\Repository\EntryRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryGroupUser\Repository\EntryGroupUserRepository;
+use App\Shared\Domain\Security\Encryption\Exception\DecryptionException;
 use App\Shared\Domain\Security\Encryption\Exception\EncryptionException;
 use App\Shared\Domain\ValueObject\CreatedAt;
+use App\Shared\Infrastructure\Security\Encryption\AesDecryptor;
 use App\Shared\Infrastructure\Security\Encryption\AesEncryptor;
 use App\Shared\Infrastructure\Security\Encryption\InitialVectorProvider;
 use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
@@ -80,7 +83,7 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
         ?int    $fileSize = null,
         ?string $login = null,
         ?string $totpHashAlgorithm = null,
-        ?string $totpTimeout = null,
+        ?int $totpTimeout = null,
     ): AbstractEntryField {
         $authUser = $this->getAuthUser();
         $entryGroupAesPassword = $this->getAesPassword($entryId, $authUser, $masterPassword);
@@ -217,6 +220,33 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
                 ),
             )->handle(),
         };
+    }
+
+    /**
+     * @throws AuthUserNotInEntryGroupException
+     * @throws EntryFieldException
+     * @throws JwtTokenExpiredException
+     * @throws JwtInvalidTokenException
+     * @throws AuthException
+     * @throws RsaDomainServiceException
+     * @throws DecryptionException
+     * @throws PersistenceException
+     */
+    public function decryptEntryField(AbstractEntryField $entryField, string $masterPassword): string
+    {
+        $entry = $this->entryRepository->findById($entryField->entryId);
+        if (!$entry) {
+            throw new EntryFieldException('Entry not found');
+        }
+        $authUser = $this->getAuthUser();
+        $entryGroupAesPassword = $this->getAesPassword($entry->getId()->toRaw(), $authUser, $masterPassword);
+
+        return AesDecryptor::getInstance()->decrypt(
+            cipherText: $entryField->valueEncrypted->toRaw(),
+            password: $entryGroupAesPassword,
+            iv: $entryField->initializationVector->toRaw(),
+            tag: $entryField->tag->toRaw(),
+        );
     }
 
     /**

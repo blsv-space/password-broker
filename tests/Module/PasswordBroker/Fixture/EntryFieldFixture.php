@@ -16,11 +16,14 @@ use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTotpHashAlgorithm
 use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTypeEnum;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldFileMime;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldFileName;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldFileSize;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldId;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldInitializationVector;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldLogin;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldTag;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldTitle;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldTotpHashAlgorithm;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldTotpTimeout;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldType;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldValueEncrypted;
 use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
@@ -73,7 +76,14 @@ class EntryFieldFixture extends AbstractFixture
             ?? EntryFieldId::generate()->toRaw()));
 
         $type = EntryFieldType::fromRaw(
-            isset($attributes[self::TYPE]) && in_array($attributes[self::TYPE], EntryFieldTypeEnum::toArray(), true)
+            isset($attributes[self::TYPE])
+            && in_array(
+                $attributes[self::TYPE] instanceof EntryFieldTypeEnum
+                    ? $attributes[self::TYPE]->value
+                    : $attributes[self::TYPE],
+                EntryFieldTypeEnum::toArray(),
+                true,
+            )
                 ? $attributes[self::TYPE]
                 : EntryFieldTypeEnum::PASSWORD,
         );
@@ -134,7 +144,7 @@ class EntryFieldFixture extends AbstractFixture
                 updatedBy: $updatedBy,
                 fileName: EntryFieldFileName::fromRaw($attributes[self::FILE_NAME] ?? static::faker()->word()),
                 fileMime: EntryFieldFileMime::fromRaw($attributes[self::FILE_MIME] ?? static::faker()->mimeType()),
-                fileSize: $attributes[self::FILE_SIZE] ?? static::faker()->numberBetween(100, 1000000),
+                fileSize: EntryFieldFileSize::fromRaw($attributes[self::FILE_SIZE] ?? static::faker()->numberBetween(100, 1000000)),
             ),
             EntryFieldTypeEnum::TOTP => new EntryFieldTotp(
                 id: $entryFieldId,
@@ -148,8 +158,12 @@ class EntryFieldFixture extends AbstractFixture
                 deletedAt: $deletedAt,
                 createdBy: $createdBy,
                 updatedBy: $updatedBy,
-                totpHashAlgorithm: $attributes[self::TOTP_HASH_ALGORITHM] ?? EntryFieldTotpHashAlgorithmEnum::SHA1->value,
-                totpTimeout: $attributes[self::TOTP_TIMEOUT] ?? static::faker()->numberBetween(30, 900),
+                totpHashAlgorithm: EntryFieldTotpHashAlgorithm::fromRaw(
+                    $attributes[self::TOTP_HASH_ALGORITHM] ?? EntryFieldTotpHashAlgorithmEnum::SHA1->value,
+                ),
+                totpTimeout: EntryFieldTotpTimeout::fromRaw(
+                    $attributes[self::TOTP_TIMEOUT] ?? static::faker()->numberBetween(30, 900),
+                ),
             ),
             EntryFieldTypeEnum::LINK => new EntryFieldLink(
                 id: $entryFieldId,
