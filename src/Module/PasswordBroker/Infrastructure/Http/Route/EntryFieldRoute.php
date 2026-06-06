@@ -31,6 +31,7 @@ final readonly class EntryFieldRoute extends AbstractRouterRegistry
             ->prefix("/{{$PARAM_ENTRY_ID}}/" . self::GROUP_NAME)
             ->get('', EntryFieldController::class, RestControllerInterface::ACTION_INDEX)
             ->get("/{{$PARAM_ENTRY_FIELD_ID}}", EntryFieldController::class, RestControllerInterface::ACTION_SHOW)
+            ->get("/{{$PARAM_ENTRY_FIELD_ID}}/encrypted", EntryFieldController::class, EntryFieldController::ACTION_ENCRYPTED)
             ->post('', EntryFieldController::class, RestControllerInterface::ACTION_STORE)
             ->put("/{{$PARAM_ENTRY_FIELD_ID}}", EntryFieldController::class, RestControllerInterface::ACTION_UPDATE)
             ->delete("/{{$PARAM_ENTRY_FIELD_ID}}", EntryFieldController::class, RestControllerInterface::ACTION_DESTROY)

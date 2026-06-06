@@ -8,7 +8,23 @@ use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Infrastructure\Http\Controller\UserController;
 use App\Module\PasswordBroker\Application\EntryField\DTO\EntryFieldResponse\DecryptedResponse;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldCreatedGeneralEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldDecryptedEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldDeletedEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldFileCreatedEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldFileUpdatedEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldLinkCreatedEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldNoteCreatedEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldPasswordCreatedEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldPasswordUpdatedEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldTotpCreatedEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldTotpUpdatedEvent;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldUpdatedGeneralEvent;
 use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
+use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldFile;
+use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldPassword;
+use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldTotp;
+use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTotpHashAlgorithmEnum;
 use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTypeEnum;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldTitle;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\Enum\RoleEnum;
@@ -28,6 +44,7 @@ use Inquisition\Core\Infrastructure\Http\HttpStatusCode;
 use Inquisition\Core\Infrastructure\Http\Router\Exception\RouteNotFoundException;
 use Inquisition\Core\Infrastructure\Http\Router\Router;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
+use InvalidArgumentException;
 use ReflectionException;
 use Tests\Module\Identity\Fixture\UserFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryFieldFixture;
@@ -35,6 +52,7 @@ use Tests\Module\PasswordBroker\Fixture\EntryFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupUserFixture;
 use Tests\Shared\FunctionalTestCase;
+use Tests\Shared\TestEventHandler;
 
 class EntryFieldControllerTest extends FunctionalTestCase
 {
@@ -237,6 +255,10 @@ class EntryFieldControllerTest extends FunctionalTestCase
             ],
         );
 
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldCreatedGeneralEvent::class],
+        );
+
         $httpResponse = $this->sendRequest(
             method: $httpMethod,
             uri: $uri,
@@ -252,6 +274,7 @@ class EntryFieldControllerTest extends FunctionalTestCase
             EntryFieldFixture::ENTRY_ID => $entry->id->toRaw(),
             EntryFieldFixture::TITLE => $entryField->title->toRaw(),
         ]);
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
     }
 
     /**
@@ -323,6 +346,10 @@ class EntryFieldControllerTest extends FunctionalTestCase
             ],
         );
 
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldUpdatedGeneralEvent::class],
+        );
+
         $httpResponse = $this->sendRequest(
             method: $httpMethod,
             uri: $uri,
@@ -341,6 +368,7 @@ class EntryFieldControllerTest extends FunctionalTestCase
             EntryFieldFixture::ENTRY_ID => $entry->id->toRaw(),
             EntryFieldFixture::TITLE => $oldTitle->toRaw(),
         ]);
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
     }
 
     /**
@@ -415,6 +443,10 @@ class EntryFieldControllerTest extends FunctionalTestCase
             ],
         );
 
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldDeletedEvent::class],
+        );
+
         $httpResponse = $this->sendRequest(
             method: $httpMethod,
             uri: $uri,
@@ -430,6 +462,8 @@ class EntryFieldControllerTest extends FunctionalTestCase
             EntryFieldFixture::ENTRY_ID => $entry->id->toRaw(),
             EntryFieldFixture::TITLE => $entryField->title->toRaw(),
         ]);
+
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
     }
 
     /**
@@ -469,6 +503,50 @@ class EntryFieldControllerTest extends FunctionalTestCase
             EntryFieldFixture::TITLE => $entryField->title->toRaw(),
             EntryFieldFixture::DELETED_AT => null,
         ]);
+    }
+
+    /**
+     * @throws PersistenceException
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     */
+    public function test_is_should_return_encrypted_entry_field_value(): void
+    {
+        $entry = $this->createAnEntry();
+        $entryField = EntryFieldFixture::create(attributes: [EntryFieldFixture::ENTRY => $entry], persist: true);
+
+        $routeName = $this->buildRouteName($this->routePath, EntryFieldController::ACTION_ENCRYPTED);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entry->entryGroupId->toRaw(),
+                EntryRoute::PARAM_ENTRY_ID => $entry->id->toRaw(),
+                EntryFieldRoute::PARAM_ENTRY_FIELD_ID => $entryField->id->toRaw(),
+            ],
+        );
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+        );
+
+        $this->assertEquals(HttpStatusCode::OK, $httpResponse->getStatusCode());
+        $content = $httpResponse->getContent();
+        $this->assertJson($content);
+        $response = json_decode($content, true);
+        $this->assertArrayHasKey(EntryFieldRepository::FIELD_ID, $response);
+        $this->assertEquals($entryField->id->toRaw(), $response[EntryRepository::FIELD_ID]);
+        $this->assertArrayHasKey(EntryFieldRepository::FIELD_VALUE_ENCRYPTED, $response);
+        $this->assertEquals($entryField->valueEncrypted->toRaw(), $response[EntryFieldRepository::FIELD_VALUE_ENCRYPTED]);
+        $this->assertArrayHasKey(EntryFieldRepository::FIELD_INITIALIZATION_VECTOR, $response);
+        $this->assertEquals($entryField->initializationVector->toRaw(), $response[EntryFieldRepository::FIELD_INITIALIZATION_VECTOR]);
+        $this->assertArrayHasKey(EntryFieldRepository::FIELD_TAG, $response);
+        $this->assertEquals($entryField->tag->toRaw(), $response[EntryFieldRepository::FIELD_TAG]);
     }
 
     /**
@@ -515,6 +593,10 @@ class EntryFieldControllerTest extends FunctionalTestCase
             ],
         );
 
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldDecryptedEvent::class],
+        );
+
         $httpResponse = $this->sendRequest(
             method: $httpMethod,
             uri: $uri,
@@ -531,6 +613,8 @@ class EntryFieldControllerTest extends FunctionalTestCase
         $this->assertEquals($entryField->id->toRaw(), $response[DecryptedResponse::FIELD_ENTRY_FIELD_ID]);
         $this->assertArrayHasKey(DecryptedResponse::FIELD_DECRYPTED_VALUE, $response);
         $this->assertEquals($value, $response[DecryptedResponse::FIELD_DECRYPTED_VALUE]);
+
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
     }
 
     /**
@@ -546,13 +630,16 @@ class EntryFieldControllerTest extends FunctionalTestCase
                 EntryFieldFixture::ENTRY => $entry,
                 EntryFieldFixture::TYPE => EntryFieldTypeEnum::PASSWORD,
             ],
-            persist: true,
         );
         $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_STORE);
         $route = Router::getInstance()->getRouteByName($routeName);
         $this->assertNotNull($route, "Route $routeName not found");
         $httpMethod = $route->methods[0] ?? null;
         $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldPasswordCreatedEvent::class],
+        );
 
         $uri = $this->buildUri(
             path: $route->path,
@@ -578,6 +665,8 @@ class EntryFieldControllerTest extends FunctionalTestCase
             EntryFieldFixture::TITLE => $entryField->title->toRaw(),
             EntryFieldFixture::TYPE => EntryFieldTypeEnum::PASSWORD->value,
         ]);
+
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
     }
 
     /**
@@ -593,7 +682,6 @@ class EntryFieldControllerTest extends FunctionalTestCase
                 EntryFieldFixture::ENTRY => $entry,
                 EntryFieldFixture::TYPE => EntryFieldTypeEnum::LINK,
             ],
-            persist: true,
         );
         $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_STORE);
         $route = Router::getInstance()->getRouteByName($routeName);
@@ -607,6 +695,10 @@ class EntryFieldControllerTest extends FunctionalTestCase
                 EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entry->entryGroupId->toRaw(),
                 EntryRoute::PARAM_ENTRY_ID => $entry->id->toRaw(),
             ],
+        );
+
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldLinkCreatedEvent::class],
         );
 
         $httpResponse = $this->sendRequest(
@@ -625,6 +717,8 @@ class EntryFieldControllerTest extends FunctionalTestCase
             EntryFieldFixture::TITLE => $entryField->title->toRaw(),
             EntryFieldFixture::TYPE => EntryFieldTypeEnum::LINK->value,
         ]);
+
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
     }
 
     /**
@@ -640,7 +734,6 @@ class EntryFieldControllerTest extends FunctionalTestCase
                 EntryFieldFixture::ENTRY => $entry,
                 EntryFieldFixture::TYPE => EntryFieldTypeEnum::NOTE,
             ],
-            persist: true,
         );
         $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_STORE);
         $route = Router::getInstance()->getRouteByName($routeName);
@@ -654,6 +747,10 @@ class EntryFieldControllerTest extends FunctionalTestCase
                 EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entry->entryGroupId->toRaw(),
                 EntryRoute::PARAM_ENTRY_ID => $entry->id->toRaw(),
             ],
+        );
+
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldNoteCreatedEvent::class],
         );
 
         $httpResponse = $this->sendRequest(
@@ -673,6 +770,8 @@ class EntryFieldControllerTest extends FunctionalTestCase
             EntryFieldFixture::TITLE => $entryField->title->toRaw(),
             EntryFieldFixture::TYPE => EntryFieldTypeEnum::NOTE->value,
         ]);
+
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
     }
 
     /**
@@ -688,7 +787,6 @@ class EntryFieldControllerTest extends FunctionalTestCase
                 EntryFieldFixture::ENTRY => $entry,
                 EntryFieldFixture::TYPE => EntryFieldTypeEnum::FILE,
             ],
-            persist: true,
         );
         $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_STORE);
         $route = Router::getInstance()->getRouteByName($routeName);
@@ -702,6 +800,10 @@ class EntryFieldControllerTest extends FunctionalTestCase
                 EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entry->entryGroupId->toRaw(),
                 EntryRoute::PARAM_ENTRY_ID => $entry->id->toRaw(),
             ],
+        );
+
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldFileCreatedEvent::class],
         );
 
         $httpResponse = $this->sendRequest(
@@ -721,6 +823,8 @@ class EntryFieldControllerTest extends FunctionalTestCase
             EntryFieldFixture::TITLE => $entryField->title->toRaw(),
             EntryFieldFixture::TYPE => EntryFieldTypeEnum::FILE->value,
         ]);
+
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
     }
 
     /**
@@ -736,7 +840,6 @@ class EntryFieldControllerTest extends FunctionalTestCase
                 EntryFieldFixture::ENTRY => $entry,
                 EntryFieldFixture::TYPE => EntryFieldTypeEnum::TOTP,
             ],
-            persist: true,
         );
         $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_STORE);
         $route = Router::getInstance()->getRouteByName($routeName);
@@ -750,6 +853,10 @@ class EntryFieldControllerTest extends FunctionalTestCase
                 EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entry->entryGroupId->toRaw(),
                 EntryRoute::PARAM_ENTRY_ID => $entry->id->toRaw(),
             ],
+        );
+
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldTotpCreatedEvent::class],
         );
 
         $httpResponse = $this->sendRequest(
@@ -769,6 +876,303 @@ class EntryFieldControllerTest extends FunctionalTestCase
             EntryFieldFixture::TITLE => $entryField->title->toRaw(),
             EntryFieldFixture::TYPE => EntryFieldTypeEnum::TOTP->value,
         ]);
+
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
+    }
+
+    /**
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     * @throws PersistenceException
+     */
+    public function test_it_should_update_entry_field_password(): void
+    {
+        $entry = $this->createAnEntry();
+        $entryField = EntryFieldFixture::create(
+            attributes: [
+                EntryFieldFixture::ENTRY => $entry,
+                EntryFieldFixture::TYPE => EntryFieldTypeEnum::PASSWORD,
+            ],
+            persist: true,
+        );
+        $this->assertInstanceOf(EntryFieldPassword::class, $entryField);
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_UPDATE);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldPasswordUpdatedEvent::class],
+        );
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entry->entryGroupId->toRaw(),
+                EntryRoute::PARAM_ENTRY_ID => $entry->id->toRaw(),
+                EntryFieldRoute::PARAM_ENTRY_FIELD_ID => $entryField->id->toRaw(),
+            ],
+        );
+
+        $updatedLogin = $entryField->login->toRaw() . 'new';
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+            body: [
+                ...$entryField->getAsArray(),
+                UserController::FIELD_MASTER_PASSWORD => UserFixture::DEFAULT_MASTER_PASSWORD,
+                EntryFieldRepository::FIELD_LOGIN => $updatedLogin,
+            ],
+        );
+
+        $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
+
+        $this->assertDatabaseHas(EntryFieldFixture::getTableName(), [
+            EntryFieldFixture::ID => $entryField->id->toRaw(),
+            EntryFieldFixture::TITLE => $entryField->title->toRaw(),
+            EntryFieldFixture::TYPE => $entryField->type->toRaw(),
+
+            EntryFieldFixture::LOGIN => $updatedLogin,
+        ]);
+
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
+    }
+
+    /**
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     * @throws PersistenceException
+     */
+    public function test_it_should_update_entry_field_file(): void
+    {
+        $entry = $this->createAnEntry();
+        $entryField = EntryFieldFixture::create(
+            attributes: [
+                EntryFieldFixture::ENTRY => $entry,
+                EntryFieldFixture::TYPE => EntryFieldTypeEnum::FILE,
+            ],
+            persist: true,
+        );
+        $this->assertInstanceOf(EntryFieldFile::class, $entryField);
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_UPDATE);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldFileUpdatedEvent::class],
+        );
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entry->entryGroupId->toRaw(),
+                EntryRoute::PARAM_ENTRY_ID => $entry->id->toRaw(),
+                EntryFieldRoute::PARAM_ENTRY_FIELD_ID => $entryField->id->toRaw(),
+            ],
+        );
+
+        $updatedFileName = $entryField->fileName->toRaw() . 'new';
+        $updatedFileMime = $entryField->fileMime->toRaw() . 'new';
+        $updatedFileSize = $entryField->fileSize->toRaw() + 1;
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+            body: [
+                ...$entryField->getAsArray(),
+                UserController::FIELD_MASTER_PASSWORD => UserFixture::DEFAULT_MASTER_PASSWORD,
+                EntryFieldRepository::FIELD_FILE_NAME => $updatedFileName,
+                EntryFieldRepository::FIELD_FILE_MIME => $updatedFileMime,
+                EntryFieldRepository::FIELD_FILE_SIZE => $updatedFileSize,
+            ],
+        );
+
+        $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
+
+        $this->assertDatabaseHas(EntryFieldFixture::getTableName(), [
+            EntryFieldFixture::ID => $entryField->id->toRaw(),
+            EntryFieldFixture::TITLE => $entryField->title->toRaw(),
+            EntryFieldFixture::TYPE => $entryField->type->toRaw(),
+
+            EntryFieldFixture::FILE_NAME => $updatedFileName,
+            EntryFieldFixture::FILE_MIME => $updatedFileMime,
+            EntryFieldFixture::FILE_SIZE => $updatedFileSize,
+        ]);
+
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
+    }
+
+    /**
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     * @throws PersistenceException
+     */
+    public function test_it_should_update_entry_field_totp(): void
+    {
+        $entry = $this->createAnEntry();
+        $entryField = EntryFieldFixture::create(
+            attributes: [
+                EntryFieldFixture::ENTRY => $entry,
+                EntryFieldFixture::TYPE => EntryFieldTypeEnum::TOTP,
+            ],
+            persist: true,
+        );
+        $this->assertInstanceOf(EntryFieldTotp::class, $entryField);
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_UPDATE);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $testEventHandler = new TestEventHandler(
+            eventNames: [EntryFieldTotpUpdatedEvent::class],
+        );
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entry->entryGroupId->toRaw(),
+                EntryRoute::PARAM_ENTRY_ID => $entry->id->toRaw(),
+                EntryFieldRoute::PARAM_ENTRY_FIELD_ID => $entryField->id->toRaw(),
+            ],
+        );
+
+        $updatedTotpHashAlgorithm = match ($entryField->totpHashAlgorithm->toRaw()) {
+            EntryFieldTotpHashAlgorithmEnum::SHA256->value, EntryFieldTotpHashAlgorithmEnum::SHA1->value => EntryFieldTotpHashAlgorithmEnum::SHA512->value,
+            EntryFieldTotpHashAlgorithmEnum::SHA512->value => EntryFieldTotpHashAlgorithmEnum::SHA256->value,
+            default => throw new InvalidArgumentException('Unsupported TOTP hash algorithm'),
+        };
+        $updatedTotpTimeout = $entryField->totpTimeout->toRaw() + 1;
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+            body: [
+                ...$entryField->getAsArray(),
+                UserController::FIELD_MASTER_PASSWORD => UserFixture::DEFAULT_MASTER_PASSWORD,
+                EntryFieldRepository::FIELD_TOTP_HASH_ALGORITHM => $updatedTotpHashAlgorithm,
+                EntryFieldRepository::FIELD_TOTP_TIMEOUT => $updatedTotpTimeout,
+            ],
+        );
+
+        $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
+
+        $this->assertDatabaseHas(EntryFieldFixture::getTableName(), [
+            EntryFieldFixture::ID => $entryField->id->toRaw(),
+            EntryFieldFixture::TITLE => $entryField->title->toRaw(),
+            EntryFieldFixture::TYPE => $entryField->type->toRaw(),
+
+            EntryFieldFixture::TOTP_HASH_ALGORITHM => $updatedTotpHashAlgorithm,
+            EntryFieldFixture::TOTP_TIMEOUT => $updatedTotpTimeout,
+        ]);
+
+        $this->assertTrue($testEventHandler->wasDispatched(), "Event not dispatched");
+    }
+
+    /**
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     * @throws PersistenceException
+     * @throws EncryptionException
+     */
+    public function test_it_should_update_and_decrypt_value_of_entry_field(): void
+    {
+        $entry = $this->createAnEntry();
+        $aesEncryptor = AesEncryptor::getInstance();
+        $initialVectorProvider = InitialVectorProvider::getInstance();
+        $value = $this->faker->text;
+        $updatedValue = $value . '_updated';
+        $iv = $initialVectorProvider->getInitialVector();
+        $aesEncryptedData = $aesEncryptor->encrypt(
+            data: $value,
+            password: EntryGroupUserFixture::DEFAULT_AES_PASSWORD,
+            iv: $iv,
+        );
+        $entryField = EntryFieldFixture::create(
+            attributes: [
+                EntryFieldFixture::ENTRY => $entry,
+                EntryFieldFixture::VALUE_ENCRYPTED => $aesEncryptedData->encryptedData,
+                EntryFieldFixture::INITIALIZATION_VECTOR => $iv,
+                EntryFieldFixture::TAG => $aesEncryptedData->tag,
+                EntryFieldFixture::TYPE => EntryFieldTypeEnum::PASSWORD,
+            ],
+            persist: true,
+        );
+
+        $routeUpdateName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_UPDATE);
+        $routeUpdate = Router::getInstance()->getRouteByName($routeUpdateName);
+        $this->assertNotNull($routeUpdate, "Route $routeUpdateName not found");
+        $httpUpdateMethod = $routeUpdate->methods[0] ?? null;
+        $this->assertNotNull($httpUpdateMethod, "Method not found for route $routeUpdateName");
+
+        $uriUpdate = $this->buildUri(
+            path: $routeUpdate->path,
+            pathParams: [
+                EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entry->entryGroupId->toRaw(),
+                EntryRoute::PARAM_ENTRY_ID => $entry->id->toRaw(),
+                EntryFieldRoute::PARAM_ENTRY_FIELD_ID => $entryField->id->toRaw(),
+            ],
+        );
+
+        $testEventUpdateHandler = new TestEventHandler(
+            eventNames: [EntryFieldUpdatedGeneralEvent::class],
+        );
+
+        $httpUpdateResponse = $this->sendRequest(
+            method: $httpUpdateMethod,
+            uri: $uriUpdate,
+            body: [
+                ...$entryField->getAsArray(),
+                UserController::FIELD_MASTER_PASSWORD => UserFixture::DEFAULT_MASTER_PASSWORD,
+                EntryFieldController::FIELD_VALUE => $updatedValue,
+            ],
+        );
+
+        $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpUpdateResponse->getStatusCode());
+
+
+        $routeDecryptName = $this->buildRouteName($this->routePath, EntryFieldController::ACTION_DECRYPT);
+        $routeDecrypt = Router::getInstance()->getRouteByName($routeDecryptName);
+        $this->assertNotNull($routeDecrypt, "Route $routeDecryptName not found");
+        $httpDecryptMethod = $routeDecrypt->methods[0] ?? null;
+        $this->assertNotNull($httpDecryptMethod, "Method not found for route $routeDecryptName");
+
+        $uriDecrypt = $this->buildUri(
+            path: $routeDecrypt->path,
+            pathParams: [
+                EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entry->entryGroupId->toRaw(),
+                EntryRoute::PARAM_ENTRY_ID => $entry->id->toRaw(),
+                EntryFieldRoute::PARAM_ENTRY_FIELD_ID => $entryField->id->toRaw(),
+            ],
+        );
+
+        $testEventDecryptHandler = new TestEventHandler(
+            eventNames: [EntryFieldDecryptedEvent::class],
+        );
+
+        $httpResponse = $this->sendRequest(
+            method: $httpDecryptMethod,
+            uri: $uriDecrypt,
+            body: [
+                UserController::FIELD_MASTER_PASSWORD => UserFixture::DEFAULT_MASTER_PASSWORD,
+            ],
+        );
+
+        $this->assertEquals(HttpStatusCode::OK, $httpResponse->getStatusCode());
+        $content = $httpResponse->getContent();
+        $this->assertJson($content);
+        $response = json_decode($content, true);
+        $this->assertArrayHasKey(DecryptedResponse::FIELD_ENTRY_FIELD_ID, $response);
+        $this->assertEquals($entryField->id->toRaw(), $response[DecryptedResponse::FIELD_ENTRY_FIELD_ID]);
+        $this->assertArrayHasKey(DecryptedResponse::FIELD_DECRYPTED_VALUE, $response);
+        $this->assertEquals($updatedValue, $response[DecryptedResponse::FIELD_DECRYPTED_VALUE]);
+
+        $this->assertTrue($testEventDecryptHandler->wasDispatched(), "Event Decrypt not dispatched");
+        $this->assertTrue($testEventUpdateHandler->wasDispatched(), "Event Update not dispatched");
     }
 
     /**

@@ -57,8 +57,8 @@ abstract class AbstractUpdateEntryFieldSyncJob extends AbstractReplicableSyncJob
             $entryField->valueEncrypted = EntryFieldValueEncrypted::fromRaw($this->payload[self::PAYLOAD_KEY_VALUE_ENCRYPTED]);
             $entryField->tag = EntryFieldTag::fromRaw($this->payload[self::PAYLOAD_KEY_TAG]);
             $entryField->initializationVector = EntryFieldInitializationVector::fromRaw($this->payload[self::PAYLOAD_KEY_INITIALIZATION_VECTOR]);
-            $this->updateByEntryFieldType($entryField);
         }
+        $this->updateByEntryFieldType($entryField);
         $entryField->updatedAt = UpdatedAt::fromRaw($this->payload[self::PAYLOAD_KEY_UPDATED_AT]);
         $entryField->updatedBy = UserId::fromRaw($this->payload[self::PAYLOAD_KEY_UPDATED_BY]);
 

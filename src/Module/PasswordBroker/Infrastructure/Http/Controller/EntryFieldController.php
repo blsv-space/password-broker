@@ -8,6 +8,7 @@ use App\Module\Identity\Application\User\Service\Exception\AuthException;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Infrastructure\Http\Controller\UserController;
 use App\Module\PasswordBroker\Application\EntryField\DTO\EntryFieldResponse\DecryptedResponse;
+use App\Module\PasswordBroker\Application\EntryField\DTO\EntryFieldResponse\EncryptedValueEntryFieldResponse;
 use App\Module\PasswordBroker\Application\EntryField\Provider\EntryFieldResponseProvider;
 use App\Module\PasswordBroker\Application\EntryField\Service\EntryFieldApplicationService;
 use App\Module\PasswordBroker\Application\EntryField\Service\Exception\EntryFieldException;
@@ -45,6 +46,7 @@ use Throwable;
 final readonly class EntryFieldController extends AbstractRestController implements RestControllerInterface
 {
     public const string ACTION_DECRYPT = 'decrypt';
+    public const string ACTION_ENCRYPTED = 'encrypted';
     public const string FIELD_QUERY = 'query';
     public const string FIELD_VALUE = 'value';
 
@@ -224,6 +226,33 @@ final readonly class EntryFieldController extends AbstractRestController impleme
                 entryFieldId: $entryField->id->toRaw(),
                 decryptedValue: $decryptedValue,
             )->getAsArray(),
+        );
+    }
+
+    /**
+     * @throws AuthException
+     * @throws AuthUserNotInEntryGroupException
+     * @throws JsonException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
+     * @throws PersistenceException
+     * @throws RsaDomainServiceException
+     * @throws EntryFieldException
+     * @throws DecryptionException
+     */
+    public function encrypted(RequestInterface $request, array $parameters): ResponseInterface
+    {
+        $entryField = $this->entryFieldApplicationService->getEntryFieldByUuid($parameters[EntryFieldRoute::PARAM_ENTRY_FIELD_ID]);
+
+        if (!$entryField) {
+            return ResponseFactory::notFound();
+        }
+
+        return $this->jsonResponse(
+            $this->normalizeData(
+                data: $entryField,
+                entityResponseClassName: EncryptedValueEntryFieldResponse::class,
+            ),
         );
     }
 

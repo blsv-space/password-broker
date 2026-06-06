@@ -9,6 +9,7 @@ use App\Module\Identity\Application\User\Service\Exception\AuthException;
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Domain\User\Service\RsaDomainService;
+use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldDecryptedEvent;
 use App\Module\PasswordBroker\Application\EntryField\Job\AbstractCreateEntryFieldSyncJob;
 use App\Module\PasswordBroker\Application\EntryField\Job\AbstractUpdateEntryFieldSyncJob;
 use App\Module\PasswordBroker\Application\EntryField\Job\CreateEntryFieldFileSyncJob;
@@ -41,6 +42,7 @@ use App\Shared\Infrastructure\Security\Encryption\InitialVectorProvider;
 use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
 use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
+use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Foundation\Singleton\SingletonTrait;
@@ -160,7 +162,7 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
         ?int    $fileSize = null,
         ?string $login = null,
         ?string $totpHashAlgorithm = null,
-        ?string $totpTimeout = null,
+        ?int $totpTimeout = null,
     ): AbstractEntryField {
         $entryField = $this->entryFieldRepository->findById(EntryFieldId::fromRaw($id));
         if (!$entryField) {
@@ -241,12 +243,18 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
         $authUser = $this->getAuthUser();
         $entryGroupAesPassword = $this->getAesPassword($entry->getId()->toRaw(), $authUser, $masterPassword);
 
-        return AesDecryptor::getInstance()->decrypt(
+        $decryptedValue = AesDecryptor::getInstance()->decrypt(
             cipherText: $entryField->valueEncrypted->toRaw(),
             password: $entryGroupAesPassword,
             iv: $entryField->initializationVector->toRaw(),
             tag: $entryField->tag->toRaw(),
         );
+
+        EventDispatcher::getInstance()->dispatch(
+            new EntryFieldDecryptedEvent($entryField),
+        );
+
+        return $decryptedValue;
     }
 
     /**

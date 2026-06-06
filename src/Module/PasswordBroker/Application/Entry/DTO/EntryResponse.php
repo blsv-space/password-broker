@@ -10,7 +10,7 @@ use Inquisition\Core\Application\DTO\EntityResponseInterface;
 use Inquisition\Core\Domain\Entity\EntityInterface;
 use InvalidArgumentException;
 
-class EntryResponse implements EntityResponseInterface
+final class EntryResponse implements EntityResponseInterface
 {
     public const string RESPONSE_NAME = 'entry';
     public const string RESPONSE_MANY_NAME = 'entries';
