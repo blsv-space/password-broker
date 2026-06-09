@@ -13,15 +13,23 @@ use App\Module\PasswordBroker\Application\Entry\Job\CreateEntrySyncJob;
 use App\Module\PasswordBroker\Application\Entry\Job\DeleteEntrySyncJob;
 use App\Module\PasswordBroker\Application\Entry\Job\MoveEntrySyncJob;
 use App\Module\PasswordBroker\Application\Entry\Job\RenameEntrySyncJob;
+use App\Module\PasswordBroker\Application\EntryField\Job\AbstractUpdateEntryFieldSyncJob;
+use App\Module\PasswordBroker\Application\EntryField\Job\UpdateEntryFieldEncryptedValueSyncJob;
 use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Infrastructure\Entry\Repository\EntryRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryGroupUser\Repository\EntryGroupUserRepository;
+use App\Shared\Domain\Security\Encryption\Exception\DecryptionException;
+use App\Shared\Domain\Security\Encryption\Exception\EncryptionException;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\UpdatedAt;
+use App\Shared\Infrastructure\Security\Encryption\AesDecryptor;
+use App\Shared\Infrastructure\Security\Encryption\AesEncryptor;
+use App\Shared\Infrastructure\Security\Encryption\InitialVectorProvider;
 use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
 use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
@@ -30,6 +38,7 @@ use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryOperatorEnum;
 use Inquisition\Foundation\Singleton\SingletonTrait;
 use InvalidArgumentException;
+use RuntimeException;
 use Throwable;
 
 class EntryApplicationService implements ApplicationServiceInterface
@@ -38,6 +47,7 @@ class EntryApplicationService implements ApplicationServiceInterface
     private EntryRepository $entryRepository;
     private EntryGroupRepository $entryGroupRepository;
     private EntryGroupUserRepository $entryGroupUserRepository;
+    private EntryFieldRepository $entryFieldRepository;
     private RsaDomainService $rsaDomainService;
 
     private function __construct()
@@ -45,6 +55,7 @@ class EntryApplicationService implements ApplicationServiceInterface
         $this->entryRepository = EntryRepository::getInstance();
         $this->entryGroupRepository = EntryGroupRepository::getInstance();
         $this->entryGroupUserRepository = EntryGroupUserRepository::getInstance();
+        $this->entryFieldRepository = EntryFieldRepository::getInstance();
         $this->rsaDomainService = RsaDomainService::getInstance();
     }
 
@@ -114,6 +125,7 @@ class EntryApplicationService implements ApplicationServiceInterface
      * @throws AuthException
      * @throws RsaDomainServiceException
      * @throws PersistenceException
+     * @throws DecryptionException
      */
     public function moveEntrySync(string $uuid, string $targetUuid, string $authUserMasterPassword): Entry
     {
@@ -154,14 +166,65 @@ class EntryApplicationService implements ApplicationServiceInterface
             privateKey: $authUserPrivateKey,
         );
 
+        $this->entryRepository->beginTransaction();
 
-        return new MoveEntrySyncJob([
+        $updatedAt = UpdatedAt::now()->toRaw();
+        $jobResponse = new MoveEntrySyncJob([
             MoveEntrySyncJob::PAYLOAD_KEY_ID => $uuid,
             MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_TARGET_ID => $targetUuid,
-            MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_ORIGIN_AES_PASSWORD => $originAesPassword,
-            MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_TARGET_AES_PASSWORD => $targetAesPassword,
-            MoveEntrySyncJob::PAYLOAD_UPDATED_AT => UpdatedAt::now()->toRaw(),
+            MoveEntrySyncJob::PAYLOAD_UPDATED_AT => $updatedAt,
         ])->handle();
+
+        $aesEncryptor = AesEncryptor::getInstance();
+        $aesDecryptor = AesDecryptor::getInstance();
+        $initialVectorProvider = InitialVectorProvider::getInstance();
+
+        $entryFields = $this->entryFieldRepository->findBy([
+            new QueryCriteria(
+                field: EntryFieldRepository::FIELD_ENTRY_ID,
+                value: $uuid,
+                operator: QueryOperatorEnum::EQUALS,
+            ),
+        ]);
+        try {
+            foreach ($entryFields as $entryField) {
+                $decryptedValue = $aesDecryptor->decrypt(
+                    cipherText: $entryField->valueEncrypted->toRaw(),
+                    password: $originAesPassword,
+                    iv: $entryField->initializationVector->toRaw(),
+                    tag: $entryField->tag->toRaw(),
+                );
+                $iv = $initialVectorProvider->getInitialVector();
+
+                $encryptedValue = $aesEncryptor->encrypt(
+                    data: $decryptedValue,
+                    password: $targetAesPassword,
+                    iv: $iv,
+                );
+
+                new UpdateEntryFieldEncryptedValueSyncJob([
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_ID => $entryField->id->toRaw(),
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_TITLE => $entryField->title->toRaw(),
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_VALUE_ENCRYPTED => $encryptedValue->encryptedData,
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_INITIALIZATION_VECTOR => $iv,
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_TAG => $encryptedValue->tag,
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_UPDATED_AT => $updatedAt,
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_UPDATED_BY => $authUser->id->toRaw(),
+                ])->handle();
+            }
+        } catch (EncryptionException $e) {
+            $this->entryRepository->rollback();
+            throw new RuntimeException(
+                'Failed to reencrypt entry fields with new Entry Group AES password: ' . $e->getMessage(),
+                0,
+                $e,
+            );
+        }
+
+        $this->entryRepository->commit();
+
+
+        return $jobResponse;
     }
 
     /**

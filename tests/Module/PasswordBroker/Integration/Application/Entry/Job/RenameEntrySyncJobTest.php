@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PasswordBroker\Integration\Application\Entry\Job;
+namespace Tests\Module\PasswordBroker\Integration\Application\Entry\Job;
 
 use App\Module\PasswordBroker\Application\Entry\Event\EntryRenamedEvent;
 use App\Module\PasswordBroker\Application\Entry\Job\RenameEntrySyncJob;

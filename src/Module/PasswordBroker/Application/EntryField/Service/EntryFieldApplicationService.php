@@ -155,8 +155,8 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
     public function updateEntryFieldSync(
         string  $id,
         string  $title,
-        ?string  $value,
-        ?string  $masterPassword,
+        ?string  $value = null,
+        ?string  $masterPassword = null,
         ?string $fileName = null,
         ?string $fileMime = null,
         ?int    $fileSize = null,

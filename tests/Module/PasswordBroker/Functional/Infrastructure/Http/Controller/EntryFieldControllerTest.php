@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PasswordBroker\Functional\Infrastructure\Http\Controller;
+namespace Tests\Module\PasswordBroker\Functional\Infrastructure\Http\Controller;
 
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;

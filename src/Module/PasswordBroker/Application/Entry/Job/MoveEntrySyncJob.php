@@ -20,8 +20,6 @@ final class MoveEntrySyncJob extends AbstractReplicableSyncJob
 {
     public const string PAYLOAD_KEY_ID = EntryRepository::FIELD_ID;
     public const string PAYLOAD_KEY_ENTRY_GROUP_TARGET_ID = EntryRepository::FIELD_ENTRY_GROUP_ID;
-    public const string PAYLOAD_KEY_ENTRY_GROUP_ORIGIN_AES_PASSWORD = 'originAesPassword';
-    public const string PAYLOAD_KEY_ENTRY_GROUP_TARGET_AES_PASSWORD = 'targetAesPassword';
     public const string PAYLOAD_UPDATED_AT = EntryRepository::FIELD_UPDATED_AT;
 
 
@@ -53,17 +51,7 @@ final class MoveEntrySyncJob extends AbstractReplicableSyncJob
         }
 
         $entry->entryGroupId = EntryGroupId::fromRaw($this->payload[self::PAYLOAD_KEY_ENTRY_GROUP_TARGET_ID]);
-
-        $entryRepository->beginTransaction();
-
-        /**
-         * @TODO create and handle reencryptions for all fields in the Entry
-         */
-
-
         $entryRepository->save($entry);
-
-        $entryRepository->commit();
 
         EventDispatcher::getInstance()->dispatch(new EntryMovedEvent($entry));
 
@@ -78,14 +66,6 @@ final class MoveEntrySyncJob extends AbstractReplicableSyncJob
 
         if (empty($this->payload[self::PAYLOAD_KEY_ENTRY_GROUP_TARGET_ID])) {
             throw new InvalidArgumentException('Entry Group id is required');
-        }
-
-        if (empty($this->payload[self::PAYLOAD_KEY_ENTRY_GROUP_ORIGIN_AES_PASSWORD])) {
-            throw new InvalidArgumentException('Origin Group AES password is required');
-        }
-
-        if (empty($this->payload[self::PAYLOAD_KEY_ENTRY_GROUP_TARGET_AES_PASSWORD])) {
-            throw new InvalidArgumentException('Target Group AES password is required');
         }
 
         if (empty($this->payload[self::PAYLOAD_UPDATED_AT])

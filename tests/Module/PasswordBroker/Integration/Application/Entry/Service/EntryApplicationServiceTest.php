@@ -2,20 +2,29 @@
 
 declare(strict_types=1);
 
-namespace PasswordBroker\Integration\Application\Entry\Service;
+namespace Tests\Module\PasswordBroker\Integration\Application\Entry\Service;
 
 use App\Module\Identity\Application\User\Service\Exception\AuthException;
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
+use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\PasswordBroker\Application\Entry\Service\EntryApplicationService;
 use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
+use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldId;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\Enum\RoleEnum;
+use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
+use App\Shared\Domain\Security\Encryption\Exception\DecryptionException;
+use App\Shared\Domain\Security\Encryption\Exception\EncryptionException;
+use App\Shared\Infrastructure\Security\Encryption\AesDecryptor;
+use App\Shared\Infrastructure\Security\Encryption\AesEncryptor;
+use App\Shared\Infrastructure\Security\Encryption\InitialVectorProvider;
 use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
 use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use ReflectionException;
 use Tests\Module\Identity\Fixture\UserFixture;
+use Tests\Module\PasswordBroker\Fixture\EntryFieldFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupUserFixture;
@@ -127,25 +136,44 @@ class EntryApplicationServiceTest extends IntegrationTestCase
         );
     }
 
-    //moveEntrySync
-
     /**
-     * @throws JwtTokenExpiredException
-     * @throws JwtInvalidTokenException
      * @throws AuthException
-     * @throws RsaDomainServiceException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
      * @throws PersistenceException
+     * @throws RsaDomainServiceException
+     * @throws DecryptionException
+     * @throws EncryptionException
      */
     public function test_it_should_move_entry_to_another_group(): void
     {
+        $rsaDomainService = RsaDomainService::getInstance();
+        $aesEncryptor = AesEncryptor::getInstance();
+        $aesDecryptor = AesDecryptor::getInstance();
+        $initialVectorProvider = InitialVectorProvider::getInstance();
         $entryGroupSource = EntryGroupFixture::create(persist: true);
         $entryGroupTarget = EntryGroupFixture::create(persist: true);
+
+        $sourceAesPassword = $this->faker->word();
+        $targetAesPassword = $this->faker->word();
+
+        $userPublicKey = $rsaDomainService->getUserPublicKey(user: $this->authUser);
+
+        $encryptedAesPasswordSource = $rsaDomainService->encryptByPublic(
+            data: $sourceAesPassword,
+            publicKey: $userPublicKey,
+        );
+        $encryptedAesPasswordTarget = $rsaDomainService->encryptByPublic(
+            data: $targetAesPassword,
+            publicKey: $userPublicKey,
+        );
 
         EntryGroupUserFixture::create(
             attributes: [
                 EntryGroupUserFixture::USER_ID => $this->authUser->getId()->toRaw(),
                 EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupSource->getId()->toRaw(),
                 EntryGroupUserFixture::ROLE => RoleEnum::ADMIN->value,
+                EntryGroupUserFixture::ENCRYPTED_AES_PASSWORD => $encryptedAesPasswordSource,
             ],
             persist: true,
         );
@@ -154,6 +182,7 @@ class EntryApplicationServiceTest extends IntegrationTestCase
                 EntryGroupUserFixture::USER_ID => $this->authUser->getId()->toRaw(),
                 EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupTarget->getId()->toRaw(),
                 EntryGroupUserFixture::ROLE => RoleEnum::ADMIN->value,
+                EntryGroupUserFixture::ENCRYPTED_AES_PASSWORD => $encryptedAesPasswordTarget,
             ],
             persist: true,
         );
@@ -161,6 +190,71 @@ class EntryApplicationServiceTest extends IntegrationTestCase
         $entry = EntryFixture::create(
             attributes: [
                 EntryFixture::ENTRY_GROUP => $entryGroupSource,
+            ],
+            persist: true,
+        );
+
+        $id_1 = EntryFieldId::generate()->toRaw();
+        $value_1 = $this->faker->word();
+        $iv_1 = $initialVectorProvider->getInitialVector();
+        $value_encrypted_source_1 = $aesEncryptor->encrypt(
+            data: $value_1,
+            password: $sourceAesPassword,
+            iv: $iv_1,
+        );
+
+        $id_2 = EntryFieldId::generate()->toRaw();
+        $value_2 = $this->faker->word();
+        $iv_2 = $initialVectorProvider->getInitialVector();
+        $value_encrypted_source_2 = $aesEncryptor->encrypt(
+            data: $value_2,
+            password: $sourceAesPassword,
+            iv: $iv_2,
+        );
+
+        $id_3 = EntryFieldId::generate()->toRaw();
+        $value_3 = $this->faker->word();
+        $iv_3 = $initialVectorProvider->getInitialVector();
+        $value_encrypted_source_3 = $aesEncryptor->encrypt(
+            data: $value_3,
+            password: $sourceAesPassword,
+            iv: $iv_3,
+        );
+
+        $idToValue = [
+            $id_1 => $value_1,
+            $id_2 => $value_2,
+            $id_3 => $value_3,
+        ];
+
+
+        EntryFieldFixture::create(
+            attributes: [
+                EntryFieldFixture::ID => $id_1,
+                EntryFieldFixture::ENTRY => $entry,
+                EntryFieldFixture::VALUE_ENCRYPTED => $value_encrypted_source_1->encryptedData,
+                EntryFieldFixture::INITIALIZATION_VECTOR => $iv_1,
+                EntryFieldFixture::TAG => $value_encrypted_source_1->tag,
+            ],
+            persist: true,
+        );
+        EntryFieldFixture::create(
+            attributes: [
+                EntryFieldFixture::ID => $id_2,
+                EntryFieldFixture::ENTRY => $entry,
+                EntryFieldFixture::VALUE_ENCRYPTED => $value_encrypted_source_2->encryptedData,
+                EntryFieldFixture::INITIALIZATION_VECTOR => $iv_2,
+                EntryFieldFixture::TAG => $value_encrypted_source_2->tag,
+            ],
+            persist: true,
+        );
+        EntryFieldFixture::create(
+            attributes: [
+                EntryFieldFixture::ID => $id_3,
+                EntryFieldFixture::ENTRY => $entry,
+                EntryFieldFixture::VALUE_ENCRYPTED => $value_encrypted_source_3->encryptedData,
+                EntryFieldFixture::INITIALIZATION_VECTOR => $iv_3,
+                EntryFieldFixture::TAG => $value_encrypted_source_3->tag,
             ],
             persist: true,
         );
@@ -178,6 +272,30 @@ class EntryApplicationServiceTest extends IntegrationTestCase
                 EntryFixture::ENTRY_GROUP_ID => $entryGroupTarget->getId()->toRaw(),
             ],
         );
+
+        $entryFieldEntries = EntryFieldRepository::getInstance()->findBy(
+            [
+                new QueryCriteria(
+                    field: EntryFieldFixture::ENTRY_ID,
+                    value: $entry->getId()->toRaw(),
+                ),
+            ],
+        );
+
+        $this->assertCount(3, $entryFieldEntries);
+
+        foreach ($entryFieldEntries as $entryFieldEntry) {
+            $this->assertArrayHasKey($entryFieldEntry->id->toRaw(), $idToValue);
+            $this->assertEquals(
+                $idToValue[$entryFieldEntry->id->toRaw()],
+                $aesDecryptor->decrypt(
+                    cipherText: $entryFieldEntry->valueEncrypted->toRaw(),
+                    password: $targetAesPassword,
+                    iv: $entryFieldEntry->initializationVector->toRaw(),
+                    tag: $entryFieldEntry->tag->toRaw(),
+                ),
+            );
+        }
     }
 
     /**

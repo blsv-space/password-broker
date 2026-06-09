@@ -10,7 +10,6 @@ use App\Shared\Domain\ValueObject\UpdatedAt;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Tests\Module\PasswordBroker\Fixture\EntryFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
-use Tests\Module\PasswordBroker\Fixture\EntryGroupUserFixture;
 use Tests\Shared\IntegrationTestCase;
 use Tests\Shared\TestEventHandler;
 
@@ -27,8 +26,6 @@ class MoveEntrySyncJobTest extends IntegrationTestCase
         $payload = [
             MoveEntrySyncJob::PAYLOAD_KEY_ID => $entry->id->toRaw(),
             MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_TARGET_ID => $entryGroupTarget->id->toRaw(),
-            MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_ORIGIN_AES_PASSWORD => EntryGroupUserFixture::DEFAULT_AES_PASSWORD,
-            MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_TARGET_AES_PASSWORD => EntryGroupUserFixture::DEFAULT_AES_PASSWORD,
             MoveEntrySyncJob::PAYLOAD_UPDATED_AT => UpdatedAt::now()->toRaw(),
         ];
 
@@ -54,8 +51,6 @@ class MoveEntrySyncJobTest extends IntegrationTestCase
         $payload = [
             MoveEntrySyncJob::PAYLOAD_KEY_ID => $entry->id->toRaw(),
             MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_TARGET_ID => $entryGroupTarget->id->toRaw(),
-            MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_ORIGIN_AES_PASSWORD => EntryGroupUserFixture::DEFAULT_AES_PASSWORD,
-            MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_TARGET_AES_PASSWORD => EntryGroupUserFixture::DEFAULT_AES_PASSWORD,
             MoveEntrySyncJob::PAYLOAD_UPDATED_AT => UpdatedAt::now()->toRaw(),
         ];
 
