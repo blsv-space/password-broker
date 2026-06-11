@@ -101,10 +101,7 @@ final readonly class EntryFieldController extends AbstractRestController impleme
 
         $normalizeData = array_map(
             fn(AbstractEntryField $entryField)
-                => $this->normalizeData(
-                    data: $entryField,
-                    entityResponseClassName: $this->entryFieldResponseProvider->response($entryField)::class,
-                ),
+                => $this->entryFieldResponseProvider->response($entryField)->getAsArray(),
             $entryFields,
         );
         $total = $this->entryFieldApplicationService->countEntryFieldsBy($criteria);

@@ -22,6 +22,7 @@ use App\Shared\Infrastructure\Security\Encryption\InitialVectorProvider;
 use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
 use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
+use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use ReflectionException;
 use Tests\Module\Identity\Fixture\UserFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryFieldFixture;
@@ -174,6 +175,103 @@ class EntryFieldApplicationServiceTest extends IntegrationTestCase
         );
 
         $this->assertEquals($value, $decryptEntryField);
+    }
+
+    /**
+     * @throws PersistenceException
+     * @throws RsaDomainServiceException
+     */
+    public function test_it_should_delete_entry_field_sync(): void
+    {
+        $entry = $this->createAnEntry();
+        $entryField = EntryFieldFixture::create(
+            attributes: [EntryFieldFixture::ENTRY => $entry],
+            persist: true,
+        );
+        $this->assertDatabaseHas(
+            table: EntryFieldFixture::getTableName(),
+            param: [
+                EntryFieldFixture::ID => $entryField->getId()->toRaw(),
+                EntryFieldFixture::DELETED_AT => null,
+            ],
+        );
+
+        $this->entryFieldApplicationService->deleteEntryFieldSync(
+            uuid: $entryField->getId()->toRaw(),
+        );
+
+        $this->assertDatabaseHas(
+            table: EntryFieldFixture::getTableName(),
+            param: [
+                EntryFieldFixture::ID => $entryField->getId()->toRaw(),
+            ],
+        );
+
+        $this->assertDatabaseMissing(
+            table: EntryFieldFixture::getTableName(),
+            param: [
+                EntryFieldFixture::ID => $entryField->getId()->toRaw(),
+                EntryFieldFixture::DELETED_AT => null,
+            ],
+        );
+    }
+
+    /**
+     * @throws PersistenceException
+     * @throws RsaDomainServiceException
+     */
+    public function test_it_should_get_entry_field_by_uuid(): void
+    {
+        $entry = $this->createAnEntry();
+        $entryField = EntryFieldFixture::create(
+            attributes: [EntryFieldFixture::ENTRY => $entry],
+            persist: true,
+        );
+        $result = $this->entryFieldApplicationService->getEntryFieldByUuid($entryField->getId()->toRaw());
+        $this->assertEquals($entryField->getId(), $result->getId());
+    }
+
+    /**
+     * @throws PersistenceException
+     * @throws RsaDomainServiceException
+     */
+    public function test_it_should_get_entry_fields_by_criteria(): void
+    {
+        $entry = $this->createAnEntry();
+        $entryField = EntryFieldFixture::create(
+            attributes: [EntryFieldFixture::ENTRY => $entry],
+            persist: true,
+        );
+        $result = $this->entryFieldApplicationService->getEntryFieldsBy(criteria: [
+            new QueryCriteria(
+                field: EntryFieldFixture::ENTRY_ID,
+                value: $entry->getId()->toRaw(),
+            ),
+            new QueryCriteria(
+                field: EntryFieldFixture::TITLE,
+                value: $entryField->title->toRaw(),
+            ),
+        ]);
+        $this->assertCount(1, $result);
+        $this->assertEquals($entryField->getId(), $result[0]->getId());
+    }
+
+    /**
+     * @throws RsaDomainServiceException
+     * @throws PersistenceException
+     */
+    public function test_it_should_count_entry_fields_by_criteria(): void
+    {
+        $entry = $this->createAnEntry();
+        EntryFieldFixture::create(attributes: [EntryFieldFixture::ENTRY => $entry], persist: true);
+        EntryFieldFixture::create(attributes: [EntryFieldFixture::ENTRY => $entry], persist: true);
+        $result = $this->entryFieldApplicationService->countEntryFieldsBy(criteria: [
+            new QueryCriteria(
+                field: EntryFieldFixture::ENTRY_ID,
+                value: $entry->getId()->toRaw(),
+            ),
+        ]);
+        $this->assertEquals(2, $result);
     }
 
     /**
