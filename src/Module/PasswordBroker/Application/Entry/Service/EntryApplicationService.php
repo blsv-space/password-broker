@@ -210,6 +210,7 @@ class EntryApplicationService implements ApplicationServiceInterface
                     AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_TAG => $encryptedValue->tag,
                     AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_UPDATED_AT => $updatedAt,
                     AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_UPDATED_BY => $authUser->id->toRaw(),
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_EXECUTED_BY => $authUser->id->toRaw(),
                 ])->handle();
             }
         } catch (EncryptionException $e) {

@@ -33,6 +33,7 @@ abstract class AbstractUpdateEntryFieldSyncJob extends AbstractReplicableSyncJob
     public const string PAYLOAD_KEY_INITIALIZATION_VECTOR = EntryFieldRepository::FIELD_INITIALIZATION_VECTOR;
     public const string PAYLOAD_KEY_UPDATED_AT = EntryFieldRepository::FIELD_UPDATED_AT;
     public const string PAYLOAD_KEY_UPDATED_BY = EntryFieldRepository::FIELD_UPDATED_BY;
+    public const string PAYLOAD_EXECUTED_BY = 'executedBy';
 
     /**
      * @throws PersistenceException
@@ -64,19 +65,26 @@ abstract class AbstractUpdateEntryFieldSyncJob extends AbstractReplicableSyncJob
 
         $entryFieldRepository->save($entryField);
         EventDispatcher::getInstance()->dispatch($this->getEvent($entryField));
-        EventDispatcher::getInstance()->dispatch(new EntryFieldUpdatedGeneralEvent($entryField));
+        EventDispatcher::getInstance()->dispatch(new EntryFieldUpdatedGeneralEvent(
+            entryField: $entryField,
+            executorId: $this->payload[self::PAYLOAD_EXECUTED_BY],
+        ));
 
         return $entryField;
     }
 
-    abstract protected function getEvent(AbstractEntryField $entry): EventInterface;
+    /**
+     * @psalm-param T $entryField
+     * @psalm-return U
+     */
+    abstract protected function getEvent(AbstractEntryField $entryField): EventInterface;
 
     abstract protected function validateByEntryFieldType(): void;
 
     /**
-     * @psalm-param T $entry
+     * @psalm-param T $entryField
      */
-    abstract protected function updateByEntryFieldType(AbstractEntryField $entry): void;
+    abstract protected function updateByEntryFieldType(AbstractEntryField $entryField): void;
 
     protected function validate(): void
     {
@@ -109,6 +117,11 @@ abstract class AbstractUpdateEntryFieldSyncJob extends AbstractReplicableSyncJob
         if (empty($this->payload[self::PAYLOAD_KEY_UPDATED_BY])) {
             throw new InvalidArgumentException('updatedBy id is required');
         }
+
+        if (empty($this->payload[self::PAYLOAD_EXECUTED_BY])) {
+            throw new InvalidArgumentException('Executer user id is required');
+        }
+        UserId::validate($this->payload[self::PAYLOAD_EXECUTED_BY]);
     }
 
 }

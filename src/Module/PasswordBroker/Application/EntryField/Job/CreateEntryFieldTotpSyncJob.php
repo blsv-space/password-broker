@@ -19,8 +19,11 @@ final class CreateEntryFieldTotpSyncJob extends AbstractCreateEntryFieldSyncJob
     use EntryFieldTotpValidate;
 
     #[Override]
-    protected function getEvent(AbstractEntryField $entry): EventInterface
+    protected function getEvent(AbstractEntryField $entryField): EventInterface
     {
-        return new EntryFieldTotpCreatedEvent($entry);
+        return new EntryFieldTotpCreatedEvent(
+            entryField: $entryField,
+            executorId: $this->payload[self::PAYLOAD_EXECUTED_BY],
+        );
     }
 }

@@ -7,6 +7,7 @@ namespace Tests\Module\PasswordBroker\Integration\Application\EntryField\Job;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldPasswordUpdatedEvent;
 use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldUpdatedGeneralEvent;
+use App\Module\PasswordBroker\Application\EntryField\Job\AbstractUpdateEntryFieldSyncJob;
 use App\Module\PasswordBroker\Application\EntryField\Job\UpdateEntryFieldPasswordSyncJob;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldPassword;
 use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTypeEnum;
@@ -43,7 +44,10 @@ class UpdateEntryFieldPasswordSyncJobTest extends IntegrationTestCase
 
         $this->assertInstanceof(EntryFieldPassword::class, $entryField);
 
-        $payload = $entryField->getAsArray();
+        $payload = [
+            ...$entryField->getAsArray(),
+            AbstractUpdateEntryFieldSyncJob::PAYLOAD_EXECUTED_BY => $user->id->toRaw(),
+        ];
 
         new UpdateEntryFieldPasswordSyncJob($payload)->handle();
 
@@ -84,7 +88,10 @@ class UpdateEntryFieldPasswordSyncJobTest extends IntegrationTestCase
 
         $this->assertInstanceof(EntryFieldPassword::class, $entryField);
 
-        $payload = $entryField->getAsArray();
+        $payload = [
+            ...$entryField->getAsArray(),
+            AbstractUpdateEntryFieldSyncJob::PAYLOAD_EXECUTED_BY => $user->id->toRaw(),
+        ];
 
         $testEventHandler = new TestEventHandler(
             eventNames: [EntryFieldPasswordUpdatedEvent::class, EntryFieldUpdatedGeneralEvent::class],

@@ -17,6 +17,7 @@ abstract readonly class AbstractEntryFieldCreatedEvent extends AbstractPasswordB
      */
     public function __construct(
         protected AbstractEntryField $entryField,
+        protected string $executorId,
     ) {
         parent::__construct();
     }
@@ -27,6 +28,11 @@ abstract readonly class AbstractEntryFieldCreatedEvent extends AbstractPasswordB
     public function getEntry(): AbstractEntryField
     {
         return $this->entryField;
+    }
+
+    public function getExecutorId(): string
+    {
+        return $this->executorId;
     }
 
 }

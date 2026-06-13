@@ -12,6 +12,7 @@ final readonly class EntryFieldDecryptedEvent extends AbstractPasswordBrokerEven
 {
     public function __construct(
         private AbstractEntryField $entryField,
+        private string $executorId,
     ) {
         parent::__construct();
     }
@@ -19,6 +20,11 @@ final readonly class EntryFieldDecryptedEvent extends AbstractPasswordBrokerEven
     public function getEntry(): AbstractEntryField
     {
         return $this->entryField;
+    }
+
+    public function getExecutorId(): string
+    {
+        return $this->executorId;
     }
 
     #[\Override]

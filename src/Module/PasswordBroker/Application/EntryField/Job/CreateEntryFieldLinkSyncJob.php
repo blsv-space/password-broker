@@ -16,9 +16,12 @@ use Override;
 final class CreateEntryFieldLinkSyncJob extends AbstractCreateEntryFieldSyncJob
 {
     #[Override]
-    protected function getEvent(AbstractEntryField $entry): EventInterface
+    protected function getEvent(AbstractEntryField $entryField): EventInterface
     {
-        return new EntryFieldLinkCreatedEvent($entry);
+        return new EntryFieldLinkCreatedEvent(
+            entryField: $entryField,
+            executorId: $this->payload[self::PAYLOAD_EXECUTED_BY],
+        );
     }
 
     #[Override]

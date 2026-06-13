@@ -32,5 +32,9 @@ class EntryFieldFileSize extends AbstractValueObject
         if (!is_int($data)) {
             throw new InvalidArgumentException('Invalid data type');
         }
+
+        if ($data < 0) {
+            throw new InvalidArgumentException('Invalid data: must be positive');
+        }
     }
 }

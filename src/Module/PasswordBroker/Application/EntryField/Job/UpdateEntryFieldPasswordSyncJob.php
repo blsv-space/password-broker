@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Module\PasswordBroker\Application\EntryField\Job;
 
-use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldPasswordCreatedEvent;
 use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldPasswordUpdatedEvent;
 use App\Module\PasswordBroker\Application\EntryField\Job\ValidateTrait\EntryFieldPasswordValidate;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
@@ -14,21 +13,24 @@ use Inquisition\Core\Application\Event\EventInterface;
 use Override;
 
 /**
- * @extends AbstractUpdateEntryFieldSyncJob<EntryFieldPassword, EntryFieldPasswordCreatedEvent>
+ * @extends AbstractUpdateEntryFieldSyncJob<EntryFieldPassword, EntryFieldPasswordUpdatedEvent>
  */
 final class UpdateEntryFieldPasswordSyncJob extends AbstractUpdateEntryFieldSyncJob
 {
     use EntryFieldPasswordValidate;
 
     #[Override]
-    protected function getEvent(AbstractEntryField $entry): EventInterface
+    protected function getEvent(AbstractEntryField $entryField): EventInterface
     {
-        return new EntryFieldPasswordUpdatedEvent($entry);
+        return new EntryFieldPasswordUpdatedEvent(
+            entryField: $entryField,
+            executorId: $this->payload[self::PAYLOAD_EXECUTED_BY],
+        );
     }
 
     #[Override]
-    protected function updateByEntryFieldType(AbstractEntryField $entry): void
+    protected function updateByEntryFieldType(AbstractEntryField $entryField): void
     {
-        $entry->login = EntryFieldLogin::fromRaw($this->payload[self::PAYLOAD_KEY_LOGIN]);
+        $entryField->login = EntryFieldLogin::fromRaw($this->payload[self::PAYLOAD_KEY_LOGIN]);
     }
 }

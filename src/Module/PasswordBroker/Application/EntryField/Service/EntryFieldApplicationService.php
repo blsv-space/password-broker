@@ -102,6 +102,7 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
             AbstractCreateEntryFieldSyncJob::PAYLOAD_KEY_TAG => $aesEncryptedData->tag,
             AbstractCreateEntryFieldSyncJob::PAYLOAD_KEY_CREATED_AT => CreatedAt::now()->toRaw(),
             AbstractCreateEntryFieldSyncJob::PAYLOAD_KEY_CREATED_BY => $authUser->id->toRaw(),
+            AbstractCreateEntryFieldSyncJob::PAYLOAD_EXECUTED_BY => $authUser->id->toRaw(),
         ];
 
         return match ($type) {
@@ -175,6 +176,7 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
             AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_TITLE => $title,
             AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_UPDATED_AT => CreatedAt::now()->toRaw(),
             AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_UPDATED_BY => $authUser->id->toRaw(),
+            AbstractUpdateEntryFieldSyncJob::PAYLOAD_EXECUTED_BY => $authUser->id->toRaw(),
         ];
 
         if (!is_null($value)) {
@@ -251,19 +253,28 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
         );
 
         EventDispatcher::getInstance()->dispatch(
-            new EntryFieldDecryptedEvent($entryField),
+            new EntryFieldDecryptedEvent(
+                entryField: $entryField,
+                executorId: $authUser->id->toRaw(),
+            ),
         );
 
         return $decryptedValue;
     }
 
     /**
+     * @throws AuthException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
      * @throws PersistenceException
      */
     public function deleteEntryFieldSync(string $uuid): AbstractEntryField
     {
+        $authUser = $this->getAuthUser();
+
         return new DeleteEntryFieldSyncJob([
             DeleteEntryFieldSyncJob::PAYLOAD_KEY_ID => $uuid,
+            DeleteEntryFieldSyncJob::PAYLOAD_EXECUTED_BY => $authUser->id->toRaw(),
         ])->handle();
     }
 

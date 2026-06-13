@@ -18,8 +18,11 @@ final class CreateEntryFieldPasswordSyncJob extends AbstractCreateEntryFieldSync
 {
     use EntryFieldPasswordValidate;
     #[Override]
-    protected function getEvent(AbstractEntryField $entry): EventInterface
+    protected function getEvent(AbstractEntryField $entryField): EventInterface
     {
-        return new EntryFieldPasswordCreatedEvent($entry);
+        return new EntryFieldPasswordCreatedEvent(
+            entryField: $entryField,
+            executorId: $this->payload[self::PAYLOAD_EXECUTED_BY],
+        );
     }
 }

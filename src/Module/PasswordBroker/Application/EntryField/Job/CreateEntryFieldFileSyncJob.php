@@ -19,9 +19,12 @@ final class CreateEntryFieldFileSyncJob extends AbstractCreateEntryFieldSyncJob
     use EntryFieldFiledValidate;
 
     #[Override]
-    protected function getEvent(AbstractEntryField $entry): EventInterface
+    protected function getEvent(AbstractEntryField $entryField): EventInterface
     {
-        return new EntryFieldFileCreatedEvent($entry);
+        return new EntryFieldFileCreatedEvent(
+            entryField: $entryField,
+            executorId: $this->payload[self::PAYLOAD_EXECUTED_BY],
+        );
     }
 
 }

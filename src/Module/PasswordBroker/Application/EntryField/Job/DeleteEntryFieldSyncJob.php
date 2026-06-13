@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Module\PasswordBroker\Application\EntryField\Job;
 
+use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldDeletedEvent;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldId;
@@ -16,6 +17,7 @@ use InvalidArgumentException;
 final class DeleteEntryFieldSyncJob extends AbstractReplicableSyncJob
 {
     public const string PAYLOAD_KEY_ID = EntryFieldRepository::FIELD_ID;
+    public const string PAYLOAD_EXECUTED_BY = 'executedBy';
 
     /**
      * @throws PersistenceException
@@ -36,7 +38,10 @@ final class DeleteEntryFieldSyncJob extends AbstractReplicableSyncJob
         }
         $entryFieldRepository->softDelete($entryField);
 
-        EventDispatcher::getInstance()->dispatch(new EntryFieldDeletedEvent($entryField));
+        EventDispatcher::getInstance()->dispatch(new EntryFieldDeletedEvent(
+            entryField: $entryField,
+            executorId: $this->payload[self::PAYLOAD_EXECUTED_BY],
+        ));
 
         return $entryField;
     }
@@ -46,5 +51,9 @@ final class DeleteEntryFieldSyncJob extends AbstractReplicableSyncJob
         if (empty($this->payload[self::PAYLOAD_KEY_ID])) {
             throw new InvalidArgumentException('Entry Field id is required');
         }
+        if (empty($this->payload[self::PAYLOAD_EXECUTED_BY])) {
+            throw new InvalidArgumentException('Executer user id is required');
+        }
+        UserId::validate($this->payload[self::PAYLOAD_EXECUTED_BY]);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Module\PasswordBroker\Application\EntryField\Job;
 
+use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldCreatedGeneralEvent;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
 use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTypeEnum;
@@ -31,6 +32,7 @@ abstract class AbstractCreateEntryFieldSyncJob extends AbstractReplicableSyncJob
     public const string PAYLOAD_KEY_INITIALIZATION_VECTOR = EntryFieldRepository::FIELD_INITIALIZATION_VECTOR;
     public const string PAYLOAD_KEY_CREATED_AT = EntryFieldRepository::FIELD_CREATED_AT;
     public const string PAYLOAD_KEY_CREATED_BY = EntryFieldRepository::FIELD_CREATED_BY;
+    public const string PAYLOAD_EXECUTED_BY = 'executedBy';
 
     /**
      * @throws PersistenceException
@@ -57,16 +59,19 @@ abstract class AbstractCreateEntryFieldSyncJob extends AbstractReplicableSyncJob
 
         $entryFieldRepository->save($entryField);
         EventDispatcher::getInstance()->dispatch($this->getEvent($entryField));
-        EventDispatcher::getInstance()->dispatch(new EntryFieldCreatedGeneralEvent($entryField));
+        EventDispatcher::getInstance()->dispatch(new EntryFieldCreatedGeneralEvent(
+            entryField: $entryField,
+            executorId: $this->payload[self::PAYLOAD_EXECUTED_BY],
+        ));
 
         return $entryField;
     }
 
     /**
-     * @param  T $entry
+     * @param  T $entryField
      * @return U
      */
-    abstract protected function getEvent(AbstractEntryField $entry): EventInterface;
+    abstract protected function getEvent(AbstractEntryField $entryField): EventInterface;
 
     abstract protected function validateByEntryFieldType(): void;
 
@@ -115,6 +120,11 @@ abstract class AbstractCreateEntryFieldSyncJob extends AbstractReplicableSyncJob
         if (empty($this->payload[self::PAYLOAD_KEY_CREATED_BY])) {
             throw new InvalidArgumentException('createdBy id is required');
         }
+
+        if (empty($this->payload[self::PAYLOAD_EXECUTED_BY])) {
+            throw new InvalidArgumentException('Executer user id is required');
+        }
+        UserId::validate($this->payload[self::PAYLOAD_EXECUTED_BY]);
     }
 
 }
