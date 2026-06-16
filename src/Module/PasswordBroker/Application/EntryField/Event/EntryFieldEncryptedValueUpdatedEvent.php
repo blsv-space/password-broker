@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Module\PasswordBroker\Application\EntryField\Event;
 
-use App\Module\PasswordBroker\Domain\EntryField\Entity\EntryFieldFile;
+use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
 
 /**
- * @extends AbstractEntryFieldUpdatedEvent<EntryFieldFile>
+ * @extends AbstractEntryFieldUpdatedEvent<AbstractEntryField>
  */
 final readonly class EntryFieldEncryptedValueUpdatedEvent extends AbstractEntryFieldUpdatedEvent
 {

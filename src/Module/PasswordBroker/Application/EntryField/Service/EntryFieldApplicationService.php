@@ -26,10 +26,13 @@ use App\Module\PasswordBroker\Application\EntryField\Job\UpdateEntryFieldTotpSyn
 use App\Module\PasswordBroker\Application\EntryField\Service\Exception\EntryFieldException;
 use App\Module\PasswordBroker\Application\EntryField\Service\Exception\EntryFieldNotFountException;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserNotInEntryGroupException;
+use App\Module\PasswordBroker\Domain\Entry\Repository\EntryRepositoryInterface;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;
 use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
 use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTypeEnum;
+use App\Module\PasswordBroker\Domain\EntryField\Repository\EntryFieldRepositoryInterface;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldId;
+use App\Module\PasswordBroker\Domain\EntryGroupUser\Repository\EntryGroupUserRepositoryInterface;
 use App\Module\PasswordBroker\Infrastructure\Entry\Repository\EntryRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryGroupUser\Repository\EntryGroupUserRepository;
@@ -52,10 +55,10 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
 {
     use SingletonTrait;
 
-    private EntryFieldRepository $entryFieldRepository;
-    private EntryRepository $entryRepository;
+    private EntryFieldRepositoryInterface $entryFieldRepository;
+    private EntryRepositoryInterface $entryRepository;
     private RsaDomainService $rsaDomainService;
-    private EntryGroupUserRepository $entryGroupUserRepository;
+    private EntryGroupUserRepositoryInterface $entryGroupUserRepository;
 
     private function __construct()
     {
@@ -335,7 +338,7 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
      * @throws PersistenceException
      * @throws RsaDomainServiceException
      */
-    private function getAesPassword(string $entryId, User $user, string $masterPassword): string
+    public function getAesPassword(string $entryId, User $user, string $masterPassword): string
     {
         $entry = $this->entryRepository->findById(EntryId::fromRaw($entryId));
 

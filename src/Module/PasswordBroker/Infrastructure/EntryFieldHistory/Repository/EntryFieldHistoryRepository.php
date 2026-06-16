@@ -26,7 +26,6 @@ use App\Module\PasswordBroker\Domain\EntryFieldHistory\ValueObject\EntryFieldHis
 use App\Module\PasswordBroker\Domain\EntryFieldHistory\ValueObject\EntryFieldHistoryIsDeleted;
 use App\Module\PasswordBroker\Infrastructure\Repository\AbstractPasswordBrokerRepository;
 use App\Shared\Domain\ValueObject\CreatedAt;
-use App\Shared\Infrastructure\Repository\RepositorySoftDeleteInterface;
 use Inquisition\Core\Domain\Entity\EntityInterface;
 use Inquisition\Core\Domain\ValueObject\ValueObjectInterface;
 use Inquisition\Foundation\Singleton\SingletonTrait;
