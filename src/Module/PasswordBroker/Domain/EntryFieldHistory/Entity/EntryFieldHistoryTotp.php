@@ -41,12 +41,12 @@ final class EntryFieldHistoryTotp extends AbstractEntryFieldHistory
             eventName: $eventName,
             title: $title,
             type: EntryFieldType::fromRaw(EntryFieldTypeEnum::TOTP),
-            valueEncrypted: $valueEncrypted,
-            initializationVector: $initializationVector,
-            tag: $tag,
             isDeleted: $isDeleted,
             createdBy: $createdBy,
             createdAt: $createdAt,
+            valueEncrypted: $valueEncrypted,
+            initializationVector: $initializationVector,
+            tag: $tag,
         );
     }
 }

@@ -37,5 +37,7 @@ final readonly class EntryFieldRoute extends AbstractRouterRegistry
             ->delete("/{{$PARAM_ENTRY_FIELD_ID}}", EntryFieldController::class, RestControllerInterface::ACTION_DESTROY)
             ->post("/{{$PARAM_ENTRY_FIELD_ID}}", EntryFieldController::class, EntryFieldController::ACTION_DECRYPT)
         ;
+
+        EntryFieldHistoryRoute::register($routeGroup);
     }
 }
