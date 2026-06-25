@@ -110,7 +110,7 @@ abstract class AbstractCreateEntryFieldHistorySyncJob extends AbstractSyncJob
             throw new InvalidArgumentException('Entry Field Initialization Vector is required');
         }
 
-        if (empty($this->payload[self::PAYLOAD_KEY_IS_DELETED])) {
+        if (!isset($this->payload[self::PAYLOAD_KEY_IS_DELETED])) {
             throw new InvalidArgumentException('Entry Field Is Deleted is required');
         }
 

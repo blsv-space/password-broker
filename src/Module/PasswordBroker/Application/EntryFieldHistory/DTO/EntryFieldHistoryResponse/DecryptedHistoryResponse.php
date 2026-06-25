@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Module\PasswordBroker\Application\EntryFieldHistory\DTO\EntryFieldHistoryResponse;
 
-final readonly class DecryptedResponse
+final readonly class DecryptedHistoryResponse
 {
     public const string FIELD_ENTRY_FIELD_HISTORY_ID = 'entryFieldHistoryId';
     public const string FIELD_DECRYPTED_VALUE = 'decryptedValue';

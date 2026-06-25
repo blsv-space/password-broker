@@ -9,12 +9,12 @@ use InvalidArgumentException;
 use Override;
 
 /**
- * @property string $value
+ * @property bool $value
  */
 class EntryFieldHistoryIsDeleted extends AbstractValueObject
 {
     #[Override]
-    public function toRaw(): string
+    public function toRaw(): bool
     {
         return $this->value;
     }

@@ -28,7 +28,6 @@ use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTotpHashAlgorithm
 use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTypeEnum;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldTitle;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\Enum\RoleEnum;
-use App\Module\PasswordBroker\Infrastructure\Entry\Repository\EntryRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
 use App\Module\PasswordBroker\Infrastructure\Http\Controller\EntryFieldController;
 use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryFieldRoute;
@@ -188,7 +187,7 @@ class EntryFieldControllerTest extends FunctionalTestCase
         $this->assertJson($content);
         $response = json_decode($content, true);
         $this->assertArrayHasKey(EntryFieldRepository::FIELD_ID, $response);
-        $this->assertEquals($entryField->id->toRaw(), $response[EntryRepository::FIELD_ID]);
+        $this->assertEquals($entryField->id->toRaw(), $response[EntryFieldRepository::FIELD_ID]);
         $this->assertArrayHasKey(EntryFieldRepository::FIELD_ENTRY_ID, $response);
         $this->assertEquals($entry->id->toRaw(), $response[EntryFieldRepository::FIELD_ENTRY_ID]);
         $this->assertArrayHasKey(EntryFieldRepository::FIELD_TITLE, $response);
@@ -540,7 +539,7 @@ class EntryFieldControllerTest extends FunctionalTestCase
         $this->assertJson($content);
         $response = json_decode($content, true);
         $this->assertArrayHasKey(EntryFieldRepository::FIELD_ID, $response);
-        $this->assertEquals($entryField->id->toRaw(), $response[EntryRepository::FIELD_ID]);
+        $this->assertEquals($entryField->id->toRaw(), $response[EntryFieldRepository::FIELD_ID]);
         $this->assertArrayHasKey(EntryFieldRepository::FIELD_VALUE_ENCRYPTED, $response);
         $this->assertEquals($entryField->valueEncrypted->toRaw(), $response[EntryFieldRepository::FIELD_VALUE_ENCRYPTED]);
         $this->assertArrayHasKey(EntryFieldRepository::FIELD_INITIALIZATION_VECTOR, $response);

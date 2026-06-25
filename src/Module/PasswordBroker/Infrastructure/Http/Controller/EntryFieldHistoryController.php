@@ -8,7 +8,7 @@ use App\Module\Identity\Application\User\Service\Exception\AuthException;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Infrastructure\Http\Controller\UserController;
 use App\Module\PasswordBroker\Application\EntryField\Service\Exception\EntryFieldException;
-use App\Module\PasswordBroker\Application\EntryFieldHistory\DTO\EntryFieldHistoryResponse\DecryptedResponse;
+use App\Module\PasswordBroker\Application\EntryFieldHistory\DTO\EntryFieldHistoryResponse\DecryptedHistoryResponse;
 use App\Module\PasswordBroker\Application\EntryFieldHistory\DTO\EntryFieldHistoryResponse\EncryptedValueEntryFieldHistoryResponse;
 use App\Module\PasswordBroker\Application\EntryFieldHistory\Provider\EntryFieldHistoryResponseProvider;
 use App\Module\PasswordBroker\Application\EntryFieldHistory\Service\EntryFieldHistoryApplicationService;
@@ -16,7 +16,7 @@ use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthU
 use App\Module\PasswordBroker\Domain\EntryFieldHistory\Entity\AbstractEntryFieldHistory;
 use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryFieldHistory\Repository\EntryFieldHistoryRepository;
-use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryFieldRoute;
+use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryFieldHistoryRoute;
 use App\Shared\Domain\Security\Encryption\Exception\DecryptionException;
 use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
 use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
@@ -34,8 +34,6 @@ final readonly class EntryFieldHistoryController extends AbstractRestController 
 {
     public const string ACTION_DECRYPT = 'decrypt';
     public const string ACTION_ENCRYPTED = 'encrypted';
-    public const string FIELD_QUERY = 'query';
-    public const string FIELD_VALUE = 'value';
 
     private EntryFieldHistoryApplicationService $entryFieldHistoryApplicationService;
     private EntryFieldHistoryResponseProvider $entryFieldHistoryResponseProvider;
@@ -67,6 +65,7 @@ final readonly class EntryFieldHistoryController extends AbstractRestController 
                 EntryFieldHistoryRepository::FIELD_IS_DELETED,
             ],
             defaultSort: EntryFieldRepository::FIELD_CREATED_AT,
+            defaultDirection: AbstractRestController::SORT_DIRECTION_DESC,
         );
         $offset = ($page - 1) * $per_page;
 
@@ -107,7 +106,8 @@ final readonly class EntryFieldHistoryController extends AbstractRestController 
     #[Override]
     public function show(RequestInterface $request, array $parameters): ResponseInterface
     {
-        $entryFieldHistory = $this->entryFieldHistoryApplicationService->getEntryFieldHistoryByUuid($parameters[EntryFieldRoute::PARAM_ENTRY_FIELD_ID]);
+        $entryFieldHistory = $this->entryFieldHistoryApplicationService
+            ->getEntryFieldHistoryByUuid($parameters[EntryFieldHistoryRoute::PARAM_ENTRY_FIELD_HISTORY_ID]);
 
         if (!$entryFieldHistory) {
             return ResponseFactory::notFound();
@@ -134,7 +134,7 @@ final readonly class EntryFieldHistoryController extends AbstractRestController 
      */
     public function decrypt(RequestInterface $request, array $parameters): ResponseInterface
     {
-        $entryFieldHistory = $this->entryFieldHistoryApplicationService->getEntryFieldHistoryByUuid($parameters[EntryFieldRoute::PARAM_ENTRY_FIELD_ID]);
+        $entryFieldHistory = $this->entryFieldHistoryApplicationService->getEntryFieldHistoryByUuid($parameters[EntryFieldHistoryRoute::PARAM_ENTRY_FIELD_HISTORY_ID]);
 
         if (!$entryFieldHistory) {
             return ResponseFactory::notFound();
@@ -146,7 +146,7 @@ final readonly class EntryFieldHistoryController extends AbstractRestController 
         );
 
         return $this->jsonResponse(
-            new DecryptedResponse(
+            new DecryptedHistoryResponse(
                 entryFieldHistoryId: $entryFieldHistory->id->toRaw(),
                 decryptedValue: $decryptedValue,
             )->getAsArray(),
@@ -166,7 +166,7 @@ final readonly class EntryFieldHistoryController extends AbstractRestController 
      */
     public function encrypted(RequestInterface $request, array $parameters): ResponseInterface
     {
-        $entryFieldHistory = $this->entryFieldHistoryApplicationService->getEntryFieldHistoryByUuid($parameters[EntryFieldRoute::PARAM_ENTRY_FIELD_ID]);
+        $entryFieldHistory = $this->entryFieldHistoryApplicationService->getEntryFieldHistoryByUuid($parameters[EntryFieldHistoryRoute::PARAM_ENTRY_FIELD_HISTORY_ID]);
 
         if (!$entryFieldHistory) {
             return ResponseFactory::notFound();

@@ -15,8 +15,9 @@ use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 final class TestEventHandler implements EventHandlerInterface
 {
     public private(set) int $handledEventsCount;
+    public private(set) int $handledUniqueEventsCount;
     /**
-     * @var EventInterface[]
+     * @var string[]
      */
     public private(set) array $handledEvents;
 
@@ -26,6 +27,7 @@ final class TestEventHandler implements EventHandlerInterface
         private readonly ?Closure $eventHandler = null,
     ) {
         $this->handledEventsCount = 0;
+        $this->handledUniqueEventsCount = 0;
         $this->handledEvents = [];
         EventDispatcher::getInstance()->registry($this);
     }
@@ -33,8 +35,9 @@ final class TestEventHandler implements EventHandlerInterface
     #[\Override]
     public function handle(EventInterface $event): void
     {
-        $this->handledEvents = [...$this->handledEvents, $event];
+        $this->handledEvents = [...$this->handledEvents, $event->getEventName()];
         $this->handledEventsCount = $this->handledEventsCount + 1;
+        $this->handledUniqueEventsCount = count(array_unique($this->handledEvents));
 
         if (!$this->eventHandler) {
             return;
@@ -51,6 +54,6 @@ final class TestEventHandler implements EventHandlerInterface
 
     public function wasDispatched(): bool
     {
-        return $this->handledEventsCount > 0;
+        return $this->handledUniqueEventsCount === count($this->eventNames);
     }
 }

@@ -9,10 +9,10 @@ use App\Module\Identity\Application\User\Service\Exception\AuthException;
 use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Domain\User\Service\RsaDomainService;
-use App\Module\PasswordBroker\Application\EntryField\Event\EntryFieldDecryptedEvent;
 use App\Module\PasswordBroker\Application\EntryField\Service\EntryFieldApplicationService;
 use App\Module\PasswordBroker\Application\EntryField\Service\Exception\EntryFieldException;
 use App\Module\PasswordBroker\Application\EntryField\Service\Exception\EntryFieldNotFountException;
+use App\Module\PasswordBroker\Application\EntryFieldHistory\Event\EntryFieldHistoryDecryptedEvent;
 use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\AbstractUpdateEntryFieldHistorySyncJob;
 use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\CreateEntryFieldHistoryLinkSyncJob;
 use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\CreateEntryFieldHistoryNoteSyncJob;
@@ -152,15 +152,15 @@ class EntryFieldHistoryApplicationService implements ApplicationServiceInterface
         $entryGroupAesPassword = $this->entryFieldApplicationService->getAesPassword($entryField->entryId->toRaw(), $authUser, $masterPassword);
 
         $decryptedValue = AesDecryptor::getInstance()->decrypt(
-            cipherText: $entryField->valueEncrypted->toRaw(),
+            cipherText: $entryFieldHistory->valueEncrypted->toRaw(),
             password: $entryGroupAesPassword,
-            iv: $entryField->initializationVector->toRaw(),
-            tag: $entryField->tag->toRaw(),
+            iv: $entryFieldHistory->initializationVector->toRaw(),
+            tag: $entryFieldHistory->tag->toRaw(),
         );
 
         EventDispatcher::getInstance()->dispatch(
-            new EntryFieldDecryptedEvent(
-                entryField: $entryField,
+            new EntryFieldHistoryDecryptedEvent(
+                entryFieldHistory: $entryFieldHistory,
                 executorId: $authUser->id->toRaw(),
             ),
         );

@@ -88,6 +88,9 @@ abstract class AbstractTestCase extends TestCase
                 if (!is_string($key)) {
                     throw new PersistenceException('Invalid parameter key type');
                 }
+                if (is_bool($value)) {
+                    $value = (int) $value;
+                }
                 if (!is_string($value) && !is_numeric($value) && !is_null($value)) {
                     throw new PersistenceException('Invalid parameter value type');
                 }
