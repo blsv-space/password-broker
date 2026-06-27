@@ -15,12 +15,15 @@ use App\Module\PasswordBroker\Application\Entry\Job\MoveEntrySyncJob;
 use App\Module\PasswordBroker\Application\Entry\Job\RenameEntrySyncJob;
 use App\Module\PasswordBroker\Application\EntryField\Job\AbstractUpdateEntryFieldSyncJob;
 use App\Module\PasswordBroker\Application\EntryField\Job\UpdateEntryFieldEncryptedValueSyncJob;
+use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\AbstractUpdateEntryFieldHistorySyncJob;
+use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\UpdateEntryFieldHistoryEncryptedValueSyncJob;
 use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
 use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;
 use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
 use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
 use App\Module\PasswordBroker\Infrastructure\Entry\Repository\EntryRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryFieldHistory\Repository\EntryFieldHistoryRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryGroupUser\Repository\EntryGroupUserRepository;
 use App\Shared\Domain\Security\Encryption\Exception\DecryptionException;
@@ -48,6 +51,7 @@ class EntryApplicationService implements ApplicationServiceInterface
     private EntryGroupRepository $entryGroupRepository;
     private EntryGroupUserRepository $entryGroupUserRepository;
     private EntryFieldRepository $entryFieldRepository;
+    private EntryFieldHistoryRepository $entryFieldHistoryRepository;
     private RsaDomainService $rsaDomainService;
 
     private function __construct()
@@ -56,6 +60,7 @@ class EntryApplicationService implements ApplicationServiceInterface
         $this->entryGroupRepository = EntryGroupRepository::getInstance();
         $this->entryGroupUserRepository = EntryGroupUserRepository::getInstance();
         $this->entryFieldRepository = EntryFieldRepository::getInstance();
+        $this->entryFieldHistoryRepository = EntryFieldHistoryRepository::getInstance();
         $this->rsaDomainService = RsaDomainService::getInstance();
     }
 
@@ -188,6 +193,36 @@ class EntryApplicationService implements ApplicationServiceInterface
         ]);
         try {
             foreach ($entryFields as $entryField) {
+                $entryFieldHistories = $this->entryFieldHistoryRepository->findBy([
+                    new QueryCriteria(
+                        field: EntryFieldHistoryRepository::FIELD_ENTRY_FIELD_ID,
+                        value: $entryField->id->toRaw(),
+                    ),
+                ]);
+
+                foreach ($entryFieldHistories as $entryFieldHistory) {
+                    $decryptedHistoryValue = $aesDecryptor->decrypt(
+                        cipherText: $entryFieldHistory->valueEncrypted->toRaw(),
+                        password: $originAesPassword,
+                        iv: $entryFieldHistory->initializationVector->toRaw(),
+                        tag: $entryFieldHistory->tag->toRaw(),
+                    );
+
+                    $ivHistory = $initialVectorProvider->getInitialVector();
+                    $encryptedHistoryValue = $aesEncryptor->encrypt(
+                        data: $decryptedHistoryValue,
+                        password: $targetAesPassword,
+                        iv: $ivHistory,
+                    );
+
+                    new UpdateEntryFieldHistoryEncryptedValueSyncJob([
+                        AbstractUpdateEntryFieldHistorySyncJob::PAYLOAD_KEY_ID => $entryFieldHistory->id->toRaw(),
+                        AbstractUpdateEntryFieldHistorySyncJob::PAYLOAD_KEY_VALUE_ENCRYPTED => $encryptedHistoryValue->encryptedData,
+                        AbstractUpdateEntryFieldHistorySyncJob::PAYLOAD_KEY_INITIALIZATION_VECTOR => $ivHistory,
+                        AbstractUpdateEntryFieldHistorySyncJob::PAYLOAD_KEY_TAG => $encryptedHistoryValue->tag,
+                    ])->handle();
+                }
+
                 $decryptedValue = $aesDecryptor->decrypt(
                     cipherText: $entryField->valueEncrypted->toRaw(),
                     password: $originAesPassword,

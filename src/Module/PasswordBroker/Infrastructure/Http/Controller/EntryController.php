@@ -14,6 +14,7 @@ use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRep
 use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryGroupRoute;
 use App\Module\PasswordBroker\Infrastructure\Http\Route\EntryRoute;
 use App\Shared\Application\Validation\Rule\ValidUuidRule;
+use App\Shared\Domain\Security\Encryption\Exception\DecryptionException;
 use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
 use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use Inquisition\Core\Application\Validation\Exception\ValidationException;
@@ -180,11 +181,12 @@ final readonly class EntryController extends AbstractRestController implements R
     /**
      * @throws AuthException
      * @throws JsonException
-     * @throws PersistenceException
-     * @throws ValidationException
-     * @throws RsaDomainServiceException
      * @throws JwtInvalidTokenException
      * @throws JwtTokenExpiredException
+     * @throws PersistenceException
+     * @throws RsaDomainServiceException
+     * @throws ValidationException
+     * @throws DecryptionException
      */
     public function move(RequestInterface $request, array $parameters): ResponseInterface
     {

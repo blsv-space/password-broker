@@ -9,10 +9,15 @@ use App\Module\Identity\Domain\User\Entity\User;
 use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Domain\User\Service\RsaDomainService;
 use App\Module\PasswordBroker\Application\Entry\Service\EntryApplicationService;
+use App\Module\PasswordBroker\Application\EntryField\Job\AbstractUpdateEntryFieldSyncJob;
+use App\Module\PasswordBroker\Application\EntryField\Job\UpdateEntryFieldNoteSyncJob;
+use App\Module\PasswordBroker\Application\EntryField\Job\UpdateEntryFieldTotpSyncJob;
 use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
+use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTypeEnum;
 use App\Module\PasswordBroker\Domain\EntryField\ValueObject\EntryFieldId;
 use App\Module\PasswordBroker\Domain\EntryGroupUser\Enum\RoleEnum;
 use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryFieldHistory\Repository\EntryFieldHistoryRepository;
 use App\Shared\Domain\Security\Encryption\Exception\DecryptionException;
 use App\Shared\Domain\Security\Encryption\Exception\EncryptionException;
 use App\Shared\Infrastructure\Security\Encryption\AesDecryptor;
@@ -25,6 +30,7 @@ use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use ReflectionException;
 use Tests\Module\Identity\Fixture\UserFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryFieldFixture;
+use Tests\Module\PasswordBroker\Fixture\EntryFieldHistoryFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupFixture;
 use Tests\Module\PasswordBroker\Fixture\EntryGroupUserFixture;
@@ -227,36 +233,122 @@ class EntryApplicationServiceTest extends IntegrationTestCase
             $id_3 => $value_3,
         ];
 
-
-        EntryFieldFixture::create(
+        $entryFieldPassword = EntryFieldFixture::create(
             attributes: [
                 EntryFieldFixture::ID => $id_1,
                 EntryFieldFixture::ENTRY => $entry,
+                EntryFieldFixture::TYPE => EntryFieldTypeEnum::PASSWORD->value,
                 EntryFieldFixture::VALUE_ENCRYPTED => $value_encrypted_source_1->encryptedData,
                 EntryFieldFixture::INITIALIZATION_VECTOR => $iv_1,
                 EntryFieldFixture::TAG => $value_encrypted_source_1->tag,
             ],
             persist: true,
         );
-        EntryFieldFixture::create(
+
+        $entryFieldTotp = EntryFieldFixture::create(
             attributes: [
                 EntryFieldFixture::ID => $id_2,
                 EntryFieldFixture::ENTRY => $entry,
+                EntryFieldFixture::TYPE => EntryFieldTypeEnum::TOTP->value,
                 EntryFieldFixture::VALUE_ENCRYPTED => $value_encrypted_source_2->encryptedData,
                 EntryFieldFixture::INITIALIZATION_VECTOR => $iv_2,
                 EntryFieldFixture::TAG => $value_encrypted_source_2->tag,
             ],
             persist: true,
         );
-        EntryFieldFixture::create(
+        $entryFieldTotpTitleUpdated_1 = $this->faker->word();
+        $entryFieldTotpTitleUpdated_2 = $this->faker->word();
+
+        $entryFieldNote = EntryFieldFixture::create(
             attributes: [
                 EntryFieldFixture::ID => $id_3,
                 EntryFieldFixture::ENTRY => $entry,
+                EntryFieldFixture::TYPE => EntryFieldTypeEnum::NOTE->value,
                 EntryFieldFixture::VALUE_ENCRYPTED => $value_encrypted_source_3->encryptedData,
                 EntryFieldFixture::INITIALIZATION_VECTOR => $iv_3,
                 EntryFieldFixture::TAG => $value_encrypted_source_3->tag,
             ],
             persist: true,
+        );
+        $entryFieldNoteTitleUpdated = $this->faker->word();
+
+        new UpdateEntryFieldTotpSyncJob(
+            payload: [
+                ... $entryFieldTotp->getAsArray(),
+                AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_TITLE => $entryFieldTotpTitleUpdated_1,
+                AbstractUpdateEntryFieldSyncJob::PAYLOAD_EXECUTED_BY => $this->authUser->getId()->toRaw(),
+            ],
+        )->handle();
+
+        new UpdateEntryFieldTotpSyncJob(
+            payload: [
+                ... $entryFieldTotp->getAsArray(),
+                AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_TITLE => $entryFieldTotpTitleUpdated_2,
+                AbstractUpdateEntryFieldSyncJob::PAYLOAD_EXECUTED_BY => $this->authUser->getId()->toRaw(),
+            ],
+        )->handle();
+
+        new UpdateEntryFieldNoteSyncJob(
+            payload: [
+                ... $entryFieldNote->getAsArray(),
+                AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_TITLE => $entryFieldNoteTitleUpdated,
+                AbstractUpdateEntryFieldSyncJob::PAYLOAD_EXECUTED_BY => $this->authUser->getId()->toRaw(),
+            ],
+        )->handle();
+
+        $this->assertDatabaseHas(
+            table: EntryFieldFixture::getTableName(),
+            param: [
+                EntryFieldFixture::ID => $id_1,
+                EntryFieldFixture::TITLE => $entryFieldPassword->title->toRaw(),
+            ],
+        );
+
+        $this->assertDatabaseHas(
+            table: EntryFieldFixture::getTableName(),
+            param: [
+                EntryFieldFixture::ID => $id_2,
+                EntryFieldFixture::TITLE => $entryFieldTotpTitleUpdated_2,
+            ],
+        );
+
+        $this->assertDatabaseHas(
+            table: EntryFieldFixture::getTableName(),
+            param: [
+                EntryFieldFixture::ID => $id_3,
+                EntryFieldFixture::TITLE => $entryFieldNoteTitleUpdated,
+            ],
+        );
+
+        $this->assertDatabaseMissing(
+            table: EntryFieldHistoryFixture::getTableName(),
+            param: [
+                EntryFieldHistoryFixture::ENTRY_FIELD_ID => $id_1,
+            ],
+        );
+
+        $this->assertDatabaseHas(
+            table: EntryFieldHistoryFixture::getTableName(),
+            param: [
+                EntryFieldHistoryFixture::ENTRY_FIELD_ID => $id_2,
+                EntryFieldHistoryFixture::TITLE => $entryFieldTotpTitleUpdated_1,
+            ],
+        );
+
+        $this->assertDatabaseHas(
+            table: EntryFieldHistoryFixture::getTableName(),
+            param: [
+                EntryFieldHistoryFixture::ENTRY_FIELD_ID => $id_2,
+                EntryFieldHistoryFixture::TITLE => $entryFieldTotpTitleUpdated_2,
+            ],
+        );
+
+        $this->assertDatabaseHas(
+            table: EntryFieldHistoryFixture::getTableName(),
+            param: [
+                EntryFieldHistoryFixture::ENTRY_FIELD_ID => $id_3,
+                EntryFieldHistoryFixture::TITLE => $entryFieldNoteTitleUpdated,
+            ],
         );
 
         $this->entryApplicationService->moveEntrySync(
@@ -284,6 +376,10 @@ class EntryApplicationServiceTest extends IntegrationTestCase
 
         $this->assertCount(3, $entryFieldEntries);
 
+        $entryFieldHistoryRepository = EntryFieldHistoryRepository::getInstance();
+
+        $this->assertCount(3, $entryFieldHistoryRepository->findAll());
+
         foreach ($entryFieldEntries as $entryFieldEntry) {
             $this->assertArrayHasKey($entryFieldEntry->id->toRaw(), $idToValue);
             $this->assertEquals(
@@ -295,6 +391,25 @@ class EntryApplicationServiceTest extends IntegrationTestCase
                     tag: $entryFieldEntry->tag->toRaw(),
                 ),
             );
+            $entryFieldHistories = $entryFieldHistoryRepository->findBy([
+                new QueryCriteria(
+                    field: EntryFieldHistoryFixture::ENTRY_FIELD_ID,
+                    value: $entryFieldEntry->id->toRaw(),
+                ),
+            ]);
+
+            foreach ($entryFieldHistories as $entryFieldHistory) {
+                $this->assertArrayHasKey($entryFieldHistory->entryFieldId->toRaw(), $idToValue);
+                $this->assertEquals(
+                    $idToValue[$entryFieldHistory->entryFieldId->toRaw()],
+                    $aesDecryptor->decrypt(
+                        cipherText: $entryFieldHistory->valueEncrypted->toRaw(),
+                        password: $targetAesPassword,
+                        iv: $entryFieldHistory->initializationVector->toRaw(),
+                        tag: $entryFieldHistory->tag->toRaw(),
+                    ),
+                );
+            }
         }
     }
 
