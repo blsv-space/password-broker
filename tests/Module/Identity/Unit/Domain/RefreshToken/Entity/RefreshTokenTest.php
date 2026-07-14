@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Identity\Unit\Domain\RefreshToken\Entity;
 
 use App\Module\Identity\Domain\RefreshToken\Entity\RefreshToken;
@@ -14,10 +16,9 @@ use Tests\Shared\UnitTestCase;
 class RefreshTokenTest extends UnitTestCase
 {
     /**
-     * @return void
      * @throws JsonException
      */
-    public function testItShouldCreateARefreshToken(): void
+    public function test_it_should_create_a_refresh_token(): void
     {
 
         $id = RefreshTokenId::generate();

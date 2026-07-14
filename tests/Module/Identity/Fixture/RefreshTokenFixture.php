@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Identity\Fixture;
 
 use App\Module\Identity\Domain\RefreshToken\Entity\RefreshToken;
@@ -22,26 +24,24 @@ class RefreshTokenFixture extends AbstractFixture
     public const string ID = RefreshTokenRepository::FIELD_ID;
 
     /**
-     * @param array $attributes
-     * @param bool $persist
      *
-     * @return RefreshToken
      *
      * @throws PersistenceException
      */
+    #[\Override]
     public static function create(array $attributes = [], bool $persist = false): RefreshToken
     {
         $refreshToken = new RefreshToken(
+            id: RefreshTokenId::fromRaw(static::generateId($attributes[self::ID] ?? RefreshTokenId::generate()->toRaw())),
             userId: UserId::fromRaw($attributes[self::USER_ID] ?? UserFixture::getId()),
             token: Token::fromRaw($attributes[self::TOKEN] ?? static::faker()->sha256()),
             expirationAt: ExpirationAt::fromRaw(
                 $attributes[self::EXPIRATION_AT]
                 ?? static::faker()->dateTimeBetween('+1 hour', '+1 day')
-                ->format(DateTime::FORMAT)
+                ->format(DateTime::FORMAT),
             ),
             createdAt: CreatedAt::fromRaw($attributes[self::CREATED_AT]
                 ?? static::faker()->dateTime()->format(DateTime::FORMAT)),
-            id: RefreshTokenId::fromRaw(static::generateId($attributes[self::ID] ?? null)),
         );
 
         if ($persist) {
@@ -52,14 +52,11 @@ class RefreshTokenFixture extends AbstractFixture
     }
 
     /**
-     * @param int $count
-     * @param array $attributes
-     * @param bool $persist
      *
-     * @return array
      *
      * @throws PersistenceException
      */
+    #[\Override]
     public static function createMany(int $count, array $attributes = [], bool $persist = true): array
     {
         $out = [];
@@ -70,9 +67,7 @@ class RefreshTokenFixture extends AbstractFixture
         return $out;
     }
 
-    /**
-     * @return string
-     */
+    #[\Override]
     public static function getTableName(): string
     {
         return RefreshTokenRepository::getTableName();

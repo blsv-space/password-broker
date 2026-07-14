@@ -1,28 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shared\Domain\ValueObject;
 
 use App\Shared\Infrastructure\Security\UuidGenerator;
 use Inquisition\Core\Domain\ValueObject\AbstractValueObject;
 use InvalidArgumentException;
-use Random\RandomException;
 
 /**
- * @property int $value
+ * @property string $value
  */
 class Id extends AbstractValueObject
 {
-    /**
-     * @return string
-     */
+    #[\Override]
     public function toRaw(): string
     {
         return $this->value;
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public static function fromRaw(mixed $data): static
     {
         static::validate($data);
@@ -30,13 +27,11 @@ class Id extends AbstractValueObject
         return new static($data);
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public static function validate(mixed $data): void
     {
         if (!is_string($data)) {
-            throw new InvalidArgumentException('Invalid data type');
+            throw new InvalidArgumentException('Invalid data type expected string, got ' . gettype($data));
         }
 
         if (!new UuidGenerator()->isValid($data)) {

@@ -1,14 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Identity\Unit\Domain\User\ValueObject;
 
 use App\Module\Identity\Domain\User\ValueObject\UserId;
-use Tests\Module\Identity\Fixture\UserFixture;
 use Tests\Shared\UnitTestCase;
 
 final class UserIdTest extends UnitTestCase
 {
-    public function testIsShouldCreateAUserId(): void
+    public function test_is_should_create_a_user_id(): void
     {
         $id = UserId::generate()->toRaw();
 

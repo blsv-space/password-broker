@@ -1,9 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Application\User\Service\Exception;
 
 use Exception;
 
-class AuthException extends Exception
-{
-}
+class AuthException extends Exception {}

@@ -1,28 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Application\User\Service;
 
 use App\Module\Identity\Application\User\Job\CreateUserSyncJob;
 use App\Module\Identity\Application\User\Job\DeleteUserSyncJob;
 use App\Module\Identity\Application\User\Job\UpdateUserSyncJob;
 use App\Module\Identity\Domain\User\Entity\User;
-use App\Module\Identity\Domain\User\Service\UserDomainService;
+use App\Module\Identity\Domain\User\Service\RsaDomainService;
+use App\Module\Identity\Domain\User\ValueObject\UserId;
+use App\Module\Identity\Infrastructure\Security\PasswordHasher;
+use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
+use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\Id;
+use App\Shared\Domain\ValueObject\UpdatedAt;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
+use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Foundation\Singleton\SingletonTrait;
 use Throwable;
 
-final class UserApplicationService
-    implements ApplicationServiceInterface
+final class UserApplicationService implements ApplicationServiceInterface
 {
-    private UserDomainService $userDomainService;
-
     use SingletonTrait;
+    private UserRepository $userRepository;
+    private PasswordHasher $passwordHasher;
 
     private function __construct()
     {
-        $this->userDomainService = UserDomainService::getInstance();
+        $this->userRepository = UserRepository::getInstance();
+        $this->passwordHasher = PasswordHasher::getInstance();
     }
 
     /**
@@ -31,61 +39,62 @@ final class UserApplicationService
     public function createUserSync(
         string $userName,
         string $password,
-    ): User
-    {
+        string $email,
+        string $masterPassword,
+        bool $isAdmin,
+    ): User {
+        $rsaKeyPair = RsaDomainService::getInstance()->generateKeyPair($masterPassword);
+        $dateTime = CreatedAt::now();
+
         return new CreateUserSyncJob([
-            'userName' => $userName,
-            'password' => $password,
+            CreateUserSyncJob::PAYLOAD_KEY_ID => UserId::generate()->toRaw(),
+            CreateUserSyncJob::PAYLOAD_KEY_USER_NAME => $userName,
+            CreateUserSyncJob::PAYLOAD_KEY_HASHED_PASSWORD => $this->passwordHasher->hash($password),
+            CreateUserSyncJob::PAYLOAD_KEY_EMAIL => $email,
+            CreateUserSyncJob::PAYLOAD_KEY_IS_ADMIN => $isAdmin,
+            CreateUserSyncJob::PAYLOAD_KEY_RSA_PRIVATE_KEY => $rsaKeyPair->privateKey,
+            CreateUserSyncJob::PAYLOAD_KEY_RSA_PUBLIC_KEY => $rsaKeyPair->publicKey,
+            CreateUserSyncJob::PAYLOAD_CREATED_AT => $dateTime->toRaw(),
+            CreateUserSyncJob::PAYLOAD_UPDATED_AT => $dateTime->toRaw(),
         ])->execute();
     }
 
     /**
-     * @param string $uuid
-     * @param string $userName
-     * @param string|null $password
      *
-     * @return User
      * @throws Throwable
      */
-    public function updateUser(
+    public function updateUserSync(
         string  $uuid,
         string  $userName,
         ?string $password = null,
-    ): User
-    {
+    ): User {
+        $dateTime = UpdatedAt::now();
+
         return new UpdateUserSyncJob([
-            'id' => $uuid,
-            'userName' => $userName,
-            'password' => $password,
+            UpdateUserSyncJob::PAYLOAD_KEY_ID => $uuid,
+            UpdateUserSyncJob::PAYLOAD_KEY_USER_NAME => $userName,
+            UpdateUserSyncJob::PAYLOAD_KEY_HASHED_PASSWORD => $password ? $this->passwordHasher->hash($password) : null,
+            UpdateUserSyncJob::PAYLOAD_UPDATED_AT => $dateTime->toRaw(),
         ])->execute();
     }
 
     /**
-     * @param string $uuid
-     * @return void
      * @throws Throwable
      */
-    public function deleteUser(string $uuid): void
+    public function deleteUserSync(string $uuid): void
     {
-        new DeleteUserSyncJob(['id' => $uuid])->execute();
+        new DeleteUserSyncJob([DeleteUserSyncJob::PAYLOAD_KEY_ID => $uuid])->execute();
     }
 
     /**
-     * @param string $uuid
-     * @return User|null
      * @throws PersistenceException
      */
-    public function getUserByUud(string $uuid): ?User
+    public function getUserByUuid(string $uuid): ?User
     {
-        return $this->userDomainService->findUserById(Id::fromRaw($uuid));
+        return $this->userRepository->findById(Id::fromRaw($uuid));
     }
 
     /**
-     * @param array $criteria
-     * @param array|null $orderBy
-     * @param int|null $limit
-     * @param int|null $offset
-     * @return array
      * @throws PersistenceException
      */
     public function getUsersBy(
@@ -93,9 +102,8 @@ final class UserApplicationService
         ?array $orderBy = null,
         ?int   $limit = null,
         ?int   $offset = null,
-    ): array
-    {
-        return $this->userDomainService->findBy(
+    ): array {
+        return $this->userRepository->findBy(
             criteria: $criteria,
             orderBy: $orderBy,
             limit: $limit,
@@ -104,12 +112,35 @@ final class UserApplicationService
     }
 
     /**
-     * @param array $criteria
-     * @return int
+     * @param  QueryCriteria[]      $criteria
      * @throws PersistenceException
      */
     public function countUsersBy(array $criteria = []): int
     {
-        return $this->userDomainService->count($criteria);
+        return $this->userRepository->count($criteria);
+    }
+
+    /**
+     * @throws PersistenceException
+     */
+    public function delete(User $user): void
+    {
+        $this->userRepository->softDelete($user);
+    }
+
+    /**
+     * @throws PersistenceException
+     */
+    public function save(User $user): void
+    {
+        $this->userRepository->save($user);
+    }
+
+    /**
+     * @throws PersistenceException
+     */
+    public function update(User $user): void
+    {
+        $this->userRepository->updateById($user);
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Identity\Integration\Infrastructure\User\Repository;
 
 use App\Module\Identity\Infrastructure\User\Repository\RefreshTokenRepository;
@@ -13,6 +15,7 @@ class RefreshTokenRepositoryTest extends IntegrationTestCase
 {
     private RefreshTokenRepository $repository;
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -20,10 +23,9 @@ class RefreshTokenRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      */
-    public function testItCanSaveARefreshToken(): void
+    public function test_it_can_save_a_refresh_token(): void
     {
         $token = $this->faker->sha256();
 
@@ -34,10 +36,9 @@ class RefreshTokenRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      */
-    public function testItCanFindARefreshTokenByUser(): void
+    public function test_it_can_find_a_refresh_token_by_user(): void
     {
         $user = UserFixture::create(persist: true);
 
@@ -51,15 +52,14 @@ class RefreshTokenRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      */
-    public function testItCanCleanExpiredRefreshTokens(): void
+    public function test_it_can_clean_expired_refresh_tokens(): void
     {
         RefreshTokenFixture::create(
             attributes: [RefreshTokenFixture::EXPIRATION_AT => $this->faker->dateTime('-1 hour')
                 ->format(DateTime::FORMAT)],
-            persist: true
+            persist: true,
         );
         RefreshTokenFixture::create(persist: true);
 

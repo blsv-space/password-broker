@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Identity\Functional\Infrastructure\Http\Controller;
 
+use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
 use App\Module\Identity\Infrastructure\Http\Controller\UserController;
 use App\Module\Identity\Infrastructure\Http\Route\IdentityRoute;
 use App\Module\Identity\Infrastructure\Http\Route\UserRoute;
@@ -20,6 +23,10 @@ class UserControllerTest extends FunctionalTestCase
 {
     private array $routePath;
 
+    /**
+     * @throws PersistenceException
+     */
+    #[\Override]
     public function setUp(): void
     {
         parent::setUp();
@@ -33,12 +40,12 @@ class UserControllerTest extends FunctionalTestCase
 
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws RouteNotFoundException
      * @throws ReflectionException
+     * @throws RsaDomainServiceException
      */
-    public function testItShouldListUsers(): void
+    public function test_it_should_list_users(): void
     {
         $userNumber = $this->faker->numberBetween(3, 10);
         $this->actAs(UserFixture::createMany($userNumber, persist: true)[0]);
@@ -76,12 +83,12 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
-    public function testItShouldFoundUser(): void
+    public function test_it_should_found_user(): void
     {
         $userNameTarget = 'aaaaa';
         $userName_1 = 'bbbbb';
@@ -113,6 +120,8 @@ class UserControllerTest extends FunctionalTestCase
             queryParams: [
                 AbstractRestController::PER_PAGE_PARAM => 20,
                 AbstractRestController::PAGE_PARAM => 1,
+            ],
+            filterParams: [
                 UserFixture::USER_NAME => $userNameTarget,
             ],
         );
@@ -136,12 +145,12 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
-    public function testItShouldCreateUser(): void
+    public function test_it_should_create_user(): void
     {
         $userActor = UserFixture::create(persist: true);
         $userForCreating = UserFixture::create();
@@ -159,9 +168,11 @@ class UserControllerTest extends FunctionalTestCase
             body: [
                 UserFixture::USER_NAME => $userForCreating->userName->toRaw(),
                 UserController::FIELD_PASSWORD => $this->faker->password(),
-            ]
+                UserController::FIELD_MASTER_PASSWORD => $this->faker->password(),
+                UserController::FIELD_EMAIL => $this->faker->email(),
+                UserController::FIELD_IS_ADMIN => $this->faker->boolean(),
+            ],
         );
-
         $this->assertEquals(HttpStatusCode::CREATED, $httpResponse->getStatusCode());
 
         $this->assertDatabaseHas(UserFixture::getTableName(), [
@@ -170,12 +181,12 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
-    public function testItShouldShowUser(): void
+    public function test_it_should_show_user(): void
     {
         $user = UserFixture::create(persist: true);
         $this->actAs($user);
@@ -204,12 +215,12 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
-    public function testItShouldNotShowUserHashedPassword(): void
+    public function test_it_should_not_show_user_hashed_password(): void
     {
         $user = UserFixture::create(persist: true);
         $this->actAs($user);
@@ -238,12 +249,12 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
      */
-    public function testItShouldUpdateUser(): void
+    public function test_it_should_update_user(): void
     {
         $user = UserFixture::create(persist: true);
         $this->actAs($user);
@@ -265,7 +276,7 @@ class UserControllerTest extends FunctionalTestCase
             uri: $uri,
             body: [
                 UserFixture::USER_NAME => $newUserName,
-            ]
+            ],
         );
 
         $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
@@ -279,12 +290,11 @@ class UserControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
      */
-    public function testItShouldDeleteUser(): void
+    public function test_it_should_delete_user(): void
     {
         $user = UserFixture::create(persist: true);
         $this->actAs($user);
@@ -306,6 +316,12 @@ class UserControllerTest extends FunctionalTestCase
         );
 
         $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
-        $this->assertDatabaseMissing(UserFixture::getTableName(), [UserFixture::ID => $user->id->toRaw()]);
+        $this->assertDatabaseMissing(
+            table: UserFixture::getTableName(),
+            param: [
+                UserFixture::ID => $user->id->toRaw(),
+                UserFixture::DELETED_AT => null,
+            ],
+        );
     }
 }

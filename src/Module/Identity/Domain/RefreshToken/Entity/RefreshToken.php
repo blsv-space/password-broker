@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Domain\RefreshToken\Entity;
 
 use App\Module\Identity\Domain\RefreshToken\ValueObject\ExpirationAt;
@@ -13,23 +15,24 @@ use Inquisition\Core\Domain\ValueObject\ValueObjectInterface;
 class RefreshToken extends BaseEntityWithId
 {
     public function __construct(
-        public UserId          $userId,
-        public Token           $token,
-        public ExpirationAt    $expirationAt,
-        public CreatedAt       $createdAt,
-        public ?RefreshTokenId $id = null {
+        public RefreshTokenId $id {
             get {
                 return $this->id;
             }
         },
+        public UserId          $userId,
+        public Token           $token,
+        public ExpirationAt    $expirationAt,
+        public CreatedAt       $createdAt,
     )
     {
     }
 
     /**
-     * @return RefreshTokenId|null
+     * @return RefreshTokenId
      */
-    public function getId(): ?ValueObjectInterface
+    #[\Override]
+    public function getId(): ValueObjectInterface
     {
         return $this->id;
     }

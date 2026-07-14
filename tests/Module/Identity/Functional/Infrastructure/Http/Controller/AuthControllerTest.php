@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Identity\Functional\Infrastructure\Http\Controller;
 
-use App\Module\Identity\Domain\User\Service\AuthDomainService;
 use App\Module\Identity\Infrastructure\Http\Controller\AuthController;
 use App\Module\Identity\Infrastructure\Http\Route\AuthRoute;
 use App\Module\Identity\Infrastructure\Http\Route\IdentityRoute;
+use App\Module\Identity\Infrastructure\Security\PasswordHasher;
 use App\Shared\Infrastructure\Http\Route\AppRoute;
 use Inquisition\Core\Infrastructure\Http\HttpStatusCode;
 use Inquisition\Core\Infrastructure\Http\Router\Exception\RouteNotFoundException;
@@ -20,6 +22,7 @@ class AuthControllerTest extends FunctionalTestCase
 {
     private array $routePath;
 
+    #[\Override]
     public function setUp(): void
     {
         parent::setUp();
@@ -32,15 +35,14 @@ class AuthControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws RouteNotFoundException
      * @throws PersistenceException
      */
-    public function testItShouldLogin(): void
+    public function test_it_should_login(): void
     {
         $userName = $this->faker->userName();
         $password = $this->faker->password();
-        $hashedPassword = AuthDomainService::getInstance()->hashPassword($password);
+        $hashedPassword = PasswordHasher::getInstance()->hash($password);
         $user = UserFixture::create(
             attributes: [
                 UserFixture::USER_NAME => $userName,
@@ -78,11 +80,10 @@ class AuthControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws RouteNotFoundException
      */
-    public function testItShouldNotLoginWithoutPassword(): void
+    public function test_it_should_not_login_without_password(): void
     {
         $userName = $this->faker->userName();
         UserFixture::create(
@@ -111,12 +112,11 @@ class AuthControllerTest extends FunctionalTestCase
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws RouteNotFoundException
      * @throws ReflectionException
      */
-    public function testItShouldLogout(): void
+    public function test_it_should_logout(): void
     {
         $user = UserFixture::create(persist: true);
         $this->actAs($user);
@@ -141,17 +141,16 @@ class AuthControllerTest extends FunctionalTestCase
         $this->assertEquals(HttpStatusCode::NO_CONTENT, $httpResponse->getStatusCode());
         $this->assertDatabaseMissing(
             table: RefreshTokenFixture::getTableName(),
-            param: [RefreshTokenFixture::USER_ID => $user->id],
+            param: [RefreshTokenFixture::USER_ID => $user->id->toRaw()],
         );
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      * @throws ReflectionException
      * @throws RouteNotFoundException
      */
-    public function testItShouldRefreshToken(): void
+    public function test_it_should_refresh_token(): void
     {
         $user = UserFixture::create(persist: true);
         $this->actAs($user);

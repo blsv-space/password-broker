@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Module\Identity\Application\User\Service\Exception;
+declare(strict_types=1);
 
-use JetBrains\PhpStorm\Pure;
+namespace App\Module\Identity\Application\User\Service\Exception;
 
 class AuthUserNotFoundException extends AuthException
 {
-    #[Pure]
     public function __construct(string $username)
     {
         parent::__construct('User not found: ' . $username);

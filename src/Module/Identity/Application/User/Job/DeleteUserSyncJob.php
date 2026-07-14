@@ -1,30 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Application\User\Job;
 
 use App\Module\Identity\Application\User\Event\UserDeletedEvent;
-use App\Module\Identity\Domain\User\Service\UserDomainService;
-use App\Module\Identity\Domain\User\ValueObject\UserId;
-use Inquisition\Core\Application\Job\AbstractSyncJob;
+use App\Module\Identity\Application\User\Service\UserApplicationService;
+use App\Module\Identity\Infrastructure\User\Repository\UserRepository;
+use App\Shared\Application\Job\AbstractReplicableSyncJob;
 use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 use InvalidArgumentException;
 use Throwable;
 
-class DeleteUserSyncJob extends AbstractSyncJob
+class DeleteUserSyncJob extends AbstractReplicableSyncJob
 {
+    public const string PAYLOAD_KEY_ID = UserRepository::FIELD_ID;
+
     /**
-     * @return void
      * @throws Throwable
      */
+    #[\Override]
     public function handle(): void
     {
-        $userDomainService = UserDomainService::getInstance();
-        $user = $userDomainService->findUserById(UserId::fromRaw($this->payload['id']));
+        $userApplicationService = UserApplicationService::getInstance();
+        $user = $userApplicationService->getUserByUuid($this->payload['id']);
         if (!$user) {
             throw new InvalidArgumentException('User not found');
         }
 
-        $userDomainService->delete($user);
+        $userApplicationService->delete($user);
 
         EventDispatcher::getInstance()->dispatch(new UserDeletedEvent($user));
     }

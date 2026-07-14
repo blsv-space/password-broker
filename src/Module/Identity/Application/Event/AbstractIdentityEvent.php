@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Application\Event;
 
 use DateTimeImmutable;
@@ -14,17 +16,13 @@ readonly class AbstractIdentityEvent implements EventInterface
         $this->occurredOn = new DateTimeImmutable();
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function getOccurredOn(): DateTimeImmutable
     {
         return $this->occurredOn;
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function getEventName(): string
     {
         return 'identity';

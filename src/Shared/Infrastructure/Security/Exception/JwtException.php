@@ -1,9 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shared\Infrastructure\Security\Exception;
 
 use Exception;
 
-class JwtException extends Exception
-{
-}
+class JwtException extends Exception {}

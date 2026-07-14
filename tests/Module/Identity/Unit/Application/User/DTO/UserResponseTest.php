@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Identity\Unit\Application\User\DTO;
 
 use App\Module\Identity\Application\User\DTO\UserResponse;
@@ -10,10 +12,9 @@ use Tests\Shared\UnitTestCase;
 class UserResponseTest extends UnitTestCase
 {
     /**
-     * @return void
      * @throws PersistenceException
      */
-    public function testItShouldCreateAUserResponse(): void
+    public function test_it_should_create_a_user_response(): void
     {
         $user = UserFixture::create();
 

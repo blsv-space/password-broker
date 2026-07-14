@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Shared;
 
 use App\Module\Identity\Application\User\Service\AuthApplicationService;
@@ -12,6 +14,7 @@ use Inquisition\Core\Infrastructure\Persistence\DatabaseConnections;
 use Inquisition\Core\Infrastructure\Persistence\DatabaseManagerFactory;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Foundation\Config\Config;
+use Inquisition\Foundation\Storage\StorageRegistry;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use ReflectionProperty;
@@ -22,28 +25,32 @@ abstract class AbstractTestCase extends TestCase
     protected Generator $faker;
 
     /**
-     * @return void
+     * @throws PersistenceException
      */
+    #[\Override]
     protected function tearDown(): void
     {
+        BootTestHelper::boot();
+
         parent::tearDown();
     }
 
     /**
-     * @return void
+     * @throws PersistenceException
      */
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->flushDatabase();
+        $this->resetFixtures();
 
         $this->faker = Factory::create();
     }
 
     /**
-     * @param $table
-     * @param array $param
-     * @param string|null $connectionName
-     * @return void
+     * @throws PersistenceException
      */
     protected function assertDatabaseHas($table, array $param = [], ?string $connectionName = null): void
     {
@@ -54,11 +61,14 @@ abstract class AbstractTestCase extends TestCase
             sprintf(
                 'Failed asserting that table [%s] contains row with data: %s',
                 $table,
-                json_encode($param)
-            )
+                json_encode($param),
+            ),
         );
     }
 
+    /**
+     * @throws PersistenceException
+     */
     private function databaseHas($table, array $param = [], ?string $connectionName = null): bool
     {
         $databaseConnections = DatabaseConnections::getInstance();
@@ -72,21 +82,37 @@ abstract class AbstractTestCase extends TestCase
 
         $where = '';
         if (count($param) > 0) {
-            $where = ' WHERE ' . implode(' AND ', array_map(fn(string $field) => "`$field` = :$field", array_keys($param)));
+            $where = ' WHERE ';
+            $queryParams = [];
+            foreach ($param as $key => $value) {
+                if (!is_string($key)) {
+                    throw new PersistenceException('Invalid parameter key type');
+                }
+                if (is_bool($value)) {
+                    $value = (int) $value;
+                }
+                if (!is_string($value) && !is_numeric($value) && !is_null($value)) {
+                    throw new PersistenceException('Invalid parameter value type');
+                }
+                if (is_null($value)) {
+                    $queryParams[] = "`$key` IS NULL";
+                    unset($param[$key]);
+                    continue;
+                }
+                $queryParams[] = "`$key` = :$key";
+            }
+            $where .= implode(' AND ', $queryParams);
         }
 
         $statement = $databaseConnection->connect()->prepare("SELECT COUNT(*) FROM `$table` $where");
         $statement->execute($param);
-        $count = (int)$statement->fetchColumn();
+        $count = (int) $statement->fetchColumn();
 
         return $count > 0;
     }
 
     /**
-     * @param $table
-     * @param array $param
-     * @param string|null $connectionName
-     * @return void
+     * @throws PersistenceException
      */
     protected function assertDatabaseMissing($table, array $param = [], ?string $connectionName = null): void
     {
@@ -97,13 +123,12 @@ abstract class AbstractTestCase extends TestCase
             sprintf(
                 'Failed asserting that table [%s] does not contain row with data: %s',
                 $table,
-                json_encode($param)
-            )
+                json_encode($param),
+            ),
         );
     }
 
     /**
-     * @return void
      * @throws PersistenceException
      */
     public function flushDatabase(): void
@@ -130,17 +155,12 @@ abstract class AbstractTestCase extends TestCase
         );
     }
 
-    /**
-     * @return void
-     */
     public function resetFixtures(): void
     {
         FixtureRegister::reset();
     }
 
     /**
-     * @param User $user
-     * @return void
      * @throws ReflectionException
      */
     public function actAs(User $user): void
@@ -149,4 +169,9 @@ abstract class AbstractTestCase extends TestCase
         new ReflectionProperty($authApplicationService, 'authUser')->setValue($authApplicationService, $user);
     }
 
+    public function cleanUpStorage(): void
+    {
+        $storage = StorageRegistry::getInstance()->storage('local');
+        $storage->deleteDirectoryByPath('');
+    }
 }

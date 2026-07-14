@@ -1,17 +1,22 @@
 {
   "name": "blsv-space/password-broker",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "type": "project",
   "description": "Password Broker - server side application",
   "license": "MIT",
   "require": {
     "php": "^8.5",
     "ext-pdo": "*",
-    "blsv-space/inquisition-php": "^0.2.0"
+    "ext-rdkafka": "*",
+    "ext-openssl": "*",
+    "blsv-space/inquisition-php": "0.4.11"
   },
   "require-dev": {
     "fakerphp/faker": "1.24",
-    "phpunit/phpunit": "12.4"
+    "phpunit/phpunit": "12.*",
+    "vimeo/psalm": "^6.15",
+    "friendsofphp/php-cs-fixer": "^3.93",
+    "psalm/plugin-phpunit": "^0.19.5"
   },
   "autoload": {
     "psr-4": {
@@ -26,9 +31,12 @@
   ],
   "scripts": {
     "test": "phpunit",
+    "test-coverage": "phpunit --coverage-html=coverage",
+    "test-display-all": "phpunit --display-all-issues",
     "generate-secrets": [
       "@php -r \"file_exists('.env') || copy('.env.default', '.env');\"",
       "@php -r \"file_exists('.env.test') || copy('.env.test.default', '.env.test');\"",
+      "@php -r \"file_exists('.env.docker') || copy('.env.docker.default', '.env.docker');\"",
       "@php scripts/generate-secrets.php",
       "@php -r \"echo '\\n\\033[32mProject created successfully!\\033[0m\\n';\"",
       "@php -r \"echo '\\n\\033[33mNext steps:\\033[0m\\n';\"",
@@ -36,11 +44,13 @@
       "@php -r \"echo '2. Configure your .env file\\n';\"",
       "@php -r \"echo '3. Run ./console to see available commands\\n\\n';\""
     ],
-    "post-create-project-cmd": [
+    "post-install-cmd": [
       "@generate-secrets"
-    ]
+    ],
+    "psalm": "psalm",
+    "cs:check": "php-cs-fixer fix --dry-run --diff",
+    "cs:fix": "php-cs-fixer fix"
   },
-
   "config": {
     "optimize-autoloader": true,
     "preferred-install": "dist",

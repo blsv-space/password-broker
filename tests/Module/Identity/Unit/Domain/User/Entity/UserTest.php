@@ -1,11 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Module\Identity\Unit\Domain\User\Entity;
 
 use App\Module\Identity\Domain\User\Entity\User;
+use App\Module\Identity\Domain\User\ValueObject\Email;
 use App\Module\Identity\Domain\User\ValueObject\HashedPassword;
+use App\Module\Identity\Domain\User\ValueObject\IsAdmin;
 use App\Module\Identity\Domain\User\ValueObject\UserId;
 use App\Module\Identity\Domain\User\ValueObject\UserName;
+use App\Module\Identity\Domain\User\ValueObject\UserPublicKey;
 use App\Shared\Domain\ValueObject\CreatedAt;
 use App\Shared\Domain\ValueObject\DateTime;
 use App\Shared\Domain\ValueObject\UpdatedAt;
@@ -13,8 +18,7 @@ use Tests\Shared\UnitTestCase;
 
 final class UserTest extends UnitTestCase
 {
-
-    public function testItShouldCreateAUser(): void
+    public function test_it_should_create_a_user(): void
     {
         $id = UserId::generate()->toRaw();
         $name = $this->faker->userName();
@@ -23,9 +27,12 @@ final class UserTest extends UnitTestCase
         $updateAt = $this->faker->dateTime();
 
         $user = new User(
+            id: UserId::fromRaw($id),
             userName: UserName::fromRaw($name),
             hashedPassword: HashedPassword::fromRaw($password),
-            id: UserId::fromRaw($id),
+            isAdmin: IsAdmin::fromRaw($this->faker->boolean()),
+            email: Email::fromRaw($this->faker->email()),
+            publicKey: UserPublicKey::fromRaw($this->faker->sha256()),
             createdAt: CreatedAt::fromDateTime($createdAt),
             updatedAt: UpdatedAt::fromDateTime($updateAt),
         );
@@ -35,11 +42,11 @@ final class UserTest extends UnitTestCase
         $this->assertEquals($password, $user->hashedPassword->toRaw());
         $this->assertEquals(
             $createdAt->format(DateTime::FORMAT),
-            $user->createdAt->toDateTime()->format(DateTime::FORMAT)
+            $user->createdAt->toDateTime()->format(DateTime::FORMAT),
         );
         $this->assertEquals(
             $updateAt->format(DateTime::FORMAT),
-            $user->updatedAt->toDateTime()->format(DateTime::FORMAT)
+            $user->updatedAt->toDateTime()->format(DateTime::FORMAT),
         );
     }
 

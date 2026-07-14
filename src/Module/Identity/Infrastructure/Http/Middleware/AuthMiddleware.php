@@ -1,14 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Infrastructure\Http\Middleware;
 
 use App\Module\Identity\Application\User\Service\AuthApplicationService;
+use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
+use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use Inquisition\Core\Infrastructure\Http\Middleware\MiddlewareInterface;
 use Inquisition\Core\Infrastructure\Http\Request\RequestInterface;
 use Inquisition\Core\Infrastructure\Http\Response\ResponseFactory;
 use Inquisition\Core\Infrastructure\Http\Response\ResponseInterface;
+use Inquisition\Core\Infrastructure\Http\Router\RouteInterface;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use JsonException;
+use Override;
 
 final readonly class AuthMiddleware implements MiddlewareInterface
 {
@@ -20,13 +26,13 @@ final readonly class AuthMiddleware implements MiddlewareInterface
     }
 
     /**
-     * @param RequestInterface $request
-     * @param callable $next
-     * @return ResponseInterface
-     * @throws PersistenceException
      * @throws JsonException
+     * @throws PersistenceException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
      */
-    public function process(RequestInterface $request, callable $next): ResponseInterface
+    #[Override]
+    public function process(RequestInterface $request, RouteInterface $route, callable $next): ResponseInterface
     {
         if ($this->authApplicationService->authUser()) {
             return $next($request);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shared\Infrastructure\Security;
 
 use App\Shared\Domain\Service\UuidGeneratorInterface;
@@ -7,27 +9,18 @@ use Exception;
 
 class UuidGenerator implements UuidGeneratorInterface
 {
-
-    /**
-     * @return string
-     */
+    #[\Override]
     public function generate(): string
     {
         return $this->generateUuidV7();
     }
 
-    /**
-     * @param string $uuid
-     * @return bool
-     */
+    #[\Override]
     public function isValid(string $uuid): bool
     {
         return $this->validateV7($uuid);
     }
 
-    /**
-     * @return string
-     */
     private function generateUuidV7(): string
     {
         $ts = (int) floor(microtime(true) * 1000.0);
@@ -57,24 +50,20 @@ class UuidGenerator implements UuidGeneratorInterface
             $time_hi_and_version,
             $clock_seq_hi,
             $clock_seq_low,
-            strtolower($nodeHex)
+            strtolower($nodeHex),
         );
     }
 
-    /**
-     * @param string $uuid
-     * @return bool
-     */
     private function validateV7(string $uuid): bool
     {
         if (strlen($uuid) !== 36) {
             return false;
         }
 
-        if ($uuid[8] !== '-' ||
-            $uuid[13] !== '-' ||
-            $uuid[18] !== '-' ||
-            $uuid[23] !== '-') {
+        if ($uuid[8] !== '-'
+            || $uuid[13] !== '-'
+            || $uuid[18] !== '-'
+            || $uuid[23] !== '-') {
             return false;
         }
 
@@ -101,10 +90,6 @@ class UuidGenerator implements UuidGeneratorInterface
         return true;
     }
 
-    /**
-     * @param int $bytes
-     * @return string
-     */
     private function randomHex(int $bytes): string
     {
         try {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Shared\Infrastructure\Security\JwtAlgoEnum;
 use Inquisition\Foundation\Config\Config;
 
@@ -18,5 +20,6 @@ $config->merge([
             'secret' => null,
             'algo' => JwtAlgoEnum::HS256->value,
         ],
-    ]
+        'storage_key_path' => 'keys',
+    ],
 ]);

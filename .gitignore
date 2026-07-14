@@ -3,6 +3,7 @@
 .env
 .env.test
 .env.backup
+.env.docker
 .phpunit.result.cache
 /.phpunit.cache
 /.idea
@@ -10,3 +11,4 @@
 *.rnd
 
 /var
+/.php-cs-fixer.cache

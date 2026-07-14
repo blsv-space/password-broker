@@ -1,0 +1,347 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Module\PasswordBroker\Application\Entry\Service;
+
+use App\Module\Identity\Application\User\Service\AuthApplicationService;
+use App\Module\Identity\Application\User\Service\Exception\AuthException;
+use App\Module\Identity\Domain\User\Entity\User;
+use App\Module\Identity\Domain\User\Service\Exception\RsaDomainServiceException;
+use App\Module\Identity\Domain\User\Service\RsaDomainService;
+use App\Module\PasswordBroker\Application\Entry\Job\CreateEntrySyncJob;
+use App\Module\PasswordBroker\Application\Entry\Job\DeleteEntrySyncJob;
+use App\Module\PasswordBroker\Application\Entry\Job\MoveEntrySyncJob;
+use App\Module\PasswordBroker\Application\Entry\Job\RenameEntrySyncJob;
+use App\Module\PasswordBroker\Application\EntryField\Job\AbstractUpdateEntryFieldSyncJob;
+use App\Module\PasswordBroker\Application\EntryField\Job\UpdateEntryFieldEncryptedValueSyncJob;
+use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\AbstractUpdateEntryFieldHistorySyncJob;
+use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\UpdateEntryFieldHistoryEncryptedValueSyncJob;
+use App\Module\PasswordBroker\Domain\Entry\Entity\Entry;
+use App\Module\PasswordBroker\Domain\Entry\ValueObject\EntryId;
+use App\Module\PasswordBroker\Domain\EntryGroup\Entity\EntryGroup;
+use App\Module\PasswordBroker\Domain\EntryGroup\ValueObject\EntryGroupId;
+use App\Module\PasswordBroker\Infrastructure\Entry\Repository\EntryRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryFieldHistory\Repository\EntryFieldHistoryRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroup\Repository\EntryGroupRepository;
+use App\Module\PasswordBroker\Infrastructure\EntryGroupUser\Repository\EntryGroupUserRepository;
+use App\Shared\Domain\Security\Encryption\Exception\DecryptionException;
+use App\Shared\Domain\Security\Encryption\Exception\EncryptionException;
+use App\Shared\Domain\ValueObject\CreatedAt;
+use App\Shared\Domain\ValueObject\UpdatedAt;
+use App\Shared\Infrastructure\Security\Encryption\AesDecryptor;
+use App\Shared\Infrastructure\Security\Encryption\AesEncryptor;
+use App\Shared\Infrastructure\Security\Encryption\InitialVectorProvider;
+use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
+use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
+use Inquisition\Core\Application\Service\ApplicationServiceInterface;
+use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
+use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
+use Inquisition\Core\Infrastructure\Persistence\Repository\QueryOperatorEnum;
+use Inquisition\Foundation\Singleton\SingletonTrait;
+use InvalidArgumentException;
+use RuntimeException;
+use Throwable;
+
+class EntryApplicationService implements ApplicationServiceInterface
+{
+    use SingletonTrait;
+    private EntryRepository $entryRepository;
+    private EntryGroupRepository $entryGroupRepository;
+    private EntryGroupUserRepository $entryGroupUserRepository;
+    private EntryFieldRepository $entryFieldRepository;
+    private EntryFieldHistoryRepository $entryFieldHistoryRepository;
+    private RsaDomainService $rsaDomainService;
+
+    private function __construct()
+    {
+        $this->entryRepository = EntryRepository::getInstance();
+        $this->entryGroupRepository = EntryGroupRepository::getInstance();
+        $this->entryGroupUserRepository = EntryGroupUserRepository::getInstance();
+        $this->entryFieldRepository = EntryFieldRepository::getInstance();
+        $this->entryFieldHistoryRepository = EntryFieldHistoryRepository::getInstance();
+        $this->rsaDomainService = RsaDomainService::getInstance();
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function createEntrySync(
+        string     $title,
+        EntryGroup $entryGroup,
+    ): Entry {
+
+        return new CreateEntrySyncJob([
+            CreateEntrySyncJob::PAYLOAD_KEY_ID => EntryGroupId::generate()->toRaw(),
+            CreateEntrySyncJob::PAYLOAD_KEY_TITLE => $title,
+            CreateEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            CreateEntrySyncJob::PAYLOAD_CREATED_AT => CreatedAt::now()->toRaw(),
+        ])->execute();
+    }
+
+    /**
+     * @throws PersistenceException
+     * @throws Throwable
+     */
+    public function createEntryFromPrimitivesSync(
+        string $title,
+        string $entryGroupId,
+    ): Entry {
+        $entryGroup = $this->entryGroupRepository->findById(EntryId::fromRaw($entryGroupId));
+
+        if (!$entryGroup) {
+            throw new InvalidArgumentException("Entry Group with id $entryGroupId not found");
+        }
+
+        return $this->createEntrySync(
+            title: $title,
+            entryGroup: $entryGroup,
+        );
+    }
+
+    /**
+     * @throws PersistenceException
+     */
+    public function renameEntrySync(string $uuid, string $title): Entry
+    {
+        return new RenameEntrySyncJob([
+            RenameEntrySyncJob::PAYLOAD_KEY_ID => $uuid,
+            RenameEntrySyncJob::PAYLOAD_KEY_TITLE => $title,
+            RenameEntrySyncJob::PAYLOAD_UPDATED_AT => UpdatedAt::now()->toRaw(),
+        ])->handle();
+    }
+
+    /**
+     * @throws PersistenceException
+     */
+    public function deleteEntrySync(string $uuid): Entry
+    {
+
+        return new DeleteEntrySyncJob([
+            DeleteEntrySyncJob::PAYLOAD_KEY_ID => $uuid,
+        ])->handle();
+    }
+
+
+    /**
+     * @throws JwtTokenExpiredException
+     * @throws JwtInvalidTokenException
+     * @throws AuthException
+     * @throws RsaDomainServiceException
+     * @throws PersistenceException
+     * @throws DecryptionException
+     */
+    public function moveEntrySync(string $uuid, string $targetUuid, string $authUserMasterPassword): Entry
+    {
+        $authUser = $this->getAuthUser();
+        $entry = $this->entryRepository->findById(EntryId::fromRaw($uuid));
+        if (!$entry) {
+            throw new InvalidArgumentException("Entry with id $uuid not found");
+        }
+        $entryGroup = $this->entryGroupRepository->findById($entry->entryGroupId);
+        if (!$entryGroup) {
+            throw new InvalidArgumentException("Entry Group of Entry with id $uuid not found");
+        }
+        $entryGroupTarget = $this->entryGroupRepository->findById(EntryGroupId::fromRaw($targetUuid));
+        if (!$entryGroupTarget) {
+            throw new InvalidArgumentException("Entry Group with id $targetUuid not found");
+        }
+        $entryGroupUser = $this->entryGroupUserRepository->findByUserIdAndEntryGroupId($authUser->id, $entryGroup->id);
+        if (!$entryGroupUser) {
+            throw new InvalidArgumentException("User is not in Origin Entry Group with id $entryGroup->id");
+        }
+        $entryGroupUserTarget = $this->entryGroupUserRepository->findByUserIdAndEntryGroupId($authUser->id, $entryGroupTarget->id);
+        if (!$entryGroupUserTarget) {
+            throw new InvalidArgumentException("User is not in Target Entry Group with id $entryGroupTarget->id");
+        }
+
+        $authUserPrivateKey = $this->rsaDomainService->getUserPrivateKey(
+            userId: $authUser->id,
+            masterPassword: $authUserMasterPassword,
+        );
+
+        $originAesPassword = $this->rsaDomainService->decryptByPrivate(
+            data: $entryGroupUser->encryptedAesPassword->toRaw(),
+            privateKey: $authUserPrivateKey,
+        );
+
+        $targetAesPassword = $this->rsaDomainService->decryptByPrivate(
+            data: $entryGroupUserTarget->encryptedAesPassword->toRaw(),
+            privateKey: $authUserPrivateKey,
+        );
+
+        $this->entryRepository->beginTransaction();
+
+        $updatedAt = UpdatedAt::now()->toRaw();
+        $jobResponse = new MoveEntrySyncJob([
+            MoveEntrySyncJob::PAYLOAD_KEY_ID => $uuid,
+            MoveEntrySyncJob::PAYLOAD_KEY_ENTRY_GROUP_TARGET_ID => $targetUuid,
+            MoveEntrySyncJob::PAYLOAD_UPDATED_AT => $updatedAt,
+        ])->handle();
+
+        $aesEncryptor = AesEncryptor::getInstance();
+        $aesDecryptor = AesDecryptor::getInstance();
+        $initialVectorProvider = InitialVectorProvider::getInstance();
+
+        $entryFields = $this->entryFieldRepository->findBy([
+            new QueryCriteria(
+                field: EntryFieldRepository::FIELD_ENTRY_ID,
+                value: $uuid,
+                operator: QueryOperatorEnum::EQUALS,
+            ),
+        ]);
+        try {
+            foreach ($entryFields as $entryField) {
+                $entryFieldHistories = $this->entryFieldHistoryRepository->findBy([
+                    new QueryCriteria(
+                        field: EntryFieldHistoryRepository::FIELD_ENTRY_FIELD_ID,
+                        value: $entryField->id->toRaw(),
+                    ),
+                ]);
+
+                foreach ($entryFieldHistories as $entryFieldHistory) {
+                    $decryptedHistoryValue = $aesDecryptor->decrypt(
+                        cipherText: $entryFieldHistory->valueEncrypted->toRaw(),
+                        password: $originAesPassword,
+                        iv: $entryFieldHistory->initializationVector->toRaw(),
+                        tag: $entryFieldHistory->tag->toRaw(),
+                    );
+
+                    $ivHistory = $initialVectorProvider->getInitialVector();
+                    $encryptedHistoryValue = $aesEncryptor->encrypt(
+                        data: $decryptedHistoryValue,
+                        password: $targetAesPassword,
+                        iv: $ivHistory,
+                    );
+
+                    new UpdateEntryFieldHistoryEncryptedValueSyncJob([
+                        AbstractUpdateEntryFieldHistorySyncJob::PAYLOAD_KEY_ID => $entryFieldHistory->id->toRaw(),
+                        AbstractUpdateEntryFieldHistorySyncJob::PAYLOAD_KEY_VALUE_ENCRYPTED => $encryptedHistoryValue->encryptedData,
+                        AbstractUpdateEntryFieldHistorySyncJob::PAYLOAD_KEY_INITIALIZATION_VECTOR => $ivHistory,
+                        AbstractUpdateEntryFieldHistorySyncJob::PAYLOAD_KEY_TAG => $encryptedHistoryValue->tag,
+                    ])->handle();
+                }
+
+                $decryptedValue = $aesDecryptor->decrypt(
+                    cipherText: $entryField->valueEncrypted->toRaw(),
+                    password: $originAesPassword,
+                    iv: $entryField->initializationVector->toRaw(),
+                    tag: $entryField->tag->toRaw(),
+                );
+                $iv = $initialVectorProvider->getInitialVector();
+
+                $encryptedValue = $aesEncryptor->encrypt(
+                    data: $decryptedValue,
+                    password: $targetAesPassword,
+                    iv: $iv,
+                );
+
+                new UpdateEntryFieldEncryptedValueSyncJob([
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_ID => $entryField->id->toRaw(),
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_TITLE => $entryField->title->toRaw(),
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_VALUE_ENCRYPTED => $encryptedValue->encryptedData,
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_INITIALIZATION_VECTOR => $iv,
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_TAG => $encryptedValue->tag,
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_UPDATED_AT => $updatedAt,
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_UPDATED_BY => $authUser->id->toRaw(),
+                    AbstractUpdateEntryFieldSyncJob::PAYLOAD_EXECUTED_BY => $authUser->id->toRaw(),
+                ])->handle();
+            }
+        } catch (EncryptionException $e) {
+            $this->entryRepository->rollback();
+            throw new RuntimeException(
+                'Failed to reencrypt entry fields with new Entry Group AES password: ' . $e->getMessage(),
+                0,
+                $e,
+            );
+        }
+
+        $this->entryRepository->commit();
+
+
+        return $jobResponse;
+    }
+
+    /**
+     * @param QueryCriteria[] $criteria
+     *
+     * @throws PersistenceException
+     */
+    public function search(string $query, ?array $criteria = [], ?array $orderBy = null, ?int $limit = null): array
+    {
+        $query = trim($query);
+        $queryParts = explode(' ', $query)
+                |> (fn($x) => array_map('trim', $x))
+                |> array_filter(...);
+        $query = count($queryParts) > 0
+            ? '%' . implode('%', $queryParts) . '%'
+            : '';
+
+        return $this->entryRepository->findBy(
+            criteria: [
+                ...$criteria ?? [],
+                new QueryCriteria(
+                    field: EntryRepository::FIELD_TITLE,
+                    value: $query,
+                    operator: QueryOperatorEnum::LIKE,
+                ),
+            ],
+            orderBy: $orderBy,
+            limit: $limit,
+        );
+    }
+
+    /**
+     * @throws PersistenceException
+     */
+    public function getEntryByUuid(string $uuid): ?Entry
+    {
+        return $this->entryRepository->findById(EntryId::fromRaw($uuid));
+    }
+
+    /**
+     * @param  QueryCriteria[]      $criteria
+     * @throws PersistenceException
+     * @return Entry[]
+     */
+    public function getEntryBy(
+        array  $criteria,
+        ?array $orderBy = null,
+        ?int   $limit = null,
+        ?int   $offset = null,
+    ): array {
+        return $this->entryRepository->findBy(
+            criteria: $criteria,
+            orderBy: $orderBy,
+            limit: $limit,
+            offset: $offset,
+        );
+    }
+
+    /**
+     * @param  QueryCriteria[]      $criteria
+     * @throws PersistenceException
+     */
+    public function countEntryBy(array $criteria = []): int
+    {
+        return $this->entryRepository->count($criteria);
+    }
+
+    /**
+     * @throws AuthException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
+     * @throws PersistenceException
+     */
+    private function getAuthUser(): User
+    {
+        $authUser = AuthApplicationService::getInstance()->authUser();
+        if (!$authUser) {
+            throw new AuthException('User not authenticated');
+        }
+
+        return $authUser;
+    }
+
+}

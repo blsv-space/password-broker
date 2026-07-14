@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Module\Identity\Infrastructure\Http\Controller;
 
 use App\Module\Identity\Application\User\DTO\UserResponse;
@@ -19,10 +21,12 @@ use Inquisition\Foundation\Config\Config;
 use JsonException;
 use Throwable;
 
-final readonly class UserController extends AbstractRestController
-    implements RestControllerInterface
+final readonly class UserController extends AbstractRestController implements RestControllerInterface
 {
     public const string FIELD_PASSWORD = 'password';
+    public const string FIELD_MASTER_PASSWORD = 'masterPassword';
+    public const string FIELD_EMAIL = UserRepository::FIELD_EMAIL;
+    public const string FIELD_IS_ADMIN = UserRepository::FIELD_IS_ADMIN;
 
     private UserApplicationService $userApplicationService;
 
@@ -32,12 +36,10 @@ final readonly class UserController extends AbstractRestController
     }
 
     /**
-     * @param RequestInterface $request
-     * @param array $parameters
-     * @return ResponseInterface
      * @throws PersistenceException
      * @throws JsonException
      */
+    #[\Override]
     public function index(RequestInterface $request, array $parameters): ResponseInterface
     {
         ['page' => $page, 'per_page' => $per_page] = $this->getPaginationParams($request);
@@ -70,12 +72,10 @@ final readonly class UserController extends AbstractRestController
     }
 
     /**
-     * @param RequestInterface $request
-     * @param array $parameters
-     * @return ResponseInterface
      * @throws JsonException
      * @throws Throwable
      */
+    #[\Override]
     public function store(RequestInterface $request, array $parameters): ResponseInterface
     {
         $httpRequestValidator = new HttpRequestValidator();
@@ -84,48 +84,47 @@ final readonly class UserController extends AbstractRestController
             UserRepository::FIELD_USER_NAME => [
                 new NotEmptyRule(),
                 new MinLengthRule(2),
-                new MaxLengthRule(255)
+                new MaxLengthRule(255),
             ],
             self::FIELD_PASSWORD => [
                 new NotEmptyRule(),
                 new MinLengthRule($passwordMinLength),
             ],
-        ]);
+        ])->validate($request);
 
         UserApplicationService::getInstance()->createUserSync(
             userName: $request->getParameter(UserRepository::FIELD_USER_NAME),
             password: $request->getParameter(self::FIELD_PASSWORD),
+            email: $request->getParameter(self::FIELD_EMAIL),
+            masterPassword: $request->getParameter(self::FIELD_MASTER_PASSWORD),
+            isAdmin: $request->getParameter('isAdmin', '0') === '1',
         );
 
         return $this->jsonResponse([], HttpStatusCode::CREATED);
     }
 
     /**
-     * @param RequestInterface $request
-     * @param array $parameters
-     * @return ResponseInterface
      * @throws JsonException
      * @throws PersistenceException
      */
+    #[\Override]
     public function show(RequestInterface $request, array $parameters): ResponseInterface
     {
 
         return $this->jsonResponse(
             $this->normalizeData(
-                data: $this->userApplicationService->getUserByUud($parameters['id']),
+                data: $this->userApplicationService->getUserByUuid($parameters['id']),
                 entityResponseClassName: UserResponse::class,
-            )
+            ),
         );
     }
 
     /**
-     * @param RequestInterface $request
-     * @param array $parameters
      *
-     * @return ResponseInterface
      * @throws JsonException
      * @throws Throwable
      */
+    #[\Override]
     public function update(RequestInterface $request, array $parameters): ResponseInterface
     {
         $httpRequestValidator = new HttpRequestValidator();
@@ -134,14 +133,14 @@ final readonly class UserController extends AbstractRestController
             UserRepository::FIELD_USER_NAME => [
                 new NotEmptyRule(),
                 new MinLengthRule(2),
-                new MaxLengthRule(255)
+                new MaxLengthRule(255),
             ],
             self::FIELD_PASSWORD => [
                 new MinLengthRule($passwordMinLength),
             ],
         ]);
 
-        $this->userApplicationService->updateUser(
+        $this->userApplicationService->updateUserSync(
             uuid: $parameters['id'],
             userName: $request->getParameter(UserRepository::FIELD_USER_NAME),
             password: $request->getParameter(self::FIELD_PASSWORD),
@@ -151,15 +150,13 @@ final readonly class UserController extends AbstractRestController
     }
 
     /**
-     * @param RequestInterface $request
-     * @param array $parameters
-     * @return ResponseInterface
      * @throws JsonException
      * @throws Throwable
      */
+    #[\Override]
     public function destroy(RequestInterface $request, array $parameters): ResponseInterface
     {
-        $this->userApplicationService->deleteUser($parameters['id']);
+        $this->userApplicationService->deleteUserSync($parameters['id']);
         return $this->jsonResponse([], HttpStatusCode::NO_CONTENT);
     }
 }

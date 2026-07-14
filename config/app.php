@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Inquisition\Core\Application\Service\EnvironmentEnum;
 use Inquisition\Foundation\Config\Config;
 

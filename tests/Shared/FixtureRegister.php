@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Shared;
 
 use RuntimeException;
@@ -7,13 +9,12 @@ use RuntimeException;
 class FixtureRegister
 {
     /**
-     * @var string[]
+     * @var array<class-string<AbstractFixture>>
      */
     private static array $fixtures = [];
 
     /**
-     * @param string $fixture Class name of the fixture
-     * @return void
+     * @param class-string<AbstractFixture> $fixture Class name of the fixture
      */
     public static function register(string $fixture): void
     {
@@ -21,16 +22,13 @@ class FixtureRegister
     }
 
     /**
-     * @return AbstractFixture[]
+     * @return array<class-string<AbstractFixture>>
      */
     public static function getFixtures(): array
     {
         return self::$fixtures;
     }
 
-    /**
-     * @return void
-     */
     public static function reset(): void
     {
         foreach (self::$fixtures as $fixture) {
