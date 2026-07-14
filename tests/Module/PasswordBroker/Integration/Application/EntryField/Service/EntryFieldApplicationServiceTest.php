@@ -178,6 +178,9 @@ class EntryFieldApplicationServiceTest extends IntegrationTestCase
     }
 
     /**
+     * @throws AuthException
+     * @throws JwtInvalidTokenException
+     * @throws JwtTokenExpiredException
      * @throws PersistenceException
      * @throws RsaDomainServiceException
      */

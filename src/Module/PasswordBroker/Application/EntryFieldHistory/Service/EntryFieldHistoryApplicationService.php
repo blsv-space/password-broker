@@ -13,17 +13,8 @@ use App\Module\PasswordBroker\Application\EntryField\Service\EntryFieldApplicati
 use App\Module\PasswordBroker\Application\EntryField\Service\Exception\EntryFieldException;
 use App\Module\PasswordBroker\Application\EntryField\Service\Exception\EntryFieldNotFountException;
 use App\Module\PasswordBroker\Application\EntryFieldHistory\Event\EntryFieldHistoryDecryptedEvent;
-use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\AbstractUpdateEntryFieldHistorySyncJob;
-use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\CreateEntryFieldHistoryLinkSyncJob;
-use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\CreateEntryFieldHistoryNoteSyncJob;
-use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\CreateEntryFieldHistoryPasswordSyncJob;
-use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\CreateEntryFieldHistoryTotpSyncJob;
-use App\Module\PasswordBroker\Application\EntryFieldHistory\Job\UpdateEntryFieldHistoryEncryptedValueSyncJob;
-use App\Module\PasswordBroker\Application\EntryFieldHistory\Service\Exception\EntryFieldHistoryNotFountException;
 use App\Module\PasswordBroker\Application\EntryGroupUser\Service\Exception\AuthUserNotInEntryGroupException;
 use App\Module\PasswordBroker\Domain\Entry\Repository\EntryRepositoryInterface;
-use App\Module\PasswordBroker\Domain\EntryField\Entity\AbstractEntryField;
-use App\Module\PasswordBroker\Domain\EntryField\Enum\EntryFieldTypeEnum;
 use App\Module\PasswordBroker\Domain\EntryField\Repository\EntryFieldRepositoryInterface;
 use App\Module\PasswordBroker\Domain\EntryFieldHistory\Entity\AbstractEntryFieldHistory;
 use App\Module\PasswordBroker\Domain\EntryFieldHistory\Repository\EntryFieldHistoryRepositoryInterface;
@@ -34,10 +25,7 @@ use App\Module\PasswordBroker\Infrastructure\EntryField\Repository\EntryFieldRep
 use App\Module\PasswordBroker\Infrastructure\EntryFieldHistory\Repository\EntryFieldHistoryRepository;
 use App\Module\PasswordBroker\Infrastructure\EntryGroupUser\Repository\EntryGroupUserRepository;
 use App\Shared\Domain\Security\Encryption\Exception\DecryptionException;
-use App\Shared\Domain\Security\Encryption\Exception\EncryptionException;
 use App\Shared\Infrastructure\Security\Encryption\AesDecryptor;
-use App\Shared\Infrastructure\Security\Encryption\AesEncryptor;
-use App\Shared\Infrastructure\Security\Encryption\InitialVectorProvider;
 use App\Shared\Infrastructure\Security\Exception\JwtInvalidTokenException;
 use App\Shared\Infrastructure\Security\Exception\JwtTokenExpiredException;
 use Inquisition\Core\Application\Service\ApplicationServiceInterface;
@@ -45,7 +33,6 @@ use Inquisition\Core\Infrastructure\Event\EventDispatcher;
 use Inquisition\Core\Infrastructure\Persistence\Exception\PersistenceException;
 use Inquisition\Core\Infrastructure\Persistence\Repository\QueryCriteria;
 use Inquisition\Foundation\Singleton\SingletonTrait;
-use RuntimeException;
 
 class EntryFieldHistoryApplicationService implements ApplicationServiceInterface
 {
@@ -66,70 +53,6 @@ class EntryFieldHistoryApplicationService implements ApplicationServiceInterface
         $this->entryGroupUserRepository = EntryGroupUserRepository::getInstance();
         $this->rsaDomainService = RsaDomainService::getInstance();
         $this->entryFieldApplicationService = EntryFieldApplicationService::getInstance();
-    }
-
-    /**
-     * @throws PersistenceException
-     */
-    public function createEntryFieldHistoryFromEntryFieldSync(
-        AbstractEntryField $entryField,
-    ): AbstractEntryFieldHistory {
-
-        return match ($entryField->type->toRaw()) {
-            default => throw new RuntimeException('Unsupported field type'),
-            EntryFieldTypeEnum::LINK->value => new CreateEntryFieldHistoryLinkSyncJob(
-                payload: $entryField->getAsArray(),
-            )->handle(),
-            EntryFieldTypeEnum::NOTE->value => new CreateEntryFieldHistoryNoteSyncJob(
-                payload: $entryField->getAsArray(),
-            )->handle(),
-            EntryFieldTypeEnum::PASSWORD->value => new CreateEntryFieldHistoryPasswordSyncJob(
-                payload: $entryField->getAsArray(),
-            )->handle(),
-            EntryFieldTypeEnum::TOTP->value => new CreateEntryFieldHistoryTotpSyncJob(
-                payload: $entryField->getAsArray(),
-            )->handle(),
-        };
-    }
-
-    /**
-     * @throws AuthException
-     * @throws AuthUserNotInEntryGroupException
-     * @throws EncryptionException
-     * @throws EntryFieldHistoryNotFountException
-     * @throws EntryFieldNotFountException
-     * @throws JwtInvalidTokenException
-     * @throws JwtTokenExpiredException
-     * @throws PersistenceException
-     * @throws RsaDomainServiceException
-     */
-    public function updateEntryFieldHistoryEncryptedValueSync(
-        string  $id,
-        string  $value,
-        string  $masterPassword,
-    ): AbstractEntryFieldHistory {
-        $entryFieldHistory = $this->entryFieldHistoryRepository->findById(EntryFieldHistoryId::fromRaw($id));
-        if (!$entryFieldHistory) {
-            throw new EntryFieldHistoryNotFountException($id);
-        }
-        $entryField = $this->entryFieldApplicationService->getEntryFieldByUuid($entryFieldHistory->entryFieldId->toRaw());
-        if (!$entryField) {
-            throw new EntryFieldNotFountException($entryFieldHistory->entryFieldId->toRaw());
-        }
-
-        $authUser = $this->getAuthUser();
-
-        $entryGroupAesPassword = $this->entryFieldApplicationService->getAesPassword($entryField->entryId->toRaw(), $authUser, $masterPassword);
-        $initialVector = InitialVectorProvider::getInstance()->getInitialVector();
-        $aesEncryptedData = AesEncryptor::getInstance()->encrypt($value, $entryGroupAesPassword, $initialVector);
-        $payload = $entryField->getAsArray();
-        $payload[AbstractUpdateEntryFieldHistorySyncJob::PAYLOAD_KEY_VALUE_ENCRYPTED] = $aesEncryptedData->encryptedData;
-        $payload[AbstractUpdateEntryFieldHistorySyncJob::PAYLOAD_KEY_INITIALIZATION_VECTOR] = $initialVector;
-        $payload[AbstractUpdateEntryFieldHistorySyncJob::PAYLOAD_KEY_TAG] = $aesEncryptedData->tag;
-
-        return new UpdateEntryFieldHistoryEncryptedValueSyncJob(
-            payload: $payload,
-        )->handle();
     }
 
     /**

@@ -1,6 +1,6 @@
 {
   "name": "blsv-space/password-broker",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "type": "project",
   "description": "Password Broker - server side application",
   "license": "MIT",

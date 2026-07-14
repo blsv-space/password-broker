@@ -175,6 +175,18 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
         $authUser = $this->getAuthUser();
 
         $payload = [
+            ...array_filter(
+                array: $entryField->getAsArray(),
+                callback: static fn($key) => !in_array(
+                    $key,
+                    [
+                        AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_VALUE_ENCRYPTED,
+                        AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_INITIALIZATION_VECTOR,
+                        AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_TAG,
+                    ],
+                ),
+                mode: ARRAY_FILTER_USE_KEY,
+            ),
             AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_ID => $entryField->id->toRaw(),
             AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_TITLE => $title,
             AbstractUpdateEntryFieldSyncJob::PAYLOAD_KEY_UPDATED_AT => CreatedAt::now()->toRaw(),
@@ -213,7 +225,8 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
                 payload: array_merge(
                     $payload,
                     [
-                        UpdateEntryFieldPasswordSyncJob::PAYLOAD_KEY_LOGIN => $login,
+                        UpdateEntryFieldPasswordSyncJob::PAYLOAD_KEY_LOGIN => $login
+                            ?? $payload[UpdateEntryFieldPasswordSyncJob::PAYLOAD_KEY_LOGIN],
                     ],
                 ),
             )->handle(),
@@ -221,8 +234,10 @@ class EntryFieldApplicationService implements ApplicationServiceInterface
                 payload: array_merge(
                     $payload,
                     [
-                        UpdateEntryFieldTotpSyncJob::PAYLOAD_KEY_TOTP_HASH_ALGORITHM => $totpHashAlgorithm,
-                        UpdateEntryFieldTotpSyncJob::PAYLOAD_KEY_TOTP_TIMEOUT => $totpTimeout,
+                        UpdateEntryFieldTotpSyncJob::PAYLOAD_KEY_TOTP_HASH_ALGORITHM => $totpHashAlgorithm
+                            ?? $payload[UpdateEntryFieldTotpSyncJob::PAYLOAD_KEY_TOTP_HASH_ALGORITHM],
+                        UpdateEntryFieldTotpSyncJob::PAYLOAD_KEY_TOTP_TIMEOUT => $totpTimeout
+                            ?? $payload[UpdateEntryFieldTotpSyncJob::PAYLOAD_KEY_TOTP_TIMEOUT],
                     ],
                 ),
             )->handle(),
