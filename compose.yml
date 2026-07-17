@@ -1,19 +1,7 @@
 services:
-  file-fix-permissions:
-    image: alpine:latest
-    container_name: pb_file-fix-permissions
-    user: 0:0
-    command: /bin/sh /permission.sh
-    volumes:
-      - ./docker:/permission/docker
-      - .:/app
-      - ./docker/permission.sh:/permission.sh
-    environment:
-      UID: ${UID}
-      GID: ${GID}
-
-  kafka:
-    image: apache/kafka:latest
+  pb_kafka:
+    image: docker.io/apache/kafka:latest
+    userns_mode: keep-id
     user: ${DOCKER_UID}:${DOCKER_GID}
     container_name: pb_kafka
     ports:
@@ -37,33 +25,29 @@ services:
       test: ["CMD", "nc", "-z", "localhost", "9092"]
     restart: always
     volumes:
-      - ./docker/kafka/data:/var/lib/kafka/data:rw
-    depends_on:
-      file-fix-permissions:
-        condition: service_completed_successfully
+      - ./docker/kafka/data:/var/lib/kafka/data:rw,z
     networks:
       pb_backend:
         aliases:
           - kafka
 
-  php-fpm:
+  pb_php-fpm:
     build: docker/php-fpm
+    userns_mode: keep-id
     user: ${DOCKER_UID}:${DOCKER_GID}
     container_name: pb_php-fpm
     expose:
       - 9000
     working_dir: /app
     volumes:
-      - ./:/app
-      - ./docker/php-fpm/logs:/opt/bitnami/php/logs:rw
-      - ./docker/php-fpm/tmp:/opt/bitnami/php/tmp:rw
+      - ./:/app:z
+      - ./docker/php-fpm/logs:/opt/bitnami/php/logs:rw,z
+      - ./docker/php-fpm/tmp:/opt/bitnami/php/tmp:rw,z
     restart: always
     depends_on:
-      file-fix-permissions:
-        condition: service_completed_successfully
-      kafka:
+      pb_kafka:
         condition: service_healthy
-      mysql:
+      pb_mysql:
         condition: service_healthy
     environment:
       KAFKA_BROKERS: kafka:9092
@@ -76,52 +60,48 @@ services:
         aliases:
           - php-fpm
 
-  mysql:
-    image: mysql:9.5.0
-    user: ${DOCKER_UID}:${DOCKER_GID}
+  pb_mysql:
+    image: docker.io/library/mysql:9.5.0
     container_name: pb_mysql
     expose:
       - ${APP_DATABASE_CONNECTIONS_DEFAULT_PORT}
     ports:
-      - ${DOCKER_DB_EX_PORT}:${APP_DATABASE_CONNECTIONS_DEFAULT_PORT}
+      - ${DOCKER_DB_EX_ADDRESS}:${DOCKER_DB_EX_PORT}:${APP_DATABASE_CONNECTIONS_DEFAULT_PORT}
     volumes:
-      - ./docker/mysql/data:/var/lib/mysql:rw
+      - ./docker/mysql/data:/var/lib/mysql:rw,Z
     environment:
       - MYSQL_ROOT_PASSWORD=${APP_DATABASE_CONNECTIONS_DEFAULT_PASSWORD}
       - MYSQL_DATABASE=${APP_DATABASE_CONNECTIONS_DEFAULT_DATABASE}
       - MYSQL_PORT_NUMBER=${APP_DATABASE_CONNECTIONS_DEFAULT_PORT}
     restart: always
     healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${APP_DATABASE_CONNECTIONS_DEFAULT_PASSWORD}" ]
       timeout: 10s
       retries: 10
-    depends_on:
-      file-fix-permissions:
-        condition: service_completed_successfully
+      interval: 10s
     networks:
       pb_backend:
         aliases:
           - mysql
 
-  nginx:
-    image: nginx:1.29
+  pb_nginx:
+    image: docker.io/library/nginx:1.29
+    userns_mode: keep-id
     user: ${DOCKER_UID}:${DOCKER_GID}
     container_name: pb_nginx
     ports:
       - ${DOCKER_WEB_ADDRESS}:${DOCKER_WEB_PORT}:8080
     volumes:
-      - ./public:/app:ro
-      - ./docker/nginx/app.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./docker/nginx/logs:/var/log/nginx:rw
+      - ./public:/app:ro,z
+      - ./docker/nginx/app.conf:/etc/nginx/conf.d/default.conf:ro,z
+      - ./docker/nginx/logs:/var/log/nginx:rw,z
     restart: always
     depends_on:
-      file-fix-permissions:
-        condition: service_completed_successfully
-      kafka:
+      pb_kafka:
         condition: service_healthy
-      mysql:
+      pb_mysql:
         condition: service_healthy
-      php-fpm:
+      pb_php-fpm:
         condition: service_healthy
     networks:
       pb_backend:
