@@ -288,6 +288,65 @@ class EntryGroupUserControllerTest extends FunctionalTestCase
      * @throws RouteNotFoundException
      * @throws RsaDomainServiceException
      */
+    public function test_store_user_without_role_and_group_id_should_return_error(): void
+    {
+        $userActor = UserFixture::create(persist: true);
+        $userAdmin = UserFixture::create(persist: true);
+
+        $this->actAs($userActor);
+
+        $entryGroupUser = EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $userActor->id->toRaw(),
+                EntryGroupUserFixture::ROLE => RoleEnum::ADMIN->value,
+            ],
+            persist: true,
+        );
+
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_STORE);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uri = $this->buildUri(
+            path: $route->path,
+        );
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+            body: [
+                EntryGroupUserRepository::FIELD_USER_ID => '',
+                EntryGroupUserRepository::FIELD_ENTRY_GROUP_ID => '',
+                EntryGroupUserRepository::FIELD_ROLE => RoleEnum::ADMIN->value,
+                UserController::FIELD_MASTER_PASSWORD => UserFixture::DEFAULT_MASTER_PASSWORD,
+            ],
+        );
+
+        $this->assertEquals(HttpStatusCode::BAD_REQUEST, $httpResponse->getStatusCode());
+
+        $content = $httpResponse->getContent();
+        $this->assertJson($content);
+        $response = json_decode($content, true);
+        $this->assertArrayHasKey('error', $response);
+        $this->assertArrayHasKey('errors', $response);
+        $this->assertArrayHasKey(EntryGroupUserRepository::FIELD_USER_ID, $response['errors']);
+        $this->assertArrayHasKey(EntryGroupUserRepository::FIELD_ENTRY_GROUP_ID, $response['errors']);
+
+        $this->assertDatabaseMissing(EntryGroupUserFixture::getTableName(), [
+            EntryGroupUserFixture::USER_ID => $userAdmin->id->toRaw(),
+            EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroupUser->entryGroupId->toRaw(),
+            EntryGroupUserFixture::ROLE => RoleEnum::ADMIN->value,
+        ]);
+    }
+
+    /**
+     * @throws PersistenceException
+     * @throws ReflectionException
+     * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     */
     public function test_moderator_can_add_member_to_group(): void
     {
         $userActor = UserFixture::create(persist: true);

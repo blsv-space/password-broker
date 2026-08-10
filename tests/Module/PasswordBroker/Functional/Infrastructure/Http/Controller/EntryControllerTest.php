@@ -343,6 +343,64 @@ class EntryControllerTest extends FunctionalTestCase
 
     /**
      * @throws RouteNotFoundException
+     * @throws RsaDomainServiceException
+     * @throws PersistenceException
+     */
+    public function test_it_should_return_validation_error_on_entry_update(): void
+    {
+        $entryGroup = EntryGroupFixture::create(persist: true);
+        EntryGroupUserFixture::create(
+            attributes: [
+                EntryGroupUserFixture::USER_ID => $this->userActor->getId()->toRaw(),
+                EntryGroupUserFixture::ENTRY_GROUP_ID => $entryGroup->getId()->toRaw(),
+            ],
+            persist: true,
+        );
+        $entry = EntryFixture::create(attributes: [EntryFixture::ENTRY_GROUP => $entryGroup], persist: true);
+        $oldTitle = $entry->title;
+        //invalid empty Title
+        $entry->title = EntryTitle::fromRaw('');
+
+        $routeName = $this->buildRouteName($this->routePath, RestControllerInterface::ACTION_UPDATE);
+        $route = Router::getInstance()->getRouteByName($routeName);
+        $this->assertNotNull($route, "Route $routeName not found");
+        $httpMethod = $route->methods[0] ?? null;
+        $this->assertNotNull($httpMethod, "Method not found for route $routeName");
+
+        $uri = $this->buildUri(
+            path: $route->path,
+            pathParams: [
+                EntryGroupRoute::PARAM_ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+                EntryRoute::PARAM_ENTRY_ID => $entry->id->toRaw(),
+            ],
+        );
+
+        $httpResponse = $this->sendRequest(
+            method: $httpMethod,
+            uri: $uri,
+            body: $entry->getAsArray(),
+        );
+
+        $this->assertEquals(HttpStatusCode::BAD_REQUEST, $httpResponse->getStatusCode());
+
+        $content = $httpResponse->getContent();
+        $this->assertJson($content);
+        $response = json_decode($content, true);
+        $this->assertArrayHasKey('error', $response);
+        $this->assertStringContainsString('title', $response['error']);
+
+        $this->assertDatabaseMissing(EntryFixture::getTableName(), [
+            EntryFixture::ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            EntryFixture::TITLE => $entry->title->toRaw(),
+        ]);
+        $this->assertDatabaseHas(EntryFixture::getTableName(), [
+            EntryFixture::ENTRY_GROUP_ID => $entryGroup->id->toRaw(),
+            EntryFixture::TITLE => $oldTitle->toRaw(),
+        ]);
+    }
+
+    /**
+     * @throws RouteNotFoundException
      * @throws PersistenceException
      */
     public function test_update_entry_should_return_403_for_user_not_in_group(): void

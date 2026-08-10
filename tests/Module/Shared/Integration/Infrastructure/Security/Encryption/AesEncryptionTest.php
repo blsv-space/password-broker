@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shared\Integration\Infrastructure\Security\Encryption;
+namespace Tests\Module\Shared\Integration\Infrastructure\Security\Encryption;
 
 use App\Shared\Domain\Security\Encryption\Exception\EncryptionException;
 use App\Shared\Infrastructure\Security\Encryption\AesEncryptor;
