@@ -1,6 +1,6 @@
 {
   "name": "blsv-space/password-broker",
-  "version": "2.0.3",
+  "version": "2.0.2",
   "type": "project",
   "description": "Password Broker - server side application",
   "license": "MIT",
@@ -9,7 +9,7 @@
     "ext-pdo": "*",
     "ext-rdkafka": "*",
     "ext-openssl": "*",
-    "blsv-space/inquisition-php": "0.4.15"
+    "blsv-space/inquisition-php": "0.4.17"
   },
   "require-dev": {
     "fakerphp/faker": "1.24",

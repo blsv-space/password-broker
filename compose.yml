@@ -86,8 +86,6 @@ services:
 
   pb_nginx:
     image: docker.io/library/nginx:1.29
-    userns_mode: keep-id
-    user: ${DOCKER_UID}:${DOCKER_GID}
     container_name: pb_nginx
     ports:
       - ${DOCKER_WEB_ADDRESS}:${DOCKER_WEB_PORT}:8080
