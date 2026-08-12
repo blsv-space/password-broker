@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Shared\Infrastructure\Security\OpaqueTokenGenerator;
@@ -43,10 +45,10 @@ function replaceSecretsInEnvFile(string $file): void
     $secretIndex = 0;
     $updatedContent = preg_replace_callback(
         '/%SECRET_HERE%/',
-        function() use ($secrets, &$secretIndex) {
+        function () use ($secrets, &$secretIndex) {
             return $secrets[$secretIndex++];
         },
-        $content
+        $content,
     );
 
     file_put_contents($envFile, $updatedContent);
