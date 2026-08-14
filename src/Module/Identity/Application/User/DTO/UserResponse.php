@@ -35,8 +35,9 @@ class UserResponse implements EntityResponseInterface
     public function getAsArray(): array
     {
         return [
-            UserRepository::FIELD_ID => $this->user->id->value,
+            UserRepository::FIELD_ID => $this->user->id->toRaw(),
             UserRepository::FIELD_USER_NAME => $this->user->userName->toRaw(),
+            UserRepository::FIELD_IS_ADMIN => $this->user->isAdmin->toRaw(),
             UserRepository::FIELD_CREATED_AT => $this->user->createdAt?->toRaw(),
             UserRepository::FIELD_UPDATED_AT => $this->user->updatedAt?->toRaw(),
         ];
