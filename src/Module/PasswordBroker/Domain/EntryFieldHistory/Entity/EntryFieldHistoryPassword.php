@@ -39,12 +39,12 @@ final class EntryFieldHistoryPassword extends AbstractEntryFieldHistory
             eventName: $eventName,
             title: $title,
             type: EntryFieldType::fromRaw(EntryFieldTypeEnum::PASSWORD),
-            valueEncrypted: $valueEncrypted,
-            initializationVector: $initializationVector,
-            tag: $tag,
             isDeleted: $isDeleted,
             createdBy: $createdBy,
             createdAt: $createdAt,
+            valueEncrypted: $valueEncrypted,
+            initializationVector: $initializationVector,
+            tag: $tag,
         );
     }
 }

@@ -37,12 +37,12 @@ final class EntryFieldHistoryLink extends AbstractEntryFieldHistory
             eventName: $eventName,
             title: $title,
             type: EntryFieldType::fromRaw(EntryFieldTypeEnum::LINK),
-            valueEncrypted: $valueEncrypted,
-            initializationVector: $initializationVector,
-            tag: $tag,
             isDeleted: $isDeleted,
             createdBy: $createdBy,
             createdAt: $createdAt,
+            valueEncrypted: $valueEncrypted,
+            initializationVector: $initializationVector,
+            tag: $tag,
         );
     }
 }
